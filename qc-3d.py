@@ -7,6 +7,7 @@ import h5py
 
 import os
 import nibabel
+import cPickle as pkl
 
 import matplotlib.pyplot as plt
 
@@ -141,8 +142,8 @@ def qc_model():
 #     print model.metrics_names
 #     print score
 
-# generator that produces training batches of size n so that we don't overload memory
-def train_batch(train_indices, labels, n):
+# generator that produces batches of size n so that we don't overload memory
+def batch(train_indices, labels, n):
     f = h5py.File('ibis.hdf5', 'r')
     images = f.get('ibis_t1')
 
@@ -174,18 +175,22 @@ if __name__ == "__main__":
 
     train_indices, test_indices, labels, filename_test = load_data(fail_data, pass_data)
 
+    # define model
     model = qc_model()
 
-    num_epochs = 100
+    # print summary of model
+    model.summary()
 
-    for epoch in range(num_epochs):
-	print 'epoch', epoch, 'of', str(num_epochs)
-        model.fit_generator(train_batch(train_indices, labels, 3), nb_epoch=1, samples_per_epoch=len(train_indices))
+    num_epochs = 3
 
-    score = model.evaluate_generator(train_batch(test_indices, labels, 4), len(test_indices))
+    # for epoch in range(num_epochs):
+	   # print 'epoch', epoch, 'of', str(num_epochs)
+    model.fit_generator(batch(train_indices, labels, 3), nb_epoch=num_epochs, samples_per_epoch=len(train_indices), validation_data=batch(test_indices, labels, 3), nb_val_samples=len(test_indices))
+
+    model_config = model.get_config()
+    pkl.dumps('convnet_model' + str(num_epochs) + '.pkl')
+
+
+
+    score = model.evaluate_generator(batch(test_indices, labels, 3), len(test_indices))
     print score
-
-    # score = model.evaluate(images)
-
-    #chooo chooooo
-
