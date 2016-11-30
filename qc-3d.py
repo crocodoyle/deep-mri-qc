@@ -83,28 +83,32 @@ def qc_model():
 
     model = Sequential()
 
-    model.add(Convolution3D(8, 15, 15, 15, border_mode='same', activation='relu', input_shape=(1, 160, 256, 224)))
-    model.add(MaxPooling3D(pool_size=(4, 4, 4)))
+    model.add(Convolution3D(8, 15, 15, 15, activation='relu', input_shape=(1, 160, 256, 224)))
+    # model.add(MaxPooling3D(pool_size=(4, 4, 4)))
     model.add(BatchNormalization())
 #    model.add(SpatialDropout2D(0.5))
 
-    model.add(Convolution3D(8, 6, 6, 6, border_mode='same', activation='relu'))
+    model.add(Convolution3D(8, 3, 3, 3, activation='relu'))
+    model.add(BatchNormalization())
 #    model.add(MaxPooling2D(pool_size=(3, 3)))
 #    model.add(SpatialDropout2D(0.5))
 
-    model.add(Convolution3D(8, 5, 5, 5, border_mode='same', activation='relu'))
-    model.add(MaxPooling3D(pool_size=(2, 2, 2)))
+    model.add(Convolution3D(8, 3, 3, 3, activation='relu'))
+    model.add(BatchNormalization())
+    # model.add(MaxPooling3D(pool_size=(2, 2, 2)))
 #    model.add(SpatialDropout2D(0.2))
 #
-    model.add(Convolution3D(32, 3, 3, 3, border_mode='same', activation='relu'))
-    model.add(MaxPooling3D(pool_size=(2, 2, 2)))
-    model.add(SpatialDropout3D(0.4))
+    model.add(Convolution3D(32, 3, 3, 3, activation='relu'))
+    model.add(BatchNormalization())
+    # model.add(MaxPooling3D(pool_size=(2, 2, 2)))
+    # model.add(SpatialDropout3D(0.4))
 
-    model.add(Convolution3D(64, 2, 2, 2, border_mode='same', activation='relu'))
-    model.add(SpatialDropout3D(0.5))
+    model.add(Convolution3D(64, 2, 2, 2, activation='relu'))
+    model.add(BatchNormalization())
+    # model.add(SpatialDropout3D(0.5))
 
     model.add(Flatten())
-    model.add(Dense(10, init='uniform', activation='relu'))
+    model.add(Dense(100, init='uniform', activation='relu'))
     model.add(Dropout(0.5))
     model.add(Dense(10, init='uniform', activation='relu'))
     model.add(Dropout(0.5))
@@ -116,23 +120,6 @@ def qc_model():
                   metrics=["accuracy"])
 
     return model
-
-# def model_train(x_train, x_test, y_train, y_test, filename_test):
-
-#     print "shape of training data:", np.shape(x_train)
-#     print "shape of testing data:", np.shape(x_test)
-#     print "shape of training labels:", np.shape(y_train)
-#     print "shape of testing labels:", np.shape(y_test)
-#     print "filename list:", len(filename_test)
-
-
-
-#     model.fit_generator(train_batch, nb_epoch=1, batch_size=50)
-#     #should return model to workspace so that I can keep training it
-
-#     score = model.evaluate(x_test, y_test, batch_size=10)
-#     print model.metrics_names
-#     print score
 
 # generator that produces batches of size n so that we don't overload memory
 def batch(train_indices, labels, n):
@@ -173,7 +160,7 @@ if __name__ == "__main__":
     # print summary of model
     model.summary()
 
-    num_epochs = 200
+    num_epochs = 100
 
     # for epoch in range(num_epochs):
 	   # print 'epoch', epoch, 'of', str(num_epochs)
