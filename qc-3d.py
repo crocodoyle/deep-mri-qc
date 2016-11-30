@@ -83,27 +83,24 @@ def qc_model():
 
     model = Sequential()
 
-    model.add(Convolution3D(4, 12, 15, 15, border_mode='same', activation='relu', input_shape=(1, 160, 256, 224)))
+    model.add(Convolution3D(8, 15, 15, 15, border_mode='same', activation='relu', input_shape=(1, 160, 256, 224)))
     model.add(MaxPooling3D(pool_size=(4, 4, 4)))
     model.add(BatchNormalization())
 #    model.add(SpatialDropout2D(0.5))
 
-    model.add(Convolution3D(4, 12, 12, 12, border_mode='same', activation='relu'))
+    model.add(Convolution3D(8, 6, 6, 6, border_mode='same', activation='relu'))
 #    model.add(MaxPooling2D(pool_size=(3, 3)))
 #    model.add(SpatialDropout2D(0.5))
 
-    model.add(Convolution3D(4, 5, 5, 5, border_mode='same', activation='relu'))
+    model.add(Convolution3D(8, 5, 5, 5, border_mode='same', activation='relu'))
     model.add(MaxPooling3D(pool_size=(2, 2, 2)))
 #    model.add(SpatialDropout2D(0.2))
 #
-    model.add(Convolution3D(4, 3, 3, 3, border_mode='same', activation='relu'))
-    #    model.add(SpatialDropout2D(0.5))
-
-    model.add(Convolution3D(8, 3, 3, 3, border_mode='same', activation='relu'))
+    model.add(Convolution3D(32, 3, 3, 3, border_mode='same', activation='relu'))
     model.add(MaxPooling3D(pool_size=(2, 2, 2)))
     model.add(SpatialDropout3D(0.4))
 
-    model.add(Convolution3D(16, 2, 2, 2, border_mode='same', activation='relu'))
+    model.add(Convolution3D(64, 2, 2, 2, border_mode='same', activation='relu'))
     model.add(SpatialDropout3D(0.5))
 
     model.add(Flatten())
@@ -176,14 +173,14 @@ if __name__ == "__main__":
     # print summary of model
     model.summary()
 
-    num_epochs = 3
+    num_epochs = 200
 
     # for epoch in range(num_epochs):
 	   # print 'epoch', epoch, 'of', str(num_epochs)
     model.fit_generator(batch(train_indices, labels, 2), nb_epoch=num_epochs, samples_per_epoch=len(train_indices), validation_data=batch(test_indices, labels, 2), nb_val_samples=len(test_indices))
 
     model_config = model.get_config()
-    pkl.dumps('convnet_model' + str(num_epochs) + '.pkl')
+    pkl.dumps(model_config, 'convnet_model' + str(num_epochs) + '.pkl')
 
 
     score = model.evaluate_generator(batch(test_indices, labels, 2), len(test_indices))
