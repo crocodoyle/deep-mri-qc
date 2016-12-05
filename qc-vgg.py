@@ -53,7 +53,7 @@ def load_data(fail_path, pass_path):
                 images[i] = img
                 labels[i] = [1, 0]
                 filenames.append(os.path.join(root, name))
-              i += 1
+            i += 1
 
 
     for root, dirs, files in os.walk(pass_path, topdown=False):
@@ -63,7 +63,7 @@ def load_data(fail_path, pass_path):
                 images[i] = img
                 labels[i] = [0, 1]
                 filenames.append(os.path.join(root, name))
-              i += 1
+            i += 1
 
     indices = StratifiedShuffleSplit(labels, test_size=0.4, n_iter=1, random_state=None)
 
