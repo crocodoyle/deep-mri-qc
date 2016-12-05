@@ -83,9 +83,9 @@ def qc_model():
 
     model = Sequential()
 
-    model.add(Convolution3D(8, 15, 15, 15, activation='relu', input_shape=(1, 160, 256, 224)))
-    # model.add(MaxPooling3D(pool_size=(4, 4, 4)))
+    model.add(Convolution3D(7, 3, 3, 3, activation='relu', input_shape=(1, 160, 256, 224)))
     model.add(BatchNormalization())
+    model.add(MaxPooling3D(pool_size=(2, 2, 2)))
 #    model.add(SpatialDropout2D(0.5))
 
     model.add(Convolution3D(8, 3, 3, 3, activation='relu'))
@@ -93,25 +93,15 @@ def qc_model():
 #    model.add(MaxPooling2D(pool_size=(3, 3)))
 #    model.add(SpatialDropout2D(0.5))
 
-    model.add(Convolution3D(8, 3, 3, 3, activation='relu'))
+    model.add(Convolution3D(12, 3, 3, 3, activation='relu'))
     model.add(BatchNormalization())
-    # model.add(MaxPooling3D(pool_size=(2, 2, 2)))
+    model.add(MaxPooling3D(pool_size=(2, 2, 2)))
 #    model.add(SpatialDropout2D(0.2))
 #
-    model.add(Convolution3D(32, 3, 3, 3, activation='relu'))
-    model.add(BatchNormalization())
-    # model.add(MaxPooling3D(pool_size=(2, 2, 2)))
-    # model.add(SpatialDropout3D(0.4))
-
-    model.add(Convolution3D(64, 2, 2, 2, activation='relu'))
-    model.add(BatchNormalization())
-    # model.add(SpatialDropout3D(0.5))
-
     model.add(Flatten())
-    model.add(Dense(100, init='uniform', activation='relu'))
-    model.add(Dropout(0.5))
     model.add(Dense(10, init='uniform', activation='relu'))
-    model.add(Dropout(0.5))
+#    model.add(Dropout(0.5))
+    model.add(Dense(10, init='uniform', activation='relu'))
     model.add(Dense(nb_classes, init='uniform'))
     model.add(Activation('softmax'))
 
