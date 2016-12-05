@@ -29,14 +29,14 @@ def load_data(fail_path, pass_path):
     numImgs = 0
     x_dim, y_dim, z_dim = 0, 0, 0
     for root, dirs, files in os.walk(fail_path, topdown=False):
-  for name in files:
+        for name in files:
             numImgs += 1
-      if x_dim == 0:
-               img =  nibabel.load(os.path.join(root, name)).get_data()
-               print np.shape(img)
-               x_dim = np.shape(img)[0]
-               y_dim = np.shape(img)[1]
-               z_dim = np.shape(img)[2]
+                if x_dim == 0:
+                    img =  nibabel.load(os.path.join(root, name)).get_data()
+                    print np.shape(img)
+                    x_dim = np.shape(img)[0]
+                    y_dim = np.shape(img)[1]
+                    z_dim = np.shape(img)[2]
     for root, dirs, files in os.walk(pass_path, topdown=False):
         for name in files:
             numImgs += 1
