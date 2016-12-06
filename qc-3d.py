@@ -13,12 +13,26 @@ import matplotlib.pyplot as plt
 
 from sklearn.cross_validation import StratifiedShuffleSplit
 
+images_dir = '/gs/scratch/adoyle/'
+cluster = True
+
+if cluster:
+    images_dir  = '/gs/scratch/adoyle/' 
+    scratch_dir = os.environ.get('RAMDISK') + '/'
+else:
+    images_dir   = '/home/adoyle/'
+    scratch_dir  = images_dir
+
+print 'SCRATCH', scratch_dir
+print 'IMAGES:', images_dir
+
+
 def load_data(fail_path, pass_path):
     print "loading data..."
     filenames = []
     labels = []
 
-    f = h5py.File('ibis.hdf5', 'w')
+    f = h5py.File(scratch_dir + 'ibis.hdf5', 'w')
 
 
     # First loop through the data we need to count the number of files
@@ -113,9 +127,10 @@ def qc_model():
 
 # generator that produces batches of size n so that we don't overload memory
 def batch(train_indices, labels, n):
-    f = h5py.File('ibis.hdf5', 'r')
+    f = h5py.File(scratch_dir + 'ibis.hdf5', 'r')
     images = f.get('ibis_t1')
 
+    print images
     x_train = np.zeros((n, 1, 160, 256, 224), dtype=np.float32)
     y_train = np.zeros((n, 2), dtype=np.int8)
 
@@ -139,8 +154,8 @@ def batch(train_indices, labels, n):
 
 if __name__ == "__main__":
     print "Running automatic QC"
-    fail_data = "/home/adoyle/T1_Minc_Fail"
-    pass_data = "/home/adoyle/T1_Minc_Pass"
+    fail_data = images_dir + "T1_Minc_Fail"
+    pass_data = images_dir + "T1_Minc_Pass"
 
     train_indices, test_indices, labels, filename_test = load_data(fail_data, pass_data)
 
