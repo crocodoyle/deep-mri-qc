@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from sklearn.cross_validation import StratifiedShuffleSplit
 
 images_dir = '/gs/scratch/adoyle/'
-cluster = True
+cluster = False
 
 if cluster:
     images_dir  = '/gs/scratch/adoyle/' 

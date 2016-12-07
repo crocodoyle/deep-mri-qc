@@ -86,20 +86,18 @@ def qc_model():
 
     # model = Sequential()
 
-    model = VGG16(include_top=False, weights='imagenet', input_tensor=None, input_shape=(3, 224, 224))
+    base_model = VGG16(include_top=False, weights='imagenet', input_tensor=None)
 
-    model.add(Flatten())
-    model.add(Dense(10, init='uniform', activation='relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(10, init='uniform', activation='relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(nb_classes, init='uniform'))
-    model.add(Activation('softmax'))
+    x = base_model.output
+    x = Dense(1024, activation='relu')(x)
+    x = GlobalAveragePooling2D()(x)
+    x = Flatten()(x)
+    predictions = Dense(nb_classes, activation='softmax')(x)
 
-    model.compile(loss='categorical_crossentropy',
-                  optimizer='sgd',
-                  metrics=["accuracy"])
+    for layer in base_model.layers:
+        layer.trainable = False
 
+    model.compile(optimizer='rmsprop', loss='categorical_crossentropy')
     return model
 
 
