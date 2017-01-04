@@ -88,7 +88,7 @@ def load_data(fail_path, pass_path):
 
     return train_index, test_index, labels, filename_test
 
-def loadInMemory(train_index, test_index, labels):
+def load_in_memory(train_index, test_index, labels):
     f = h5py.File(scratch_dir + 'ibis.hdf5', 'r')
     images = f.get('ibis_t1')
 
@@ -181,9 +181,9 @@ if __name__ == "__main__":
     fail_data = images_dir + "T1_Minc_Fail"
     pass_data = images_dir + "T1_Minc_Pass"
 
-    train_index, test_index, labels, filename_test = loadData(fail_data, pass_data)
+    train_index, test_index, labels, filename_test = load_data(fail_data, pass_data)
 
-    x_train, x_test, y_train, y_test = loadInMemory(train_index, test_index, labels)
+    x_train, x_test, y_train, y_test = load_in_memory(train_index, test_index, labels)
 
     model_train(x_train, x_test, y_train, y_test, filename_test)
     #chooo chooooo
