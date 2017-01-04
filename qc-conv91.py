@@ -3,9 +3,11 @@ from keras.layers import Dense, Dropout, Activation, Convolution2D, MaxPooling2D
 from keras.optimizers import SGD
 
 import numpy as np
+import h5py
 
 import os
 import nibabel
+
 
 import matplotlib.pyplot as plt
 
