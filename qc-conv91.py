@@ -57,17 +57,23 @@ def loadData(fail_path, pass_path):
 
     indices = StratifiedShuffleSplit(labels, test_size=0.4, n_iter=1, random_state=None)
 
-    train_index, test_index = None, None
+
+    test_index = None
     for train_indices, test_indices in indices:
-        train_index = train_indices
-        test_index  = test_indices
+        x_train = np.asarray(images)[train_indices]
+        x_test = np.asarray(images)[test_indices]
+        y_train = np.asarray(labels)[train_indices]
+        y_test = np.asarray(labels)[test_indices]
+
+        test_index = test_indices
+
 
     filename_test = []
     for i, f in enumerate(filenames):
         if i in test_index:
             filename_test.append(f)
 
-    return train_index, test_index, labels, filename_test
+    return x_train, x_test, y_train, y_test, filename_test
 
 
 def model_train(x_train, x_test, y_train, y_test, filename_test):
