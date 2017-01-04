@@ -25,55 +25,80 @@ print 'SCRATCH', scratch_dir
 print 'IMAGES:', images_dir
 
 
-def loadData(fail_path, pass_path):
+def load_data(fail_path, pass_path):
     print "loading data..."
-    images = []
-    labels = []
     filenames = []
-    max_images = 120
+    labels = []
+
+    f = h5py.File(scratch_dir + 'ibis.hdf5', 'w')
+
+
+    # First loop through the data we need to count the number of files
+    # also check dims
+    numImgs = 0
+    x_dim, y_dim, z_dim = 0, 0, 0
+    for root, dirs, files in os.walk(fail_path, topdown=False):
+    for name in files:
+            numImgs += 1
+        if x_dim == 0:
+               img =  nibabel.load(os.path.join(root, name)).get_data()
+               print np.shape(img)
+               x_dim = np.shape(img)[0]
+               y_dim = np.shape(img)[1]
+               z_dim = np.shape(img)[2]
+    for root, dirs, files in os.walk(pass_path, topdown=False):
+        for name in files:
+            numImgs += 1
+
+    images = f.create_dataset('ibis_t1', (numImgs, x_dim, y_dim, z_dim), dtype='float32')
+    labels = np.zeros((numImgs, 2), dtype='bool')
+
+    # Second time through, write the image data to the HDF5 file
     i = 0
     for root, dirs, files in os.walk(fail_path, topdown=False):
         for name in files:
-            images.append(nibabel.load(os.path.join(root, name)).get_data()[:,:,120])
-            labels.append([1, 0])
-            filenames.append(os.path.join(root, name))
-        i += 1
-        if i >= max_images:
-            break
-#            plt.imshow(images[-1][:,:, 120])
-#            print(os.path.join(root, name))
+            img = nibabel.load(os.path.join(root, name)).get_data()
+            if np.shape(img) == (x_dim, y_dim, z_dim):
+                images[i] = img
+                labels[i] = [1, 0]
+                filenames.append(os.path.join(root, name))
+                i += 1
 
-    i=0
+
     for root, dirs, files in os.walk(pass_path, topdown=False):
         for name in files:
-            images.append(nibabel.load(os.path.join(root, name)).get_data()[:,:,120])
-            labels.append([0, 1])
-            filenames.append(os.path.join(root, name))
-        i += 1
-        if i >= max_images:
-            break
-#            plt.imshow(images[-1][:,:, 120])
-#            print(os.path.join(root, name))
+            img = nibabel.load(os.path.join(root, name)).get_data()
+            if np.shape(img) == (x_dim, y_dim, z_dim):
+                images[i] = img
+                labels[i] = [0, 1]
+                filenames.append(os.path.join(root, name))
+                i += 1
 
     indices = StratifiedShuffleSplit(labels, test_size=0.4, n_iter=1, random_state=None)
 
-
-    test_index = None
+    train_index, test_index = None, None
     for train_indices, test_indices in indices:
-        x_train = np.asarray(images)[train_indices]
-        x_test = np.asarray(images)[test_indices]
-        y_train = np.asarray(labels)[train_indices]
-        y_test = np.asarray(labels)[test_indices]
-
-        test_index = test_indices
-
+        train_index = train_indices
+        test_index  = test_indices
 
     filename_test = []
     for i, f in enumerate(filenames):
         if i in test_index:
             filename_test.append(f)
 
-    return x_train, x_test, y_train, y_test, filename_test
+    return train_index, test_index, labels, filename_test
+
+def loadInMemory(train_index, test_index, labels):
+    f = h5py.File(scratch_dir + 'ibis.hdf5', 'r')
+    images = f.get('ibis_t1')
+
+    x_train = images[train_index]
+    y_train = labels[train_index]
+    x_test  = images[test_index]
+    y_test  = labels[test_index]
+
+    return x_train, x_text, y_train, y_test
+
 
 
 def model_train(x_train, x_test, y_train, y_test, filename_test):
@@ -156,7 +181,9 @@ if __name__ == "__main__":
     fail_data = images_dir + "T1_Minc_Fail"
     pass_data = images_dir + "T1_Minc_Pass"
 
-    x_train, x_test, y_train, y_test, filename_test = loadData(fail_data, pass_data)
+    train_index, test_index, labels, filename_test = loadData(fail_data, pass_data)
+
+    x_train, x_test, y_train, y_test = loadInMemory(train_index, test_index, labels)
 
     model_train(x_train, x_test, y_train, y_test, filename_test)
     #chooo chooooo
