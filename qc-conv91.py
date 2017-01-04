@@ -89,7 +89,7 @@ def load_data(fail_path, pass_path):
         if i in test_index:
             filename_test.append(f)
 
-    pkl.dump(labels, images_dir + 'labels.pkl')
+    # pkl.dump(labels, images_dir + 'labels.pkl')
 
     return train_index, test_index, labels, filename_test
 
@@ -119,7 +119,7 @@ def model_train(x_train, x_test, y_train, y_test, filename_test):
 
     model = Sequential()
 
-    model.add(Convolution2D(16, 15, 15, border_mode='same', input_shape=(1, 256, 244)))
+    model.add(Convolution2D(16, 15, 15, border_mode='same', input_shape=(1, 256, 224)))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(4, 4)))
     model.add(BatchNormalization())
@@ -174,7 +174,7 @@ def model_train(x_train, x_test, y_train, y_test, filename_test):
 
         test_case = np.reshape(test_case, (1, 1, np.shape(test_case)[1], np.shape(test_case)[2]))
         predictions = model.predict(test_case, batch_size=1)
-        image = np.reshape(test_case[0, 1,...], (256, 244))
+        image = np.reshape(test_case[0, 1,...], (256, 224))
         # plt.imshow(image.T)
         # plt.show()
         print "predictions:", predictions
