@@ -8,6 +8,7 @@ import h5py
 import os
 import nibabel
 
+import cPickle as pkl
 
 import matplotlib.pyplot as plt
 
@@ -61,7 +62,7 @@ def load_data(fail_path, pass_path):
         for name in files:
             img = nibabel.load(os.path.join(root, name)).get_data()
             if np.shape(img) == (x_dim, y_dim, z_dim):
-                images[i] = img
+                images[i] = img[80, :, :]
                 labels[i] = [1, 0]
                 filenames.append(os.path.join(root, name))
                 i += 1
@@ -71,7 +72,7 @@ def load_data(fail_path, pass_path):
         for name in files:
             img = nibabel.load(os.path.join(root, name)).get_data()
             if np.shape(img) == (x_dim, y_dim, z_dim):
-                images[i] = img
+                images[i] = img[80, :, :]
                 labels[i] = [0, 1]
                 filenames.append(os.path.join(root, name))
                 i += 1
@@ -88,16 +89,18 @@ def load_data(fail_path, pass_path):
         if i in test_index:
             filename_test.append(f)
 
+    pkl.dump(labels, images_dir + 'labels.pkl')
+
     return train_index, test_index, labels, filename_test
 
 def load_in_memory(train_index, test_index, labels):
     f = h5py.File(scratch_dir + 'ibis.hdf5', 'r')
     images = f.get('ibis_t1')
 
-    x_train = images[train_index]
-    y_train = labels[train_index]
-    x_test  = images[test_index]
-    y_test  = labels[test_index]
+    x_train = np.array(images)[train_index]
+    y_train = np.array(labels)[train_index]
+    x_test  = np.array(images)[test_index]
+    y_test  = np.array(labels)[test_index]
 
     return x_train, x_text, y_train, y_test
 
@@ -116,7 +119,7 @@ def model_train(x_train, x_test, y_train, y_test, filename_test):
 
     model = Sequential()
 
-    model.add(Convolution2D(16, 15, 15, border_mode='same', input_shape=(1, 160, 256)))
+    model.add(Convolution2D(16, 15, 15, border_mode='same', input_shape=(1, 256, 244)))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(4, 4)))
     model.add(BatchNormalization())
@@ -169,11 +172,11 @@ def model_train(x_train, x_test, y_train, y_test, filename_test):
         test_case = x_test[i,...]
         label = y_test[i]
 
-        test_case = np.reshape(test_case, (1, 3, np.shape(test_case)[1], np.shape(test_case)[2]))
+        test_case = np.reshape(test_case, (1, 1, np.shape(test_case)[1], np.shape(test_case)[2]))
         predictions = model.predict(test_case, batch_size=1)
-        image = np.reshape(test_case[0, 1,...], (160,256))
-        plt.imshow(image.T)
-        plt.show()
+        image = np.reshape(test_case[0, 1,...], (256, 244))
+        # plt.imshow(image.T)
+        # plt.show()
         print "predictions:", predictions
         print "label:", label
 #        print "file:", filename_test[i]
