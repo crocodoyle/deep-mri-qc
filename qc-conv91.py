@@ -148,8 +148,8 @@ def qc_model():
     model.compile(loss='categorical_crossentropy',
                   optimizer='sgd',
                   metrics=["accuracy"])
-	
-	return model
+    
+    return model
 
 def model_train(x_train, x_test, y_train, y_test, filename_test):
 
@@ -205,7 +205,7 @@ def batch(indices, labels, n):
                 samples_this_batch = 0
             elif i == len(indices)-1:
                 yield (x_train[0:samples_this_batch, ...], y_train[0:samples_this_batch, :])
-		samples_this_batch = 0
+        samples_this_batch = 0
 
 if __name__ == "__main__":
     print "Running automatic QC"
@@ -214,13 +214,13 @@ if __name__ == "__main__":
 
     train_indices, test_indices, labels, filename_test = load_data(fail_data, pass_data)
 
-	model = qc_model()
-	model.summary()
+    model = qc_model()
+    model.summary()
     model.fit_generator(batch(train_indices, labels, 2), nb_epoch=num_epochs, samples_per_epoch=len(train_indices), validation_data=batch(test_indices, labels, 2), nb_val_samples=len(test_indices))
 
     model_config = model.get_config()
     pkl.dumps(model_config, 'convnet_2d_model.pkl')
 
     score = model.evaluate_generator(batch(test_indices, labels, 2), len(test_indices))
-	
+    
     #x_train, x_test, y_train, y_test = load_in_memory(train_index, test_index, labels)
