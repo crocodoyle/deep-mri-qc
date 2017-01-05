@@ -8,6 +8,7 @@ import h5py
 import os
 import nibabel
 import cPickle as pkl
+import argparse
 
 import matplotlib.pyplot as plt
 
@@ -156,7 +157,12 @@ if __name__ == "__main__":
     print "Running automatic QC"
     fail_data = images_dir + "T1_Minc_Fail"
     pass_data = images_dir + "T1_Minc_Pass"
-
+	
+	parser = argparse.ArgumentParser("Learn an automatic Quality Control system")
+	parser.add_argument("--images_dir", metavar="i", help="The root of the directory that holds the QC images")
+	parser.add_argument("--labels_file", metavar="l", help="CSV file that contains the labels for the images. The first column should specify a filename, and the second column should include a 0 for FAIL or 1 for PASS.")
+	args = parser.parse_args()
+	
     train_indices, test_indices, labels, filename_test = load_data(fail_data, pass_data)
 
     # define model

@@ -104,17 +104,7 @@ def load_in_memory(train_index, test_index, labels):
 
     return x_train, x_text, y_train, y_test
 
-
-
-def model_train(x_train, x_test, y_train, y_test, filename_test):
-
-    print "shape of training data:", np.shape(x_train)
-    print "shape of testing data:", np.shape(x_test)
-    print "shape of training labels:", np.shape(y_train)
-    print "shape of testing labels:", np.shape(y_test)
-    print "filename list:", len(filename_test)
-
-#    data_dim = 160*256
+def qc_model():
     nb_classes = 2
 
     model = Sequential()
@@ -158,6 +148,19 @@ def model_train(x_train, x_test, y_train, y_test, filename_test):
     model.compile(loss='categorical_crossentropy',
                   optimizer='sgd',
                   metrics=["accuracy"])
+	
+	return model
+
+def model_train(x_train, x_test, y_train, y_test, filename_test):
+
+    print "shape of training data:", np.shape(x_train)
+    print "shape of testing data:", np.shape(x_test)
+    print "shape of training labels:", np.shape(y_train)
+    print "shape of testing labels:", np.shape(y_test)
+    print "filename list:", len(filename_test)
+
+#    data_dim = 160*256
+
 
     model.fit(x_train, y_train,
               nb_epoch=200,
@@ -181,14 +184,43 @@ def model_train(x_train, x_test, y_train, y_test, filename_test):
         print "label:", label
 #        print "file:", filename_test[i]
 
+def batch(indices, labels, n):
+    f = h5py.File(scratch_dir + 'ibis.hdf5', 'r')
+    images = f.get('ibis_t1')
+
+    print images
+    x_train = np.zeros((n, 1, 256, 224), dtype=np.float32)
+    y_train = np.zeros((n, 2), dtype=np.int8)
+
+    while True:
+        np.random.shuffle(indices)
+
+        samples_this_batch = 0
+        for i, index in enumerate(indices):
+            x_train[i%n, 0, :, :] = images[index]
+            y_train[i%n, :]   = labels[index]
+            samples_this_batch += 1
+            if (i+1) % n == 0:
+                yield (x_train, y_train)
+                samples_this_batch = 0
+            elif i == len(indices)-1:
+                yield (x_train[0:samples_this_batch, ...], y_train[0:samples_this_batch, :])
+		samples_this_batch = 0
+
 if __name__ == "__main__":
     print "Running automatic QC"
     fail_data = images_dir + "T1_Minc_Fail"
     pass_data = images_dir + "T1_Minc_Pass"
 
-    train_index, test_index, labels, filename_test = load_data(fail_data, pass_data)
+    train_indices, test_indices, labels, filename_test = load_data(fail_data, pass_data)
 
-    x_train, x_test, y_train, y_test = load_in_memory(train_index, test_index, labels)
+	model = qc_model()
+	model.summary()
+    model.fit_generator(batch(train_indices, labels, 2), nb_epoch=num_epochs, samples_per_epoch=len(train_indices), validation_data=batch(test_indices, labels, 2), nb_val_samples=len(test_indices))
 
-    model_train(x_train, x_test, y_train, y_test, filename_test)
-    #chooo chooooo
+    model_config = model.get_config()
+    pkl.dumps(model_config, 'convnet_2d_model.pkl')
+
+    score = model.evaluate_generator(batch(test_indices, labels, 2), len(test_indices))
+	
+    #x_train, x_test, y_train, y_test = load_in_memory(train_index, test_index, labels)
