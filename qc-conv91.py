@@ -1,6 +1,8 @@
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Convolution2D, MaxPooling2D, Flatten, BatchNormalization, SpatialDropout2D
 from keras.optimizers import SGD
+from keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
+from keras.utils.visualize_util import plot
 
 import numpy as np
 import h5py
@@ -10,12 +12,14 @@ import nibabel
 
 import cPickle as pkl
 
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 from sklearn.cross_validation import StratifiedShuffleSplit
 
 images_dir = '/gs/scratch/adoyle/'
-cluster = True
+cluster = False
 
 if cluster:
     images_dir  = '/gs/scratch/adoyle/'
@@ -49,9 +53,9 @@ def load_data(fail_path, pass_path):
                x_dim = np.shape(img)[0]
                y_dim = np.shape(img)[1]
                z_dim = np.shape(img)[2]
-        for root, dirs, files in os.walk(pass_path, topdown=False):
-            for name in files:
-                numImgs += 1
+    for root, dirs, files in os.walk(pass_path, topdown=False):
+        for name in files:
+            numImgs += 1
 
     images = f.create_dataset('ibis_t1', (numImgs, x_dim, y_dim, z_dim), dtype='float32')
     labels = np.zeros((numImgs, 2), dtype='bool')
@@ -62,7 +66,7 @@ def load_data(fail_path, pass_path):
         for name in files:
             img = nibabel.load(os.path.join(root, name)).get_data()
             if np.shape(img) == (x_dim, y_dim, z_dim):
-                images[i] = img[80, :, :]
+                images[i] = img
                 labels[i] = [1, 0]
                 filenames.append(os.path.join(root, name))
                 i += 1
@@ -72,7 +76,7 @@ def load_data(fail_path, pass_path):
         for name in files:
             img = nibabel.load(os.path.join(root, name)).get_data()
             if np.shape(img) == (x_dim, y_dim, z_dim):
-                images[i] = img[80, :, :]
+                images[i] = img
                 labels[i] = [0, 1]
                 filenames.append(os.path.join(root, name))
                 i += 1
@@ -109,32 +113,38 @@ def qc_model():
 
     model = Sequential()
 
-    model.add(Convolution2D(16, 15, 15, border_mode='same', input_shape=(1, 256, 224)))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(4, 4)))
-    model.add(BatchNormalization())
-#    model.add(SpatialDropout2D(0.5))
-
-    model.add(Convolution2D(12, 12, 12, border_mode='same'))
-    model.add(Activation('relu'))
-#    model.add(MaxPooling2D(pool_size=(3, 3)))
-#    model.add(SpatialDropout2D(0.5))
-
-    model.add(Convolution2D(12, 5, 5, border_mode='same'))
+    model.add(Convolution2D(16, 3, 3, border_mode='same', input_shape=(1, 256, 224)))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
-#    model.add(SpatialDropout2D(0.2))
-#
-    model.add(Convolution2D(12, 3, 3, border_mode='same'))
-    model.add(Activation('relu'))
-    #    model.add(SpatialDropout2D(0.5))
+    model.add(BatchNormalization())
+    model.add(SpatialDropout2D(0.2))
 
-    model.add(Convolution2D(12, 3, 3, border_mode='same'))
+    model.add(Convolution2D(32, 3, 3, border_mode='same'))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(SpatialDropout2D(0.2))
+
+    model.add(Convolution2D(32, 3, 3, border_mode='same'))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(SpatialDropout2D(0.2))
+
+    model.add(Convolution2D(64, 3, 3, border_mode='same'))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(SpatialDropout2D(0.2))
+
+    model.add(Convolution2D(64, 3, 3, border_mode='same'))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(SpatialDropout2D(0.3))
+
+    model.add(Convolution2D(128, 3, 3, border_mode='same'))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(SpatialDropout2D(0.4))
 
-    model.add(Convolution2D(12, 2, 2, border_mode='same'))
+    model.add(Convolution2D(256, 3, 3, border_mode='same'))
     model.add(Activation('relu'))
     model.add(SpatialDropout2D(0.5))
 
@@ -145,11 +155,17 @@ def qc_model():
     model.add(Dense(nb_classes, init='uniform'))
     model.add(Activation('softmax'))
 
+    sgd = SGD(lr=0.0001, momentum=0.9, decay=0.0, nesterov=True)
+
     model.compile(loss='categorical_crossentropy',
-                  optimizer='sgd',
+                  optimizer=sgd,
                   metrics=["accuracy"])
     
     return model
+
+def calculate_model_performance():
+
+    return sensitivity, specificity
 
 def model_train(x_train, x_test, y_train, y_test, filename_test):
 
@@ -184,7 +200,7 @@ def model_train(x_train, x_test, y_train, y_test, filename_test):
         print "label:", label
 #        print "file:", filename_test[i]
 
-def batch(indices, labels, n):
+def batch(indices, labels, n, random_slice=False):
     f = h5py.File(scratch_dir + 'ibis.hdf5', 'r')
     images = f.get('ibis_t1')
 
@@ -197,7 +213,11 @@ def batch(indices, labels, n):
 
         samples_this_batch = 0
         for i, index in enumerate(indices):
-            x_train[i%n, 0, :, :] = images[index]
+            if random_slice:
+                rn=np.random.randint(-5,5)
+            else:
+                rn=0
+            x_train[i%n, 0, :, :] = images[index, 80+rn, :, :]
             y_train[i%n, :]   = labels[index]
             samples_this_batch += 1
             if (i+1) % n == 0:
@@ -216,11 +236,25 @@ if __name__ == "__main__":
 
     model = qc_model()
     model.summary()
-    model.fit_generator(batch(train_indices, labels, 2), nb_epoch=num_epochs, samples_per_epoch=len(train_indices), validation_data=batch(test_indices, labels, 2), nb_val_samples=len(test_indices))
+    plot(model, to_file="model.png")
 
-    model_config = model.get_config()
-    pkl.dumps(model_config, 'convnet_2d_model.pkl')
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=4, min_lr=0.001)
+    stop_early = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
+    model_checkpoint = ModelCheckpoint("models/model.{epoch:02d}-{val_acc:.2f}.hdf5", monitor="val_acc", verbose=0, save_best_only=False, save_weights_only=False, mode='auto')
 
-    score = model.evaluate_generator(batch(test_indices, labels, 2), len(test_indices))
-    
-    #x_train, x_test, y_train, y_test = load_in_memory(train_index, test_index, labels)
+    hist = model.fit_generator(batch(train_indices, labels, 2,True), nb_epoch=600, samples_per_epoch=len(train_indices), validation_data=batch(test_indices, labels, 2), nb_val_samples=len(test_indices), callbacks=[model_checkpoint])
+
+    print hist.history.keys()
+
+    epoch_num = range(len(hist.history['acc']))
+    train_error = np.subtract(1,np.array(hist.history['acc']))
+    test_error  = np.subtract(1,np.array(hist.history['val_acc']))
+    plt.plot(epoch_num, train_error, label='Training Error')
+    plt.plot(epoch_num, test_error, label="Testing Error")
+    plt.legend(shadow=True)
+    plt.xlabel("Training Epoch Number")
+    plt.ylabel("Error")
+    plt.savefig('results.png')
+    plt.close()
+
+    model.save('conv-2d.hdf5')
