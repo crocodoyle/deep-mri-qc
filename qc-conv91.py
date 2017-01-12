@@ -17,6 +17,8 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 from sklearn.cross_validation import StratifiedShuffleSplit
+from sklearn.metrics import confusion_matrix
+
 
 images_dir = '/gs/scratch/adoyle/'
 cluster = False
@@ -40,6 +42,8 @@ def load_data(fail_path, pass_path):
     f = h5py.File(scratch_dir + 'ibis.hdf5', 'w')
 
 
+    max_pass = 1000
+
     # First loop through the data we need to count the number of files
     # also check dims
     numImgs = 0
@@ -56,6 +60,10 @@ def load_data(fail_path, pass_path):
     for root, dirs, files in os.walk(pass_path, topdown=False):
         for name in files:
             numImgs += 1
+            if numImgs > max_pass:
+                break
+        if numImgs > max_pass:
+            break
 
     images = f.create_dataset('ibis_t1', (numImgs, x_dim, y_dim, z_dim), dtype='float32')
     labels = np.zeros((numImgs, 2), dtype='bool')
@@ -80,8 +88,12 @@ def load_data(fail_path, pass_path):
                 labels[i] = [0, 1]
                 filenames.append(os.path.join(root, name))
                 i += 1
+            if i > max_pass:
+                break
+        if i > max_pass:
+            break
 
-    indices = StratifiedShuffleSplit(labels, test_size=0.4, n_iter=1, random_state=None)
+    indices = StratifiedShuffleSplit(labels, test_size=0.3, n_iter=1, random_state=None)
 
     train_index, test_index = None, None
     for train_indices, test_indices in indices:
@@ -152,20 +164,21 @@ def qc_model():
     model.add(Dense(256, init='uniform'))
     model.add(Activation('relu'))
     model.add(Dropout(0.5))
+
+    model.add(Dense(256, init='uniform'))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+
     model.add(Dense(nb_classes, init='uniform'))
     model.add(Activation('softmax'))
 
-    sgd = SGD(lr=0.0001, momentum=0.9, decay=0.0, nesterov=True)
+    sgd = SGD(lr=1e-3, momentum=0.9, decay=1e-6, nesterov=True)
 
     model.compile(loss='categorical_crossentropy',
                   optimizer=sgd,
                   metrics=["accuracy"])
-    
+
     return model
-
-def calculate_model_performance():
-
-    return sensitivity, specificity
 
 def model_train(x_train, x_test, y_train, y_test, filename_test):
 
@@ -204,7 +217,6 @@ def batch(indices, labels, n, random_slice=False):
     f = h5py.File(scratch_dir + 'ibis.hdf5', 'r')
     images = f.get('ibis_t1')
 
-    print images
     x_train = np.zeros((n, 1, 256, 224), dtype=np.float32)
     y_train = np.zeros((n, 2), dtype=np.int8)
 
@@ -214,7 +226,7 @@ def batch(indices, labels, n, random_slice=False):
         samples_this_batch = 0
         for i, index in enumerate(indices):
             if random_slice:
-                rn=np.random.randint(-5,5)
+                rn=np.random.randint(-4,4)
             else:
                 rn=0
             x_train[i%n, 0, :, :] = images[index, 80+rn, :, :]
@@ -226,6 +238,24 @@ def batch(indices, labels, n, random_slice=False):
             elif i == len(indices)-1:
                 yield (x_train[0:samples_this_batch, ...], y_train[0:samples_this_batch, :])
         samples_this_batch = 0
+
+def test_images(model, test_indices, labels, filename_test):
+    f = h5py.File(scratch_dir + 'ibis.hdf5', 'r')
+    images = f.get('ibis_t1')
+
+    predictions = np.zeros((len(test_indices)))
+    actual = np.zeros((len(test_indices)))
+
+    for i, index in enumerate(test_indices):
+        predictions[i] = model.predict_on_batch(images[index,80, :, :])[0]
+        actual[i] = labels[i][0]
+        plt.imshow(images[index,80,:,:])
+        plt.savefig('/home/adoyle/images/' + filename_test[i])
+
+    conf = confusion_matrix(labels[test_indices], predictions)
+    print conf
+
+    return conf
 
 if __name__ == "__main__":
     print "Running automatic QC"
@@ -240,9 +270,27 @@ if __name__ == "__main__":
 
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=4, min_lr=0.001)
     stop_early = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-    model_checkpoint = ModelCheckpoint("models/model.{epoch:02d}-{val_acc:.2f}.hdf5", monitor="val_acc", verbose=0, save_best_only=False, save_weights_only=False, mode='auto')
+    model_checkpoint = ModelCheckpoint("models/best_model.hdf5", monitor="val_acc", verbose=0, save_best_only=True, save_weights_only=False, mode='auto')
 
-    hist = model.fit_generator(batch(train_indices, labels, 2,True), nb_epoch=600, samples_per_epoch=len(train_indices), validation_data=batch(test_indices, labels, 2), nb_val_samples=len(test_indices), callbacks=[model_checkpoint])
+    hist = model.fit_generator(batch(train_indices, labels, 2,True), nb_epoch=500, samples_per_epoch=len(train_indices), validation_data=batch(test_indices, labels, 2), nb_val_samples=len(test_indices), callbacks=[model_checkpoint])
+
+
+    model.load_weights('models/best_model.hdf5')
+
+
+    test_scores = []
+    for test_run in range(10):
+        score = model.evaluate_generator(batch(test_indices, labels, 2, True), len(test_indices))
+        test_scores.append(score[1])
+
+    test_images(model, test_indices, labels, filename_test)
+
+
+    print 'scores:', test_scores
+    print 'average score', np.mean(test_scores)
+
+
+    print model.metrics_names
 
     print hist.history.keys()
 
