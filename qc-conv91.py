@@ -239,7 +239,7 @@ def batch(indices, labels, n, random_slice=False):
                 yield (x_train[0:samples_this_batch, ...], y_train[0:samples_this_batch, :])
         samples_this_batch = 0
 
-def test_images(model, test_indices, labels, filename_test):
+def test_images(model, test_indices, labels, filename_test, slice_modifier):
     f = h5py.File(scratch_dir + 'ibis.hdf5', 'r')
     images = f.get('ibis_t1')
 
@@ -247,15 +247,17 @@ def test_images(model, test_indices, labels, filename_test):
     actual = np.zeros((len(test_indices)))
 
     for i, index in enumerate(test_indices):
-        predictions[i] = model.predict_on_batch(images[index,80, :, :])[0]
+        predictions[i] = model.predict_on_batch(images[index,80+slice_modifier, :, :])[0]
         actual[i] = labels[i][0]
         plt.imshow(images[index,80,:,:])
         plt.savefig('/home/adoyle/images/' + filename_test[i])
 
-    conf = confusion_matrix(labels[test_indices], predictions)
-    print conf
+    tn, fp, fn, tp = confusion_matrix(labels[test_indices], predictions).ravel()
 
-    return conf
+    sensitivity = tp / (tp + fn)
+    specificity = tn / (tn + fp)
+
+    return sensitivity, specificity
 
 if __name__ == "__main__":
     print "Running automatic QC"
@@ -272,22 +274,28 @@ if __name__ == "__main__":
     stop_early = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
     model_checkpoint = ModelCheckpoint("models/best_model.hdf5", monitor="val_acc", verbose=0, save_best_only=True, save_weights_only=False, mode='auto')
 
-    hist = model.fit_generator(batch(train_indices, labels, 2,True), nb_epoch=500, samples_per_epoch=len(train_indices), validation_data=batch(test_indices, labels, 2), nb_val_samples=len(test_indices), callbacks=[model_checkpoint])
+    hist = model.fit_generator(batch(train_indices, labels, 2,True), nb_epoch=100, samples_per_epoch=len(train_indices), validation_data=batch(test_indices, labels, 2), nb_val_samples=len(test_indices), callbacks=[model_checkpoint])
 
 
     model.load_weights('models/best_model.hdf5')
 
 
     test_scores = []
-    for test_run in range(10):
+    sensitivities = []
+    specificities = []
+
+    for test_run in range(-5, 5):
         score = model.evaluate_generator(batch(test_indices, labels, 2, True), len(test_indices))
         test_scores.append(score[1])
 
-    test_images(model, test_indices, labels, filename_test)
-
+        sens, spec = test_images(model, test_indices, labels, filename_test, test_run)
+        sensitivities.append(sens)
+        specificities.append(spec)
 
     print 'scores:', test_scores
     print 'average score', np.mean(test_scores)
+    print 'average sensitivity', np.mean(sensitivities)
+    print 'average specificity', np.mean(specificities)
 
 
     print model.metrics_names
