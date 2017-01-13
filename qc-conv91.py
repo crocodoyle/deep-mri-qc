@@ -100,14 +100,9 @@ def load_data(fail_path, pass_path):
         train_index = train_indices
         test_index  = test_indices
 
-    filename_test = []
-    for i, f in enumerate(filenames):
-        if i in test_index:
-            filename_test.append(f)
-
     # pkl.dump(labels, images_dir + 'labels.pkl')
 
-    return train_index, test_index, labels, filename_test
+    return train_index, test_index, labels, filenames
 
 def load_in_memory(train_index, test_index, labels):
     f = h5py.File(scratch_dir + 'ibis.hdf5', 'r')
@@ -239,20 +234,47 @@ def batch(indices, labels, n, random_slice=False):
                 yield (x_train[0:samples_this_batch, ...], y_train[0:samples_this_batch, :])
         samples_this_batch = 0
 
-def test_images(model, test_indices, labels, filename_test, slice_modifier):
+def test_images(model, test_indices, labels, filename_test, slice_modifier, save_imgs=False):
     f = h5py.File(scratch_dir + 'ibis.hdf5', 'r')
     images = f.get('ibis_t1')
 
     predictions = np.zeros((len(test_indices)))
     actual = np.zeros((len(test_indices)))
 
-    for i, index in enumerate(test_indices):
-        predictions[i] = model.predict_on_batch(images[index,80+slice_modifier, :, :])[0]
-        actual[i] = labels[i][0]
-        plt.imshow(images[index,80,:,:])
-        plt.savefig('/home/adoyle/images/' + filename_test[i])
+    predict_batch = np.zeros((1, 1, 256, 224))
 
-    tn, fp, fn, tp = confusion_matrix(labels[test_indices], predictions).ravel()
+    print "test indices:", len(test_indices)
+    print "test index max:", max(test_indices)
+    print "labels:", len(labels)
+    print "filenames:", len(filename_test)
+
+    for i, index in enumerate(test_indices):
+        predict_batch[0,0,:,:] = images[index, 80+slice_modifier,:,:]
+
+        prediction = model.predict_on_batch(predict_batch)[0][0]
+        if prediction >= 0.5:
+            predictions[i] = 1
+        else:
+            predictions[i] = 0
+        actual[i] = labels[index][0]
+
+        if save_imgs:
+            plt.imshow(images[index,80,:,:])
+            if predictions[i] == 1 and actual[i] == 1:
+                plt.savefig('/home/adoyle/images/fail_right_' + os.path.basename(filename_test[i]) + ".png")
+            elif predictions[i] == 0 and actual[i] == 0:
+                plt.savefig('/home/adoyle/images/pass_right' + os.path.basename(filename_test[i]) + '.png')
+            elif predictions[i] == 1 and actual[i] == 0:
+                plt.savefig('/home/adoyle/images/pass_wrong_' + os.path.basename(filename_test[i]) + '.png')
+            elif predictions[i]  == 0 and actual[i] == 1:
+                plt.savefig('/home/adoyle/images/fail_wrong_' + os.path.basename(filename_test[i]) + '.png')
+            plt.clf()
+
+    conf = confusion_matrix(actual, predictions)
+    print 'Confusion Matrix'
+    print conf
+
+    tn, fp, fn, tp = conf.ravel()
 
     sensitivity = tp / (tp + fn)
     specificity = tn / (tn + fp)
@@ -264,7 +286,7 @@ if __name__ == "__main__":
     fail_data = images_dir + "T1_Minc_Fail"
     pass_data = images_dir + "T1_Minc_Pass"
 
-    train_indices, test_indices, labels, filename_test = load_data(fail_data, pass_data)
+    train_indices, test_indices, labels, filenames = load_data(fail_data, pass_data)
 
     model = qc_model()
     model.summary()
@@ -274,7 +296,7 @@ if __name__ == "__main__":
     stop_early = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
     model_checkpoint = ModelCheckpoint("models/best_model.hdf5", monitor="val_acc", verbose=0, save_best_only=True, save_weights_only=False, mode='auto')
 
-    hist = model.fit_generator(batch(train_indices, labels, 2,True), nb_epoch=100, samples_per_epoch=len(train_indices), validation_data=batch(test_indices, labels, 2), nb_val_samples=len(test_indices), callbacks=[model_checkpoint])
+    hist = model.fit_generator(batch(train_indices, labels, 2,True), nb_epoch=300, samples_per_epoch=len(train_indices), validation_data=batch(test_indices, labels, 2), nb_val_samples=len(test_indices), callbacks=[model_checkpoint], class_weight = {0:.7, 1:.3})
 
 
     model.load_weights('models/best_model.hdf5')
@@ -288,7 +310,14 @@ if __name__ == "__main__":
         score = model.evaluate_generator(batch(test_indices, labels, 2, True), len(test_indices))
         test_scores.append(score[1])
 
-        sens, spec = test_images(model, test_indices, labels, filename_test, test_run)
+
+        if test_run == 0:
+            sens, spec = test_images(model, test_indices, labels, filenames, test_run, save_imgs=True)
+        else:
+            sens, spec = test_images(model, test_indices, labels, filenames, test_run, save_imgs=False)
+        print "sensitivity:", sens
+        print "specificity:", spec
+
         sensitivities.append(sens)
         specificities.append(spec)
 
@@ -305,6 +334,8 @@ if __name__ == "__main__":
     epoch_num = range(len(hist.history['acc']))
     train_error = np.subtract(1,np.array(hist.history['acc']))
     test_error  = np.subtract(1,np.array(hist.history['val_acc']))
+
+    plt.clf()
     plt.plot(epoch_num, train_error, label='Training Error')
     plt.plot(epoch_num, test_error, label="Testing Error")
     plt.legend(shadow=True)
