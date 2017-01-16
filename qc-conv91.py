@@ -129,17 +129,17 @@ def qc_model():
     model.add(Convolution2D(32, 3, 3, border_mode='same'))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(SpatialDropout2D(0.2))
+    model.add(SpatialDropout2D(0.3))
 
     model.add(Convolution2D(32, 3, 3, border_mode='same'))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(SpatialDropout2D(0.2))
+    model.add(SpatialDropout2D(0.3))
 
     model.add(Convolution2D(64, 3, 3, border_mode='same'))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2,2)))
-    model.add(SpatialDropout2D(0.2))
+    model.add(SpatialDropout2D(0.3))
 
     model.add(Convolution2D(64, 3, 3, border_mode='same'))
     model.add(Activation('relu'))
@@ -274,10 +274,24 @@ def test_images(model, test_indices, labels, filename_test, slice_modifier, save
     print 'Confusion Matrix'
     print conf
 
-    tn, fp, fn, tp = conf.ravel()
+    print np.shape(conf)
 
-    sensitivity = tp / (tp + fn)
-    specificity = tn / (tn + fp)
+    tn = conf[0][0]
+    tp = conf[1][1]
+    fn = conf[0][1]
+    fp = conf[1][0]
+
+    print 'true negatives:', tn
+    print 'true positives:', tp
+    print 'false negatives:', fn
+    print 'false positives:', fp
+
+    sensitivity = float(tp) / (float(tp) + float(fn))
+    specificity = float(tn) / (float(tn) + float(fp))
+
+
+    print 'sens:', sensitivity
+    print 'spec:', specificity
 
     return sensitivity, specificity
 
@@ -296,7 +310,7 @@ if __name__ == "__main__":
     stop_early = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
     model_checkpoint = ModelCheckpoint("models/best_model.hdf5", monitor="val_acc", verbose=0, save_best_only=True, save_weights_only=False, mode='auto')
 
-    hist = model.fit_generator(batch(train_indices, labels, 2,True), nb_epoch=300, samples_per_epoch=len(train_indices), validation_data=batch(test_indices, labels, 2), nb_val_samples=len(test_indices), callbacks=[model_checkpoint], class_weight = {0:.7, 1:.3})
+    hist = model.fit_generator(batch(train_indices, labels, 2,True), nb_epoch=400, samples_per_epoch=len(train_indices), validation_data=batch(test_indices, labels, 2), nb_val_samples=len(test_indices), callbacks=[model_checkpoint], class_weight = {0:.7, 1:.3})
 
 
     model.load_weights('models/best_model.hdf5')
