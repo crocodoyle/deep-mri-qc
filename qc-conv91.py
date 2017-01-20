@@ -19,6 +19,8 @@ import matplotlib.pyplot as plt
 from sklearn.cross_validation import StratifiedShuffleSplit
 from sklearn.metrics import confusion_matrix
 
+import argparse
+
 
 images_dir = '/gs/scratch/adoyle/'
 cluster = False
@@ -95,14 +97,22 @@ def load_data(fail_path, pass_path):
 
     indices = StratifiedShuffleSplit(labels, test_size=0.3, n_iter=1, random_state=None)
 
-    train_index, test_index = None, None
+    train_index, validation_index, test_index = None, None, None
     for train_indices, test_indices in indices:
         train_index = train_indices
         test_index  = test_indices
 
+    validation_indices = StratifiedShuffleSplit(labels[test_index], test_size=0.5, n_iter=1, random_state=None)
+    for val_indices, test_indices in validation_indices:
+        validation_index = val_indices
+        test_index = test_indices
     # pkl.dump(labels, images_dir + 'labels.pkl')
 
-    return train_index, test_index, labels, filenames
+    print "training images:", len(train_index)
+    print "validation images:", len(validation_index)
+    print "test_index:", len(test_index)
+
+    return train_index, validation_index, test_index, labels, filenames
 
 def load_in_memory(train_index, test_index, labels):
     f = h5py.File(scratch_dir + 'ibis.hdf5', 'r')
@@ -175,39 +185,6 @@ def qc_model():
 
     return model
 
-def model_train(x_train, x_test, y_train, y_test, filename_test):
-
-    print "shape of training data:", np.shape(x_train)
-    print "shape of testing data:", np.shape(x_test)
-    print "shape of training labels:", np.shape(y_train)
-    print "shape of testing labels:", np.shape(y_test)
-    print "filename list:", len(filename_test)
-
-#    data_dim = 160*256
-
-
-    model.fit(x_train, y_train,
-              nb_epoch=200,
-              batch_size=50)
-    #should return model to workspace so that I can keep training it
-
-    score = model.evaluate(x_test, y_test, batch_size=10)
-    print model.metrics_names
-    print score
-
-    for i in range(len(x_test)):
-        test_case = x_test[i,...]
-        label = y_test[i]
-
-        test_case = np.reshape(test_case, (1, 1, np.shape(test_case)[1], np.shape(test_case)[2]))
-        predictions = model.predict(test_case, batch_size=1)
-        image = np.reshape(test_case[0, 1,...], (256, 224))
-        # plt.imshow(image.T)
-        # plt.show()
-        print "predictions:", predictions
-        print "label:", label
-#        print "file:", filename_test[i]
-
 def batch(indices, labels, n, random_slice=False):
     f = h5py.File(scratch_dir + 'ibis.hdf5', 'r')
     images = f.get('ibis_t1')
@@ -263,7 +240,7 @@ def test_images(model, test_indices, labels, filename_test, slice_modifier, save
             if predictions[i] == 1 and actual[i] == 1:
                 plt.savefig('/home/adoyle/images/fail_right_' + os.path.basename(filename_test[i]) + ".png")
             elif predictions[i] == 0 and actual[i] == 0:
-                plt.savefig('/home/adoyle/images/pass_right' + os.path.basename(filename_test[i]) + '.png')
+                plt.savefig('/home/adoyle/images/pass_right_' + os.path.basename(filename_test[i]) + '.png')
             elif predictions[i] == 1 and actual[i] == 0:
                 plt.savefig('/home/adoyle/images/pass_wrong_' + os.path.basename(filename_test[i]) + '.png')
             elif predictions[i]  == 0 and actual[i] == 1:
@@ -276,10 +253,10 @@ def test_images(model, test_indices, labels, filename_test, slice_modifier, save
 
     print np.shape(conf)
 
-    tn = conf[0][0]
-    tp = conf[1][1]
-    fn = conf[0][1]
-    fp = conf[1][0]
+    tp = conf[0][0]
+    tn = conf[1][1]
+    fp = conf[0][1]
+    fn = conf[1][0]
 
     print 'true negatives:', tn
     print 'true positives:', tp
@@ -300,7 +277,33 @@ if __name__ == "__main__":
     fail_data = images_dir + "T1_Minc_Fail"
     pass_data = images_dir + "T1_Minc_Pass"
 
-    train_indices, test_indices, labels, filenames = load_data(fail_data, pass_data)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--imagesdir", help="directory that contains the input images")
+    parser.add_argument("--cluster", help="specifies whether training is done on a cluster")
+    parser.add_argument("--scratchdir", help="directory to use for gathering image data on cluster")
+    parser.add_argument("--train", help="specifies to train a new model")
+    parser.add_argument("--model", help="path to model file to load, to continue a training run or just do testing")
+    parser.add_argument("--epochs", help="number of epochs to train the model", type=int)
+    args = parser.parse_args()
+
+    if args.imagesdir:
+        images_dir = args.imagesdir
+    if args.cluster:
+        cluster = args.cluster
+    if args.scratchdir:
+        scratch_dir = args.scratchdir
+    if args.train:
+        do_training = True
+    if args.model:
+        load_model = True
+        model_to_load = args.model
+    if args.epochs:
+        nb_epoch = args.epochs
+
+    print "command line arguments"
+    print args
+
+    train_indices, validation_indices, test_indices, labels, filenames = load_data(fail_data, pass_data)
 
     model = qc_model()
     model.summary()
@@ -310,7 +313,7 @@ if __name__ == "__main__":
     stop_early = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
     model_checkpoint = ModelCheckpoint("models/best_model.hdf5", monitor="val_acc", verbose=0, save_best_only=True, save_weights_only=False, mode='auto')
 
-    hist = model.fit_generator(batch(train_indices, labels, 2,True), nb_epoch=400, samples_per_epoch=len(train_indices), validation_data=batch(test_indices, labels, 2), nb_val_samples=len(test_indices), callbacks=[model_checkpoint], class_weight = {0:.7, 1:.3})
+    hist = model.fit_generator(batch(train_indices, labels, 2,True), nb_epoch=400, samples_per_epoch=len(train_indices), validation_data=batch(validation_indices, labels, 2), nb_val_samples=len(validation_indices), callbacks=[model_checkpoint], class_weight = {0:.7, 1:.3})
 
 
     model.load_weights('models/best_model.hdf5')
@@ -351,11 +354,9 @@ if __name__ == "__main__":
 
     plt.clf()
     plt.plot(epoch_num, train_error, label='Training Error')
-    plt.plot(epoch_num, test_error, label="Testing Error")
+    plt.plot(epoch_num, test_error, label="Validation Error")
     plt.legend(shadow=True)
     plt.xlabel("Training Epoch Number")
     plt.ylabel("Error")
     plt.savefig('results.png')
     plt.close()
-
-    model.save('conv-2d.hdf5')
