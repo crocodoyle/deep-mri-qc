@@ -1,6 +1,6 @@
 from keras.models import Model
 from keras.layers import Input, Dense, Dropout, Activation, Convolution2D, MaxPooling2D, Flatten, BatchNormalization, SpatialDropout2D, merge
-from keras.layers import Convolution3D, MaxPooling3D, SpatialDropout3D
+from keras.layers import Convolution3D, MaxPooling3D, SpatialDropout3D, UpSampling3D
 
 from keras.optimizers import SGD, Adam
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
