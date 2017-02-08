@@ -1,5 +1,5 @@
 from keras.models import Model
-from keras.layers import InputDense, Dropout, Activation, Convolution2D, MaxPooling2D, Flatten, BatchNormalization, SpatialDropout2D, merge
+from keras.layers import Input, Dense, Dropout, Activation, Convolution2D, MaxPooling2D, Flatten, BatchNormalization, SpatialDropout2D, merge
 from keras.layers import Convolution3D, MaxPooling3D, SpatialDropout3D
 
 from keras.optimizers import SGD, Adam
@@ -26,7 +26,7 @@ from sklearn.metrics import confusion_matrix
 import argparse
 
 
-images_dir = '/data1/'
+images_dir = '/data1/MICCAI_2012_MALF'
 scratch_dir = images_dir
 
 def load_oasis():
@@ -169,10 +169,13 @@ def test_images(model):
     images = f.get('oasis')
     labels = f.get('oasis_labels')
 
+    model.predict()
 
 
+    dice = 0
 
-    return sensitivity, specificity
+
+    return dice
 
 if __name__ == "__main__":
     print "Running segmentation"
@@ -181,6 +184,7 @@ if __name__ == "__main__":
 
     model = segmentation_model()
     model.summary()
+
     plot(model, to_file="segmentation_model.png")
 
 
