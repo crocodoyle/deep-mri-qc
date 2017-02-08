@@ -59,7 +59,7 @@ def load_oasis():
     i = 0
     for root, dirs, files in os.walk(images_dir, topdown=False):
         for name in files:
-            if ".nii.gz" in name:
+            if "T1_norm-stx152lin.nii.gz" in name:
                 img = nibabel.load(os.path.join(root, name)).get_data()
                 if "T1_norm-stx152lin.nii.gz" in name and np.shape(img) == (x_dim, y_dim, z_dim):
                     images[i] = img
