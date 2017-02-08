@@ -118,22 +118,26 @@ def segmentation_model():
 
     conv5 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(pool4)
     conv5 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(conv5)
+    pool5 = MaxPooling3D(pool_size=(3,3,3))(conv5)
 
-    up6 = merge([UpSampling3D(size=(2,2,2))(conv5), conv4], mode='concat', concat_axis=1)
-    conv6 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(up6)
-    conv6 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(conv6)
+    conv6 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(pool5)
+    conv6 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(pool6)
 
-    up7 = merge([UpSampling3D(size=(2,2,2))(conv6), conv3], mode='concat', concat_axis=1)
+    up7 = merge([UpSampling3D(size=(2,2,2))(conv6), conv5], mode='concat', concat_axis=1)
     conv7 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(up7)
     conv7 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(conv7)
 
-    up8 = merge([UpSampling3D(size=(2,2,2))(conv7), conv2], mode='concat', concat_axis=1)
+    up8 = merge([UpSampling3D(size=(2,2,2))(conv7), conv4], mode='concat', concat_axis=1)
     conv8 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(up8)
     conv8 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(conv8)
 
-    up9 = merge([UpSampling3D(size=(2,2,2))(conv8), conv1], mode='concat', concat_axis=1)
+    up9 = merge([UpSampling3D(size=(2,2,2))(conv8), conv3], mode='concat', concat_axis=1)
     conv9 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(up9)
     conv9 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(conv9)
+
+    up10 = merge([UpSampling3D(size=(2,2,2))(conv9), conv2], mode='concat', concat_axis=1)
+    conv10 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(up10)
+    conv10 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(conv10)
 
     conv10 = Convolution3D(13, 1, 1, 1, activation='sigmoid')(conv9)
 
