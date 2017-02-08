@@ -56,6 +56,7 @@ def load_oasis():
     images = f.create_dataset('oasis', (numImgs, x_dim, y_dim, z_dim), dtype='float32')
     labels = f.create_dataset('oasis_labels', (numImgs, x_dim, y_dim, z_dim), dtype='short')
 
+    i = 0
     for root, dirs, files in os.walk(images_dir, topdown=False):
         for name in files:
             if ".nii.gz" in name:
@@ -66,6 +67,7 @@ def load_oasis():
                     labels[i] = img
 
                     patient_id.append(root)
+                    i += 1
 
     f.close()
 
