@@ -100,9 +100,9 @@ def segmentation_model():
 
     inputs = Input(shape=(1, 181, 217, 181))
 
-    conv1 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(inputs)
-    conv1 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(conv1)
-    pool1 = MaxPooling3D(pool_size=(3,3,3))(conv1)
+    conv1 = Convolution3D(16, 3, 4, 3, activation='relu', border_mode='same')(inputs)
+    conv1 = Convolution3D(16, 3, 4, 3, activation='relu', border_mode='same')(conv1)
+    pool1 = MaxPooling3D(pool_size=(2,2,2))(conv1)
 
     conv2 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(pool1)
     conv2 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(conv2)
