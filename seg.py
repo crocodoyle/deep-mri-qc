@@ -121,7 +121,7 @@ def segmentation_model():
     pool5 = MaxPooling3D(pool_size=(2,2,2))(conv5)
 
     conv6 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(pool5)
-    conv6 = Convolution3D(16, 4, 3, 4, activation='relu', border_mode='same')(conv6)
+    conv6 = Convolution3D(16, 4, 3, 4, activation='relu', border_mode='valid')(conv6)
     pool6 = MaxPooling3D(pool_size=(2,2,2))(conv6)
 
     conv7 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(pool6)
