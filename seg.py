@@ -75,10 +75,7 @@ def load_oasis():
 
     ss = ShuffleSplit(n_splits=1, test_size=0.2)
 
-    ret_val = ss.split(index)
-    print ret_val
-    print np.shape(ret_val)
-    #train_index, other_index    = ss.split(index)
+    train_index, other_index    = ss.split(index).next()
     validation_index            = other_indices[::2]  # even
     test_index                  = other_indices[1::2] # odd
 
