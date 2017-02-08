@@ -102,46 +102,50 @@ def segmentation_model():
 
     conv1 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(inputs)
     conv1 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(conv1)
-    pool1 = MaxPooling3D(pool_size=(3,3,3))(conv1)
+    pool1 = MaxPooling3D(pool_size=(2,2,2))(conv1)
 
     conv2 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(pool1)
     conv2 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(conv2)
-    pool2 = MaxPooling3D(pool_size=(3,3,3))(conv2)
+    pool2 = MaxPooling3D(pool_size=(2,2,2))(conv2)
 
     conv3 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(pool2)
     conv3 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(conv3)
-    pool3 = MaxPooling3D(pool_size=(3,3,3))(conv3)
+    pool3 = MaxPooling3D(pool_size=(2,2,2))(conv3)
 
     conv4 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(pool3)
     conv4 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(conv4)
-    pool4 = MaxPooling3D(pool_size=(3,3,3))(conv4)
+    pool4 = MaxPooling3D(pool_size=(2,2,2))(conv4)
 
     conv5 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(pool4)
     conv5 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(conv5)
-    pool5 = MaxPooling3D(pool_size=(3,3,3))(conv5)
+    pool5 = MaxPooling3D(pool_size=(2,2,2))(conv5)
 
     conv6 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(pool5)
     conv6 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(conv6)
+    pool6 = MaxPooling3D(pool_size=(2,2,2))(conv6)
 
-    up7 = merge([UpSampling3D(size=(2,2,2))(conv6), conv5], mode='concat', concat_axis=1)
-    conv7 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(up7)
+    conv7 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(pool6)
     conv7 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(conv7)
 
-    up8 = merge([UpSampling3D(size=(2,2,2))(conv7), conv4], mode='concat', concat_axis=1)
+    up8 = merge([UpSampling3D(size=(2,2,2))(conv7), conv6], mode='concat', concat_axis=1)
     conv8 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(up8)
     conv8 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(conv8)
 
-    up9 = merge([UpSampling3D(size=(2,2,2))(conv8), conv3], mode='concat', concat_axis=1)
+    up9 = merge([UpSampling3D(size=(2,2,2))(conv7), conv4], mode='concat', concat_axis=1)
     conv9 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(up9)
     conv9 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(conv9)
 
-    up10 = merge([UpSampling3D(size=(2,2,2))(conv9), conv2], mode='concat', concat_axis=1)
+    up10 = merge([UpSampling3D(size=(2,2,2))(conv8), conv3], mode='concat', concat_axis=1)
     conv10 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(up10)
     conv10 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(conv10)
 
-    conv10 = Convolution3D(13, 1, 1, 1, activation='sigmoid')(conv9)
+    up11 = merge([UpSampling3D(size=(2,2,2))(conv9), conv2], mode='concat', concat_axis=1)
+    conv11 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(up11)
+    conv11 = Convolution3D(16, 3, 3, 3, activation='relu', border_mode='same')(conv11)
 
-    model = Model(input=inputs, output=conv10)
+    conv12 = Convolution3D(13, 1, 1, 1, activation='sigmoid')(conv11)
+
+    model = Model(input=inputs, output=conv12)
 
     model.compile(optimizer=Adam(lr=1e-5), loss=dice_coef_loss, metrics=[dice_coef])
 
