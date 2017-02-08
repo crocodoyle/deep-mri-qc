@@ -76,8 +76,8 @@ def load_oasis():
     ss = ShuffleSplit(n_splits=1, test_size=0.2)
 
     train_index, other_index    = ss.split(index).next()
-    validation_index            = other_indices[::2]  # even
-    test_index                  = other_indices[1::2] # odd
+    validation_index            = other_index[::2]  # even
+    test_index                  = other_index[1::2] # odd
 
     print "training images:", len(train_index)
     print "validation images:", len(validation_index)
