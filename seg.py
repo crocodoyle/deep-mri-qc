@@ -98,7 +98,7 @@ def dice_coef_loss(y_true, y_pred):
 def segmentation_model():
     nb_classes = 4
 
-    inputs = Input(shape=(1, 181, 217, 181))
+    inputs = Input(shape=(1, 180, 217, 180))
 
     conv1 = Convolution3D(16, 3, 4, 3, activation='relu', border_mode='same')(inputs)
     conv1 = Convolution3D(16, 3, 4, 3, activation='relu', border_mode='same')(conv1)
@@ -164,16 +164,16 @@ def batch(indices, labels, n, random_slice=False):
     images = f.get('oasis')
     labels = f.get('oasis_labels')
 
-    x_train = np.zeros((n, 1, 181, 217, 181), dtype=np.float32)
-    y_train = np.zeros((n, 181, 217, 181), dtype=np.int8)
+    x_train = np.zeros((n, 1, 180, 217, 180), dtype=np.float32)
+    y_train = np.zeros((n, 180, 217, 180), dtype=np.int8)
 
     while True:
         np.random.shuffle(indices)
 
         samples_this_batch = 0
         for i, index in enumerate(indices):
-            x_train[i%n, :, :, :] = images[index, :, :, :]
-            y_train[i%n, :, :, :] = labels[index, :, :, :]
+            x_train[i%n, :, :, :] = images[index, :-2, :, :-2]
+            y_train[i%n, :, :, :] = labels[index, :-2, :, :-2]
             samples_this_batch += 1
             if (i+1) % n == 0:
                 yield (x_train, y_train)
