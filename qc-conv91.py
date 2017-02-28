@@ -32,7 +32,7 @@ else:
     images_dir   = '/home/adoyle/'
     scratch_dir  = images_dir
 
-print('SCRATCH', scratch_dir
+print('SCRATCH', scratch_dir)
 print('IMAGES:', images_dir)
 
 
