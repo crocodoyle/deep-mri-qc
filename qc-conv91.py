@@ -55,7 +55,7 @@ def load_data(fail_path, pass_path):
             numImgs += 1
             if x_dim == 0:
                img =  nibabel.load(os.path.join(root, name)).get_data()
-               print np.shape(img)
+               print(np.shape(img))
                x_dim = np.shape(img)[0]
                y_dim = np.shape(img)[1]
                z_dim = np.shape(img)[2]
