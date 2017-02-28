@@ -32,12 +32,12 @@ else:
     images_dir   = '/home/adoyle/'
     scratch_dir  = images_dir
 
-print 'SCRATCH', scratch_dir
-print 'IMAGES:', images_dir
+print('SCRATCH', scratch_dir
+print('IMAGES:', images_dir)
 
 
 def load_data(fail_path, pass_path):
-    print "loading data..."
+    print("loading data...")
     filenames = []
     labels = []
 
@@ -108,9 +108,9 @@ def load_data(fail_path, pass_path):
         test_index = test_indices
     # pkl.dump(labels, images_dir + 'labels.pkl')
 
-    print "training images:", len(train_index)
-    print "validation images:", len(validation_index)
-    print "test_index:", len(test_index)
+    print("training images:", len(train_index))
+    print("validation images:", len(validation_index))
+    print("test_index:", len(test_index))
 
     return train_index, validation_index, test_index, labels, filenames
 
@@ -220,10 +220,10 @@ def test_images(model, test_indices, labels, filename_test, slice_modifier, save
 
     predict_batch = np.zeros((1, 1, 256, 224))
 
-    print "test indices:", len(test_indices)
-    print "test index max:", max(test_indices)
-    print "labels:", len(labels)
-    print "filenames:", len(filename_test)
+    print("test indices:", len(test_indices))
+    print("test index max:", max(test_indices))
+    print("labels:", len(labels))
+    print("filenames:", len(filename_test))
 
     for i, index in enumerate(test_indices):
         predict_batch[0,0,:,:] = images[index, 80+slice_modifier,:,:]
@@ -248,32 +248,32 @@ def test_images(model, test_indices, labels, filename_test, slice_modifier, save
             plt.clf()
 
     conf = confusion_matrix(actual, predictions)
-    print 'Confusion Matrix'
-    print conf
+    print('Confusion Matrix')
+    print(conf)
 
-    print np.shape(conf)
+    print(np.shape(conf))
 
     tp = conf[0][0]
     tn = conf[1][1]
     fp = conf[0][1]
     fn = conf[1][0]
 
-    print 'true negatives:', tn
-    print 'true positives:', tp
-    print 'false negatives:', fn
-    print 'false positives:', fp
+    print('true negatives:', tn)
+    print('true positives:', tp)
+    print('false negatives:', fn)
+    print('false positives:', fp)
 
     sensitivity = float(tp) / (float(tp) + float(fn))
     specificity = float(tn) / (float(tn) + float(fp))
 
 
-    print 'sens:', sensitivity
-    print 'spec:', specificity
+    print('sens:', sensitivity)
+    print('spec:', specificity)
 
     return sensitivity, specificity
 
 if __name__ == "__main__":
-    print "Running automatic QC"
+    print("Running automatic QC")
     fail_data = images_dir + "T1_Minc_Fail"
     pass_data = images_dir + "T1_Minc_Pass"
 
@@ -300,8 +300,8 @@ if __name__ == "__main__":
     if args.epochs:
         nb_epoch = args.epochs
 
-    print "command line arguments"
-    print args
+    print("command line arguments")
+    print(args)
 
     train_indices, validation_indices, test_indices, labels, filenames = load_data(fail_data, pass_data)
 
@@ -332,21 +332,21 @@ if __name__ == "__main__":
             sens, spec = test_images(model, test_indices, labels, filenames, test_run, save_imgs=True)
         else:
             sens, spec = test_images(model, test_indices, labels, filenames, test_run, save_imgs=False)
-        print "sensitivity:", sens
-        print "specificity:", spec
+        print("sensitivity:", sens)
+        print("specificity:", spec)
 
         sensitivities.append(sens)
         specificities.append(spec)
 
-    print 'scores:', test_scores
-    print 'average score', np.mean(test_scores)
-    print 'average sensitivity', np.mean(sensitivities)
-    print 'average specificity', np.mean(specificities)
+    print('scores:', test_scores)
+    print('average score', np.mean(test_scores))
+    print('average sensitivity', np.mean(sensitivities))
+    print('average specificity', np.mean(specificities))
 
 
-    print model.metrics_names
+    print(model.metrics_names)
 
-    print hist.history.keys()
+    print(hist.history.keys())
 
     epoch_num = range(len(hist.history['acc']))
     train_error = np.subtract(1,np.array(hist.history['acc']))
