@@ -10,13 +10,13 @@ import h5py
 import os
 import nibabel
 
-import cPickle as pkl
+import pickle as pkl
 
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 
-from sklearn.cross_validation import StratifiedShuffleSplit
+from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.metrics import confusion_matrix
 
 import argparse
@@ -29,7 +29,7 @@ if cluster:
     images_dir  = '/gs/scratch/adoyle/'
     scratch_dir = os.environ.get('RAMDISK') + '/'
 else:
-    images_dir   = '/home/adoyle/'
+    images_dir   = '/data1/data/IBIS/'
     scratch_dir  = images_dir
 
 print('SCRATCH', scratch_dir)
@@ -95,19 +95,18 @@ def load_data(fail_path, pass_path):
         if i > max_pass:
             break
 
-    indices = StratifiedShuffleSplit(labels, test_size=0.3, n_iter=1, random_state=None)
+    sss_validation = StratifiedShuffleSplit(n_splits=1, test_size=0.3, random_state=42)
+    sss_test       = StratifiedShuffleSplit(n_splits=1, test_size=0.5, random_state=42)
 
-    train_index, validation_index, test_index = None, None, None
-    for train_indices, test_indices in indices:
-        train_index = train_indices
-        test_index  = test_indices
+    train_indices, validation_indices, test_indices = None, None, None
 
-    validation_indices = StratifiedShuffleSplit(labels[test_index], test_size=0.5, n_iter=1, random_state=None)
-    for val_indices, test_indices in validation_indices:
-        validation_index = val_indices
-        test_index = test_indices
-    # pkl.dump(labels, images_dir + 'labels.pkl')
+    for train_index, validation_index in sss_validation.split(np.zeros(len(labels)), labels):
+        train_indices      = train_index
+        validation_indices = validation_index
 
+    for validation_index, test_index in sss_test.split(np.zeros(len(labels[validation_indices])), labels[validation_indices]):
+        validation_indices = validation_index
+        test_indices       = test_index
     print("training images:", len(train_index))
     print("validation images:", len(validation_index))
     print("test_index:", len(test_index))
@@ -130,7 +129,7 @@ def qc_model():
 
     model = Sequential()
 
-    model.add(Convolution2D(16, 3, 3, border_mode='same', input_shape=(1, 256, 224)))
+    model.add(Convolution2D(16, 3, 3, border_mode='same', input_shape=(256, 224, 1)))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(BatchNormalization())
@@ -189,7 +188,7 @@ def batch(indices, labels, n, random_slice=False):
     f = h5py.File(scratch_dir + 'ibis.hdf5', 'r')
     images = f.get('ibis_t1')
 
-    x_train = np.zeros((n, 1, 256, 224), dtype=np.float32)
+    x_train = np.zeros((n, 256, 224, 1), dtype=np.float32)
     y_train = np.zeros((n, 2), dtype=np.int8)
 
     while True:
@@ -201,7 +200,7 @@ def batch(indices, labels, n, random_slice=False):
                 rn=np.random.randint(-4,4)
             else:
                 rn=0
-            x_train[i%n, 0, :, :] = images[index, 80+rn, :, :]
+            x_train[i%n, :, :, 0] = images[index, 80+rn, :, :]
             y_train[i%n, :]   = labels[index]
             samples_this_batch += 1
             if (i+1) % n == 0:
@@ -218,7 +217,7 @@ def test_images(model, test_indices, labels, filename_test, slice_modifier, save
     predictions = np.zeros((len(test_indices)))
     actual = np.zeros((len(test_indices)))
 
-    predict_batch = np.zeros((1, 1, 256, 224))
+    predict_batch = np.zeros((1, 256, 224, 1))
 
     print("test indices:", len(test_indices))
     print("test index max:", max(test_indices))
@@ -226,7 +225,7 @@ def test_images(model, test_indices, labels, filename_test, slice_modifier, save
     print("filenames:", len(filename_test))
 
     for i, index in enumerate(test_indices):
-        predict_batch[0,0,:,:] = images[index, 80+slice_modifier,:,:]
+        predict_batch[0,:,:,0] = images[index,80+slice_modifier, :,:]
 
         prediction = model.predict_on_batch(predict_batch)[0][0]
         if prediction >= 0.5:
@@ -311,12 +310,12 @@ if __name__ == "__main__":
 
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=4, min_lr=0.001)
     stop_early = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-    model_checkpoint = ModelCheckpoint("models/best_model.hdf5", monitor="val_acc", verbose=0, save_best_only=True, save_weights_only=False, mode='auto')
+    model_checkpoint = ModelCheckpoint(images_dir + "models/best_model.hdf5", monitor="val_acc", verbose=0, save_best_only=True, save_weights_only=False, mode='auto')
 
     hist = model.fit_generator(batch(train_indices, labels, 2,True), nb_epoch=400, samples_per_epoch=len(train_indices), validation_data=batch(validation_indices, labels, 2), nb_val_samples=len(validation_indices), callbacks=[model_checkpoint], class_weight = {0:.7, 1:.3})
 
 
-    model.load_weights('models/best_model.hdf5')
+    model.load_weights(images_dir + 'models/best_model.hdf5')
 
 
     test_scores = []
