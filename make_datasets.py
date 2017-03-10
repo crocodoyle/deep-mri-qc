@@ -1,5 +1,5 @@
 import numpy as np
-import scipy
+from scipy.spatial.distance import euclidean
 
 import os, sys, time, csv
 
@@ -7,6 +7,9 @@ import h5py
 import sklearn
 
 import nibabel as nib
+
+
+output_path = '/data1/data/ABIDE/'
 
 
 def make_ibis(input_path, output_path, label_file):
@@ -99,14 +102,14 @@ def make_abide(path, label_file):
     f = h5py.File(output_path + 'abide.hdf5', 'w')
     f.create_dataset('images', (2295, 361, 433, 361, 3), dtype='float32') # t1, gradient magnitude, surface distance
     f.create_dataset('surfaces', (2295, 81920*2, 3))
-    f.create_dataset('filenames', (2295,), dtype='str')
+    f.create_dataset('filenames', (2295,), dtype=h5py.special_dtype(vlen=unicode))
     f.create_dataset('labels', (2295,), dtype='bool')
 
     patient_key = {}
 
     i = 0
     for filename in os.listdir(path + '/surfaces/'):
-        if 'white_surface' in filename && not 'followup' in filename && 'anat_1' in filename:
+        if 'white_surface' in filename and not 'followup' in filename and 'anat_1' in filename:
             patient_id = filename.split('+')[1]
             patient_key[str(patient_id)] = i
 
@@ -117,7 +120,7 @@ def make_abide(path, label_file):
                 coords = line.split(" ")
                 if len(coords) != 3:
                     break
-                f['surfaces'][i, j, :] = [float(coords[0]) + 72, float(coords[1]) + 126, float(coords[2] + 90)
+                f['surfaces'][i, j, :] = [float(coords[0]) + 72, float(coords[1]) + 126, float(coords[2] + 90)]
                 j += 1
             surface_obj.close()
 
@@ -133,16 +136,16 @@ def make_abide(path, label_file):
             patient_id = filename.split('+')[1]
             i = patient_key[str(patient_id)]
 
-            img = nib.load(os.path.join(path + '/T1s/')).get_data()
+            img = nib.load(os.path.join(path + '/T1s/', filename)).get_data()
             print('image shape:', np.shape(img))
 
             f['images'][i,:,:,:,0] = img
 
 
-            grad = np.gradient(img, dtype='float32')
+            grad = np.gradient(img)
             print('gradient shape:', np.shape(grad))
 
-            f['images'][i,:,:,:,1] = grad
+            f['images'][i,:,:,:,1] = np.sum(grad, axis=0)
 
 
             surface_distance = np.ones((361, 433, 361), dtype='float32')
@@ -156,7 +159,7 @@ def make_abide(path, label_file):
                 for y in range(np.shape(surface_distance)[1]):
                     for x in range(np.shape(surface_distance)[2]):
                         for point in surf_points:
-                            d = scipy.spatial.distance.euclidean(float(z), float(y), float(x))
+                            d = euclidean([float(z), float(y), float(x)], point)
 
                             if surface_distance[z,y,x] > d:
                                 surface_distance[z,y,x] = d
@@ -166,7 +169,7 @@ def make_abide(path, label_file):
 
 
     label_file = open(os.path.join(path, label_file))
-    for line in label_file.readlines()
+    for line in label_file.readlines():
 
         patient_id = line[0].split('+')[1].split('_')[0]
         label = int(line[1])
@@ -184,5 +187,5 @@ def make_abide(path, label_file):
 
 
 if __name__ == "__main__":
-    make_abide('/data1/data/ABIDE/')
+    make_abide('/data1/data/ABIDE/', 'labels.csv')
   # make_nihpd('/data1/data/NIHPD/assembly/', 'data1/data/dl-datasets/')
