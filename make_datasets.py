@@ -6,6 +6,8 @@ import os, sys, time, csv
 import h5py
 import sklearn
 
+from sklearn.neighbors import kdtree
+
 import nibabel as nib
 
 
@@ -120,7 +122,7 @@ def make_abide(path, label_file):
                 coords = line.split(" ")
                 if len(coords) != 3:
                     break
-                f['surfaces'][i, j, :] = [float(coords[0]) + 72, float(coords[1]) + 126, float(coords[2] + 90)]
+                f['surfaces'][i, j, :] = [float(coords[0]) + 72.25, float(coords[1]) + 126.25, float(coords[2] + 90.25)]
                 j += 1
             surface_obj.close()
 
@@ -154,15 +156,31 @@ def make_abide(path, label_file):
             surf_points = f['surfaces'][i,:,:]
 
 
+            print("surface points: ", np.shape(surf_points))
+
+            floatX = np.zeros(np.shape(surface_distance)[0])
+            floatY = np.zeros(np.shape(surface_distance)[1])
+            floatZ = np.zeros(np.shape(surface_distance)[2])
+
+
+            print("building KDTree...")
+            tree = KDTree(surf_points, leaf_size=1000)
+            print("built KDTree!")
 
             for z in range(np.shape(surface_distance)[0]):
                 for y in range(np.shape(surface_distance)[1]):
                     for x in range(np.shape(surface_distance)[2]):
-                        for point in surf_points:
-                            d = euclidean([float(z), float(y), float(x)], point)
 
-                            if surface_distance[z,y,x] > d:
-                                surface_distance[z,y,x] = d
+                        print("z: ", z)
+                        (distance, index) = tree.query([floatZ[z], floatY[y], floatX[x]], return_distance = True)
+
+                        surface_distance[z,y,x] = distance
+                        # brute force method, doesn't work very well
+                        # for point in surf_points:
+                        #     d = euclidean([floatZ[z], floatY[y], floatX[x]], point)
+
+                        #     if surface_distance[z,y,x] > d:
+                        #         surface_distance[z,y,x] = d
 
 
             print('done ', filename)
