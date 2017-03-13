@@ -117,6 +117,8 @@ def make_abide(path, label_file):
             patient_id = filename.split('+')[1]
             patient_key[str(patient_id)] = i
 
+            print patient_id
+
             surface_obj = open(os.path.join(path + '/surfaces/', filename), 'r')
             surface_obj.readlines(1)
             j = 0
@@ -124,16 +126,16 @@ def make_abide(path, label_file):
                 coords = line.split(" ")
                 if len(coords) != 3:
                     break
-                f['surfaces'][i, j, :] = [float(coords[0]) + 72.25, float(coords[1]) + 126.25, float(coords[2] + 90.25)]
+                f['surfaces'][i, j, :] = [float(coords[0]) + 72.25, float(coords[1]) + 126.25, float(coords[2]) + 90.25]
                 j += 1
             surface_obj.close()
 
-
-            print(i)
             i += 1
 
         else:
             continue
+
+    print(str(i), "surface files total")
 
 
     for filename in os.listdir(path + '/T1s/'):
