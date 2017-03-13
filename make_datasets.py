@@ -171,7 +171,7 @@ def make_abide(path, label_file):
                 print("z: ", z)
                 for y in range(np.shape(surface_distance)[1]):
                     for x in range(np.shape(surface_distance)[2]):
-                        (distance, index) = tree.query(np.reshape([floatZ[z], floatY[y], floatX[x]], (3,1)), return_distance = True)
+                        (distance, index) = tree.query(np.reshape([floatZ[z], floatY[y], floatX[x]], (1,3)), return_distance = True)
                         surface_distance[z,y,x] = distance
                         # brute force method, doesn't work very well
                         # for point in surf_points:
