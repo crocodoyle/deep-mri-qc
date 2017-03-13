@@ -129,12 +129,12 @@ def make_abide(path, label_file):
             surface_obj.close()
 
 
+            print(i)
             i += 1
 
         else:
             continue
 
-    patient_indices = []
 
     for filename in os.listdir(path + '/T1s/'):
 
@@ -143,17 +143,17 @@ def make_abide(path, label_file):
 
             patient_id = filename.split('+')[1]
             i = patient_key[str(patient_id)]
-            patient_indices.append(i)
 
+            print(i)
             img = nib.load(os.path.join(path + '/T1s/', filename)).get_data()
 
-            print('image shape:', np.shape(img))
+            # print('image shape:', np.shape(img))
 
             f['images'][i,:,:,:,0] = img
 
 
             grad = np.gradient(img)
-            print('gradient shape:', np.shape(grad))
+            # print('gradient shape:', np.shape(grad))
 
             f['images'][i,:,:,:,1] = np.sum(grad, axis=0)
 
