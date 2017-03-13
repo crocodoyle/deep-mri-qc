@@ -10,6 +10,8 @@ from sklearn.neighbors import KDTree
 
 import nibabel as nib
 
+from multiprocessing import Pool
+
 
 output_path = '/data1/data/ABIDE/'
 
@@ -132,13 +134,19 @@ def make_abide(path, label_file):
         else:
             continue
 
+    patient_indices = []
+
     for filename in os.listdir(path + '/T1s/'):
 
         if not 'followup' in filename and 'anat_1' in filename:
+
+
             patient_id = filename.split('+')[1]
             i = patient_key[str(patient_id)]
+            patient_indices.append(i)
 
             img = nib.load(os.path.join(path + '/T1s/', filename)).get_data()
+
             print('image shape:', np.shape(img))
 
             f['images'][i,:,:,:,0] = img
@@ -150,40 +158,7 @@ def make_abide(path, label_file):
             f['images'][i,:,:,:,1] = np.sum(grad, axis=0)
 
 
-            surface_distance = np.ones((361, 433, 361), dtype='float32')
-
-
-            surf_points = f['surfaces'][i,:,:]
-
-
-            print("surface points: ", np.shape(surf_points))
-
-            floatX = np.zeros(np.shape(surface_distance)[0])
-            floatY = np.zeros(np.shape(surface_distance)[1])
-            floatZ = np.zeros(np.shape(surface_distance)[2])
-
-
-            print("building KDTree...")
-            tree = KDTree(surf_points, leaf_size=1000)
-            print("built KDTree!")
-
-            for z in range(np.shape(surface_distance)[0]):
-                print("z: ", z)
-                for y in range(np.shape(surface_distance)[1]):
-                    for x in range(np.shape(surface_distance)[2]):
-                        (distance, index) = tree.query(np.reshape([floatZ[z], floatY[y], floatX[x]], (1,3)), return_distance = True)
-                        surface_distance[z,y,x] = distance
-                        # brute force method, doesn't work very well
-                        # for point in surf_points:
-                        #     d = euclidean([floatZ[z], floatY[y], floatX[x]], point)
-
-                        #     if surface_distance[z,y,x] > d:
-                        #         surface_distance[z,y,x] = d
-
-
-            print('done ', filename)
-
-
+    print("Reading QC labels...")
     label_file = open(os.path.join(path, label_file))
     for line in label_file.readlines():
 
@@ -193,14 +168,67 @@ def make_abide(path, label_file):
         i = patient_key[patient_id]
         f['labels'][i] = label
 
-    print('all done!')
+
+
+    print("Computing surface distances... Could take a while")
+    cores = 12
+
+    surf_points = np.zeros((81920*2, 3, cores), dtype='float32')
+
+    p = Pool(cores)
+    j = 0
+    for i in range(2295):
+        surf_points[:,:,i] = f['surfaces'][i,:,:]
+        j += 1
+
+        if i%cores == 0:
+            f['images'][i-cores:i,:,:,:,2] = p.map(distance_to_surf, surf_points)
+            j = 0
+            print("Done ", str(i))
+
+
+    p = Pool(j)
+    surf_points = f['surfaces'][-j:,:,:]
+    f['images'][-j:,:,:,:,2] = p.map(distance_to_surf, surf_points)
+
 
     f.close()
+
+
 
     return 0
 
 
+def distance_to_surf(surface_points):
+    surface_distance = np.ones((361, 433, 361), dtype='float32')
 
+    print("surface points: ", np.shape(surf_points))
+
+    floatX = np.zeros(np.shape(surface_distance)[0])
+    floatY = np.zeros(np.shape(surface_distance)[1])
+    floatZ = np.zeros(np.shape(surface_distance)[2])
+
+
+    print("building KDTree...")
+    tree = KDTree(surf_points, leaf_size=10000)
+    print("built KDTree!")
+
+    for z in range(np.shape(surface_distance)[0]):
+        print("z: ", z)
+        for y in range(np.shape(surface_distance)[1]):
+            for x in range(np.shape(surface_distance)[2]):
+                (distance, index) = tree.query(np.reshape([floatZ[z], floatY[y], floatX[x]], (1,3)), return_distance = True)
+                surface_distance[z,y,x] = distance
+                # brute force method, doesn't work very well
+                # for point in surf_points:
+                #     d = euclidean([floatZ[z], floatY[y], floatX[x]], point)
+
+                #     if surface_distance[z,y,x] > d:
+                #         surface_distance[z,y,x] = d
+
+
+    print('done ', filename)
+    return surface_distance
 
 if __name__ == "__main__":
     make_abide('/data1/data/ABIDE/', 'labels.csv')
