@@ -136,18 +136,19 @@ def make_abide(path, label_file):
         patient_data[patient_id]['index'] = i
 
     total_subjects = i
+    print(total_subjects, "in QC file")
 
     f = h5py.File(output_path + 'abide.hdf5', 'w')
-    f.create_dataset('images', (total_subjects, 361, 433, 361, 3), dtype='float32') # t1, gradient magnitude, surface distance
-    f.create_dataset('surfacepoints', (total_subjects, 40962*2, 3))
-    f.create_dataset('filenames', (total_subjects,), dtype=h5py.special_dtype(vlen=unicode))
-    f.create_dataset('labels', (total_subjects,), dtype='bool')
+    f.create_dataset('images', (total_subjects+100, 361, 433, 361, 3), dtype='float32') # t1, gradient magnitude, surface distance
+    f.create_dataset('surfacepoints', (total_subjects+100, 40962*2, 3))
+    f.create_dataset('filenames', (total_subjects+100,), dtype=h5py.special_dtype(vlen=unicode))
+    f.create_dataset('labels', (total_subjects+100,), dtype='bool')
 
 
     #load labels
     num = 0
     for patient_id in patient_data:
-        print(patient_id)
+        # print(patient_id)
         i = int(patient_data[patient_id]['index'])
         l = int(patient_data[patient_id]['label'])
 
@@ -155,7 +156,7 @@ def make_abide(path, label_file):
 
         num += 1
 
-    print(num, 'patients')
+    print(num, 'patients in labels')
 
 
     #load surface points
