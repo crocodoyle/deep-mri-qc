@@ -113,7 +113,7 @@ def make_abide(path, label_file):
     #establish a unique id as id number - scan-number - session-number
     for i, line in enumerate(lines[1:]):   # skip header
         patient_id = line.split('+')[1].split('_')[0]
-        label = int(line[1])
+        label = int(line.split(',')[1])
 
 
         anat_pos = line.find('anat')
