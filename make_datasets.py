@@ -201,7 +201,7 @@ def make_abide(path, label_file):
         anat_pos = filename.find('anat')
         if anat_pos > 0:
             anat = filename[anat_pos + 5]
-        else
+        else:
             anat = "0"
 
         followup_pos = filename.find('followup')
