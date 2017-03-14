@@ -145,9 +145,9 @@ def make_abide(path, label_file):
 
 
     #load labels
-    for patient in patient_data:
-        i = int(patient['index'])
-        l = int(patient['label'])
+    for patient_id in patient_data:
+        i = int(patient_data[patient_id]['index'])
+        l = int(patient_data[patient_id]['label'])
 
         f['labels'][i] = l
 
