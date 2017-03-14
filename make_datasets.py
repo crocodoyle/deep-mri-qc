@@ -145,12 +145,17 @@ def make_abide(path, label_file):
 
 
     #load labels
+    num = 0
     for patient_id in patient_data:
         print(patient_id)
         i = int(patient_data[patient_id]['index'])
         l = int(patient_data[patient_id]['label'])
 
-        f['labels'][i] = l
+        # f['labels'][i] = l
+
+        num += 1
+
+    print(num)
 
 
     #load surface points
