@@ -119,13 +119,13 @@ def make_abide(path, label_file):
         anat_pos = line.find('anat')
         if anat_pos > 0:
             anat = line[anat_pos + 5]
-        else
+        else:
             anat = "0"
 
         followup_pos = line.find('followup')
         if followup_pos > 0:
             followup = line[followup_pos + 9]
-        else
+        else:
             followup = "0"
 
 
@@ -160,13 +160,13 @@ def make_abide(path, label_file):
         anat_pos = filename.find('anat')
         if anat_pos > 0:
             anat = filename[anat_pos + 5]
-        else
+        else:
             anat = "0"
 
         followup_pos = filename.find('followup')
         if followup_pos > 0:
             followup = filename[followup_pos + 9]
-        else
+        else:
             followup = "0"
 
         patient_id += '-' anat + '-' + followup
@@ -207,13 +207,13 @@ def make_abide(path, label_file):
         followup_pos = filename.find('followup')
         if followup_pos > 0:
             followup = filename[followup_pos + 9]
-        else
+        else:
             followup = "0"
 
         patient_id += '-' anat + '-' + followup
         i = patient_data[patient_id]['index']
 
-        print(i)
+        # print(i)
         img = nib.load(os.path.join(path + '/T1s/', filename)).get_data()
 
         # print('image shape:', np.shape(img))
