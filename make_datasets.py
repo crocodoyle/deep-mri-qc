@@ -103,41 +103,97 @@ def train_test_val(val_frac, test_frac, labels):
 def make_abide(path, label_file):
 
 
+    patient_data = {}
+
+    print("Reading QC labels...")
+    label_file = open(os.path.join(path, label_file))
+    lines = label_file.readlines()
+
+
+    #establish a unique id as id number - scan-number - session-number
+    for i, line in enumerate(lines[1:]):   # skip header
+        patient_id = line[0].split('+')[1].split('_')[0]
+        label = int(line[1])
+
+
+        anat_pos = line.find('anat')
+        if anat_pos > 0:
+            anat = line[anat_pos + 5]
+        else
+            anat = "0"
+
+        followup_pos = line.find('followup')
+        if followup_pos > 0:
+            followup = line[followup_pos + 9]
+        else
+            followup = "0"
+
+
+        patient_id += '-' + anat + '-' + followup
+
+        patient_data[patient_id] = {}
+        patient_data[patient_id]['label'] = label
+        patient_data[patient_id]['index'] = i
+
+    total_subjects = i
+
     f = h5py.File(output_path + 'abide.hdf5', 'w')
-    f.create_dataset('images', (2295, 361, 433, 361, 3), dtype='float32') # t1, gradient magnitude, surface distance
-    f.create_dataset('surfaces', (2295, 81920*2, 3))
-    f.create_dataset('filenames', (2295,), dtype=h5py.special_dtype(vlen=unicode))
-    f.create_dataset('labels', (2295,), dtype='bool')
+    f.create_dataset('images', (total_subjects, 361, 433, 361, 3), dtype='float32') # t1, gradient magnitude, surface distance
+    f.create_dataset('surfacepoints', (total_subjects, 40962*2, 3))
+    f.create_dataset('filenames', (total_subjects,), dtype=h5py.special_dtype(vlen=unicode))
+    f.create_dataset('labels', (total_subjects,), dtype='bool')
 
-    patient_key = {}
 
-    i = 0
+    #load labels
+    for patient in patient_data:
+        i = int(patient['index'])
+        l = int(patient['label'])
+
+        f['labels'][i] = l
+
+
+    #load surface points
     for filename in os.listdir(path + '/surfaces/'):
-        if 'white_surface' in filename and not 'followup' in filename and 'anat_1' in filename:
-            patient_id = filename.split('+')[1]
-            patient_key[str(patient_id)] = i
 
-            print patient_id
+        patient_id = filename.split('+')[1]
 
-            surface_obj = open(os.path.join(path + '/surfaces/', filename), 'r')
-            surface_obj.readlines(1)
+        anat_pos = filename.find('anat')
+        if anat_pos > 0:
+            anat = filename[anat_pos + 5]
+        else
+            anat = "0"
+
+        followup_pos = filename.find('followup')
+        if followup_pos > 0:
+            followup = filename[followup_pos + 9]
+        else
+            followup = "0"
+
+        patient_id += '-' anat + '-' + followup
+
+
+
+        i = patient_data[patient_id]['index']
+
+        surface_obj = open(patient_data[patient_id]['surfacefile'])
+        surface_obj.readlines(1)
+
+        if "right" in filename:
+            patient_data[patient_id]['surfacefile-right'] = os.path.join(path + '/surfaces/', filename)
             j = 0
-            for line in surface_obj.readlines():
-                coords = line.split(" ")
-                if len(coords) != 3:
-                    break
-                f['surfaces'][i, j, :] = [float(coords[0]) + 72.25, float(coords[1]) + 126.25, float(coords[2]) + 90.25]
-                j += 1
-            surface_obj.close()
+        elif "left" in filename:
+            patient_data[patient_id]['surfacefile-left'] = os.path.join(path + '/surfaces/', filename)
+            j = 40962
 
-            i += 1
+        for line in surface_obj.readlines():
+            coords = line.split(" ")
+            if len(coords) != 3:
+                break
+            f['surfacespoints'][i, j, :] = [float(coords[0]) + 72.25, float(coords[1]) + 126.25, float(coords[2]) + 90.25]
+            j += 1
+        surface_obj.close()
 
-        else:
-            continue
-
-    print(str(i), "surface files total")
-
-
+    #load T1, compute gradient image
     for filename in os.listdir(path + '/T1s/'):
 
         if not 'followup' in filename and 'anat_1' in filename:
@@ -160,27 +216,17 @@ def make_abide(path, label_file):
             f['images'][i,:,:,:,1] = np.sum(grad, axis=0)
 
 
-    print("Reading QC labels...")
-    label_file = open(os.path.join(path, label_file))
-    for line in label_file.readlines():
-
-        patient_id = line[0].split('+')[1].split('_')[0]
-        label = int(line[1])
-
-        i = patient_key[patient_id]
-        f['labels'][i] = label
-
 
 
     print("Computing surface distances... Could take a while")
     cores = 12
 
-    surf_points = np.zeros((81920*2, 3, cores), dtype='float32')
+    surf_points = np.zeros((40962*2, 3, cores), dtype='float32')
 
     p = Pool(cores)
     j = 0
-    for i in range(2295):
-        surf_points[:,:,i] = f['surfaces'][i,:,:]
+    for i in range(total_subjects):
+        surf_points[:,:,i] = f['surfacepoints'][i,:,:]
         j += 1
 
         if i%cores == 0:
