@@ -151,11 +151,11 @@ def make_abide(path, label_file):
         i = int(patient_data[patient_id]['index'])
         l = int(patient_data[patient_id]['label'])
 
-        # f['labels'][i] = l
+        f['labels'][i] = l
 
         num += 1
 
-    print(num)
+    print(num, 'patients')
 
 
     #load surface points
@@ -178,18 +178,20 @@ def make_abide(path, label_file):
         patient_id += '-' + anat + '-' + followup
 
 
-
         i = patient_data[patient_id]['index']
 
-        surface_obj = open(patient_data[patient_id]['surfacefile'])
-        surface_obj.readlines(1)
 
         if "right" in filename:
             patient_data[patient_id]['surfacefile-right'] = os.path.join(path + '/surfaces/', filename)
+            surface_obj = open(patient_data[patient_id]['surfacefile-right'])
             j = 0
         elif "left" in filename:
             patient_data[patient_id]['surfacefile-left'] = os.path.join(path + '/surfaces/', filename)
+            surface_obj = open(patient_data[patient_id]['surfacefile-left'])
             j = 40962
+
+
+        surface_obj.readlines(1)
 
         for line in surface_obj.readlines():
             coords = line.split(" ")
