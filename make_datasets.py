@@ -169,7 +169,7 @@ def make_abide(path, label_file):
         else:
             followup = "0"
 
-        patient_id += '-' anat + '-' + followup
+        patient_id += '-' + anat + '-' + followup
 
 
 
@@ -210,7 +210,7 @@ def make_abide(path, label_file):
         else:
             followup = "0"
 
-        patient_id += '-' anat + '-' + followup
+        patient_id += '-' + anat + '-' + followup
         i = patient_data[patient_id]['index']
 
         # print(i)
