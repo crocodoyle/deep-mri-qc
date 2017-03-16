@@ -14,6 +14,8 @@ from multiprocessing import Pool
 
 
 output_path = '/data1/data/ABIDE/'
+cores = 12
+surf_points = np.zeros((40962*2, 3, cores), dtype='float32')
 
 
 def make_ibis(input_path, output_path, label_file):
@@ -239,9 +241,7 @@ def make_abide(path, label_file):
 
 
     print("Computing surface distances... Could take a while")
-    cores = 12
 
-    surf_points = np.zeros((40962*2, 3, cores), dtype='float32')
 
     p = Pool(cores)
     j = 0
