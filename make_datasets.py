@@ -205,7 +205,7 @@ def make_abide(path, label_file):
         surface_obj.close()
 
     #load T1, compute gradient image
-    for filename in os.listdir(path + '/T1s/'):
+    for index, filename in enumerate(os.listdir(path + '/T1s/')):
 
         patient_id = filename.split('+')[1]
 
@@ -236,6 +236,8 @@ def make_abide(path, label_file):
         # print('gradient shape:', np.shape(grad))
 
         f['images'][i,:,:,:,1] = np.sum(grad, axis=0)
+
+        print(index, 'of', len(os.listdir(path + '/T1s/')))
 
 
 
