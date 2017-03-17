@@ -242,23 +242,18 @@ def make_abide(path, label_file):
 
 
 
-    surf_points = np.zeros((40962*2, 3, cores), dtype='float32')
+    surf_points = np.zeros((40962*2, 3), dtype='float32')
 
     p = Pool(cores)
-    j = 0
+
     for i in range(total_subjects):
-        surf_points[:,:,i] = f['surfacepoints'][i,:,:]
-        j += 1
+        surf_points = f['surfacepoints'][i,:,:]
+        p.map(distance_to_surf, args=(surf_points, i,), callback = save_result)
 
-        if i%cores == 0:
-            f['images'][i-cores:i,:,:,:,2] = p.map(distance_to_surf, surf_points)
-            j = 0
-            print("Done ", str(i))
+        print("Done ", str(i))
 
-
-    p = Pool(j)
-    surf_points = f['surfaces'][-j:,:,:]
-    f['images'][-j:,:,:,:,2] = p.map(distance_to_surf, surf_points)
+    p.close()
+    p.join()
 
 
     f.close()
@@ -267,8 +262,12 @@ def make_abide(path, label_file):
 
     return 0
 
+def save_result(vol_info):
 
-def distance_to_surf(surface_points):
+    nib.save(vol_info['surface'], os.path.join(output_path, str(vol_info['index']) + '.nii.gz'))
+
+
+def distance_to_surf(surface_points, index):
     surface_distance = np.ones((361, 433, 361), dtype='float32')
 
     print("surface points: ", np.shape(surf_points))
@@ -297,7 +296,10 @@ def distance_to_surf(surface_points):
 
 
     print('done ', filename)
-    return surface_distance
+    result = {}
+    result['index'] = index
+    result['surface'] = surface_distance
+    return result
 
 if __name__ == "__main__":
     make_abide('/data1/data/ABIDE/', 'labels.csv')
