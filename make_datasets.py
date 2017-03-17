@@ -15,7 +15,6 @@ from multiprocessing import Pool
 
 output_path = '/data1/data/ABIDE/'
 cores = 12
-surf_points = np.zeros((40962*2, 3, cores), dtype='float32')
 
 
 def make_ibis(input_path, output_path, label_file):
@@ -205,45 +204,45 @@ def make_abide(path, label_file):
         surface_obj.close()
 
     #load T1, compute gradient image
-    for index, filename in enumerate(os.listdir(path + '/T1s/')):
+    # for index, filename in enumerate(os.listdir(path + '/T1s/')):
 
-        patient_id = filename.split('+')[1]
+    #     patient_id = filename.split('+')[1]
 
-        anat_pos = filename.find('anat')
-        if anat_pos > 0:
-            anat = filename[anat_pos + 5]
-        else:
-            anat = "0"
+    #     anat_pos = filename.find('anat')
+    #     if anat_pos > 0:
+    #         anat = filename[anat_pos + 5]
+    #     else:
+    #         anat = "0"
 
-        followup_pos = filename.find('followup')
-        if followup_pos > 0:
-            followup = filename[followup_pos + 9]
-        else:
-            followup = "0"
+    #     followup_pos = filename.find('followup')
+    #     if followup_pos > 0:
+    #         followup = filename[followup_pos + 9]
+    #     else:
+    #         followup = "0"
 
-        patient_id += '-' + anat + '-' + followup
-        i = patient_data[patient_id]['index']
+    #     patient_id += '-' + anat + '-' + followup
+    #     i = patient_data[patient_id]['index']
 
-        # print(i)
-        img = nib.load(os.path.join(path + '/T1s/', filename)).get_data()
+    #     # print(i)
+    #     img = nib.load(os.path.join(path + '/T1s/', filename)).get_data()
 
-        # print('image shape:', np.shape(img))
+    #     # print('image shape:', np.shape(img))
 
-        f['images'][i,:,:,:,0] = img
-
-
-        grad = np.gradient(img)
-        # print('gradient shape:', np.shape(grad))
-
-        f['images'][i,:,:,:,1] = np.sum(grad, axis=0)
-
-        print(index, 'of', len(os.listdir(path + '/T1s/')))
+    #     f['images'][i,:,:,:,0] = img
 
 
+    #     grad = np.gradient(img)
+    #     # print('gradient shape:', np.shape(grad))
 
+    #     f['images'][i,:,:,:,1] = np.sum(grad, axis=0)
+
+    #     print(index, 'of', len(os.listdir(path + '/T1s/')))
 
     print("Computing surface distances... Could take a while")
 
+
+
+    surf_points = np.zeros((40962*2, 3, cores), dtype='float32')
 
     p = Pool(cores)
     j = 0
