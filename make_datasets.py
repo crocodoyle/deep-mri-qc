@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.spatial.distance import euclidean
 
-import os, sys, time, csv
+import os, sys, time, csv, subprocess
 
 import h5py
 import sklearn
@@ -301,6 +301,25 @@ def distance_to_surf(surface_points, index):
     result['surface'] = surface_distance
     return result
 
+
+def combine_objs(obj1, obj2, newname):
+    subprocess.Popen(['objconcat', obj1, obj2, 'none', 'none', newname, 'none'])
+
+
+
 if __name__ == "__main__":
-    make_abide('/data1/data/ABIDE/', 'labels.csv')
+    path = '/data1/data/ABIDE/'
+
+    for filename in os.listdir(path + '/surfaces/'):
+        if "right" in filename:
+            # patient_id = filename.split('+')[1]
+
+            filename1 = filename
+            filename2 = filename.replace("right", "left")
+            filename3 = filename.replace("right", "combined")
+
+            combine_objs(filename1, filename2, filename3)
+
+
+    # make_abide('/data1/data/ABIDE/', 'labels.csv')
   # make_nihpd('/data1/data/NIHPD/assembly/', 'data1/data/dl-datasets/')
