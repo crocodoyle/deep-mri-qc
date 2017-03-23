@@ -321,7 +321,7 @@ if __name__ == "__main__":
             filename2 = filename.replace("right", "left")
             filename3 = filename.replace("right", "combined")
 
-            combine_objs(os.path.join(path, filename1), os.path.join(path, filename2), os.path.join(path, filename3))
+            combine_objs(os.path.join(path, 'surfaces' + filename1), os.path.join(path, 'surfaces' + filename2), os.path.join(path, 'surfaces' + filename3))
 
 
     # make_abide('/data1/data/ABIDE/', 'labels.csv')
