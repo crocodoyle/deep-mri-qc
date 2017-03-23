@@ -303,6 +303,9 @@ def distance_to_surf(surface_points, index):
 
 
 def combine_objs(obj1, obj2, newname):
+    print(obj1)
+    print(obj2)
+    print(newname)
     subprocess.Popen(['objconcat', obj1, obj2, 'none', 'none', newname, 'none'])
 
 
