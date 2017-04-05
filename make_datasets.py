@@ -313,16 +313,20 @@ def combine_objs(obj1, obj2, newname):
 if __name__ == "__main__":
     path = '/data1/data/ABIDE/'
 
-    for filename in os.listdir(path + '/surfaces/'):
-        if "right" in filename:
-            # patient_id = filename.split('+')[1]
+    # for filename in os.listdir(path + '/surfaces/'):
+    #     if "right" in filename:
+    #         # patient_id = filename.split('+')[1]
+    #
+    #         filename1 = filename
+    #         filename2 = filename.replace("right", "left")
+    #         filename3 = filename.replace("right", "combined")
+    #
+    #         combine_objs(os.path.join(path, 'surfaces/' + filename1), os.path.join(path, 'surfaces/' + filename2), os.path.join(path, 'surfaces/' + filename3))
 
-            filename1 = filename
-            filename2 = filename.replace("right", "left")
-            filename3 = filename.replace("right", "combined")
+    for filename in os.listdir(path + '/T1s/'):
+        patient_id = filename.split('+')[1]
 
-            combine_objs(os.path.join(path, 'surfaces/' + filename1), os.path.join(path, 'surfaces/' + filename2), os.path.join(path, 'surfaces/' + filename3))
-
+        subprocess.Popen(['mincresample', '-nearest_neighbour', '-like', path + 'icbm_template_1.00mm.mnc', path + filename, path + 'T1_downsampled/' + patient_id + '.mnc'])
 
     # make_abide('/data1/data/ABIDE/', 'labels.csv')
   # make_nihpd('/data1/data/NIHPD/assembly/', 'data1/data/dl-datasets/')
