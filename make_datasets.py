@@ -324,10 +324,14 @@ if __name__ == "__main__":
     #         combine_objs(os.path.join(path, 'surfaces/' + filename1), os.path.join(path, 'surfaces/' + filename2), os.path.join(path, 'surfaces/' + filename3))
 
     for filename in os.listdir(path + '/T1s/'):
-        patient_id = filename.split('+')[1]
+        try:
+            patient_id = filename.split('+')[1]
 
-        p = subprocess.Popen(['mincresample', '-nearest_neighbour', '-like', path + 'icbm_template_1.00mm.mnc', path + 'T1s/' + filename, path + 'T1_downsampled/' + patient_id + '.mnc'])
-        p.communicate()
+            p = subprocess.Popen(['mincresample', '-nearest_neighbour', '-like', path + 'icbm_template_1.00mm.mnc', path + 'T1s/' + filename, path + 'T1_downsampled/' + patient_id + '.mnc', '-clobber'])
+            p.communicate()
+        except:
+            print filename
+
 
 
     # make_abide('/data1/data/ABIDE/', 'labels.csv')
