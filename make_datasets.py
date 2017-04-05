@@ -326,7 +326,7 @@ if __name__ == "__main__":
     for filename in os.listdir(path + '/T1s/'):
         patient_id = filename.split('+')[1]
 
-        subprocess.Popen(['mincresample', '-nearest_neighbour', '-like', path + 'icbm_template_1.00mm.mnc', path + filename, path + 'T1_downsampled/' + patient_id + '.mnc'])
+        subprocess.Popen(['mincresample', '-nearest_neighbour', '-like', path + 'icbm_template_1.00mm.mnc', path + 'T1s/' + filename, path + 'T1_downsampled/' + patient_id + '.mnc'])
 
     # make_abide('/data1/data/ABIDE/', 'labels.csv')
   # make_nihpd('/data1/data/NIHPD/assembly/', 'data1/data/dl-datasets/')
