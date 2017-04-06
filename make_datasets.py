@@ -101,7 +101,7 @@ def make_abide(path, label_file):
 
     # load images and compute gradient
     for filename in os.listdir(path + '/T1_downsampled/'):
-        patient_id = filename.split('+')[1]
+        patient_id = filename.split('.')[0]
         print(patient_id)
 
         i = patient_data[patient_id]['index']
