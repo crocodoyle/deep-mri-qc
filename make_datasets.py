@@ -106,7 +106,7 @@ def make_abide(path, label_file):
 
         i = patient_data[patient_id]['index']
 
-        img = nib.load(os.path.join(path + '/T1s/', filename)).get_data() # load image data
+        img = nib.load(os.path.join(path + '/T1_downsampled/', filename)).get_data() # load image data
 
         f['images'][i,:,:,:,0] = img
         f['images'][i,:,:,:,1] = np.sum(np.gradient(img), axis=0)
