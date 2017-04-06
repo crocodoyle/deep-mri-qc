@@ -93,7 +93,7 @@ def make_abide(path, label_file):
         else:
             index -= 1
 
-    total_subjects = index
+    total_subjects = index + 1
     print('total of ', total_subjects, 'downsampled T1s')
 
     f = h5py.File(output_path + 'abide.hdf5', 'w')
