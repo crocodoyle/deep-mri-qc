@@ -84,32 +84,39 @@ def make_abide(path, label_file):
     patient_data = {}
 
     for index, filename in enumerate(os.listdir(path + '/T1_downsampled/')):
-        patient_id = filename[:-4]
-        patient_data[patient_id] = {}
+        if '.mnc' in filename:
+            patient_id = filename[:-4]
+            patient_data[patient_id] = {}
 
-        print(patient_id)
-        patient_data[patient_id]['index'] = index
+            # print(patient_id)
+            patient_data[patient_id]['index'] = index
+        else:
+            index -= 1
 
     total_subjects = index
+    print('total of ', total_subjects, 'downsampled T1s')
 
     f = h5py.File(output_path + 'abide.hdf5', 'w')
-    f.create_dataset('images', (total_subjects, 181, 217, 181, 3), dtype='float32') # t1, gradient magnitude, surface distance
+    f.create_dataset('images', (total_subjects, 181, 217, 181, 3), dtype='float32')  # t1, gradient magnitude, surface distance
     f.create_dataset('surfacepoints', (total_subjects, 40962*2, 3))
-    f.create_dataset('filenames', (total_subjects,), dtype=h5py.special_dtype(vlen=unicode))
+    # f.create_dataset('filenames', (total_subjects,), dtype=h5py.special_dtype(vlen=unicode))
     f.create_dataset('labels', (total_subjects,), dtype='bool')
 
 
     # load images and compute gradient
     for filename in os.listdir(path + '/T1_downsampled/'):
-        patient_id = filename.split('.')[0]
-        print(patient_id)
+        if '.mnc' in filename:
+            patient_id = filename.split('.')[0]
 
-        i = patient_data[patient_id]['index']
+            i = patient_data[patient_id]['index']
+            print(i, 'of', len(os.listdir(path + '/T1_downsampled/')))
 
-        img = nib.load(os.path.join(path + '/T1_downsampled/', filename)).get_data() # load image data
+            img = nib.load(os.path.join(path + '/T1_downsampled/', filename)).get_data()  # load image data
 
-        f['images'][i,:,:,:,0] = img
-        f['images'][i,:,:,:,1] = np.sum(np.gradient(img), axis=0)
+            f['images'][i, :, :, :, 0] = img
+            f['images'][i, :, :, :, 1] = np.sum(np.gradient(img), axis=0)
+        else:
+            print(filename, 'should not be here')
 
     # extract surfaces from combined left/right surface objs
     for filename in os.listdir(path + '/surfaces/'):
@@ -166,6 +173,10 @@ def make_abide(path, label_file):
 
     return 0
 
+def compute_gradient(img):
+
+    return
+
 def save_result(vol_info):
 
     nib.save(vol_info['surface'], os.path.join(output_path, str(vol_info['index']) + '.nii.gz'))
@@ -197,8 +208,6 @@ def distance_to_surf(surface_points, patient_id):
 
                 #     if surface_distance[z,y,x] > d:
                 #         surface_distance[z,y,x] = d
-
-    print('done ', filename)
 
     output_filename = patient_id + '_surface_distance.nii.gz'
     return surface_distance, output_filename
