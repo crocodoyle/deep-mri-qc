@@ -85,6 +85,7 @@ def make_abide(path, label_file):
 
     for index, filename in enumerate(os.listdir(path + '/T1_downsampled/')):
         patient_id = filename[:-4]
+        patient_data[patient_id] = {}
 
         print(patient_id)
         patient_data[patient_id]['index'] = index
