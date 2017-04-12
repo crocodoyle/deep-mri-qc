@@ -159,9 +159,6 @@ def make_abide(path, label_file):
     for i in range(total_subjects):
         surf_points = f['surfacepoints'][i, :, :]
 
-        # surface_distance_volume, output_filename = distance_to_surf(surf_points, patient_id)
-        # nib.save(surface_distance_volume, os.path.join(output_path, output_filename))
-
         p.apply_async(distance_to_surf, args=(surf_points, i,))
         print("Launched job", i)
 
