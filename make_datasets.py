@@ -10,11 +10,11 @@ from sklearn.neighbors import KDTree
 
 import nibabel as nib
 
-from multiprocessing import Pool
+from multiprocessing import Pool, Process
 
 
 output_path = '/data1/data/ABIDE/'
-cores = 4
+cores = 8
 
 
 def make_ibis(input_path, output_path, label_file):
@@ -141,7 +141,6 @@ def make_abide(path, label_file):
     label_file = open(os.path.join(path, label_file))
     lines = label_file.readlines()
 
-
     for i, line in enumerate(lines[1:]):   # skip header
         patient_id = line.split('+')[1].split('_')[0]
         label = int(line.split(',')[1])
@@ -154,7 +153,7 @@ def make_abide(path, label_file):
     print("Computing surface distances... Could take a while")
 
     # compute surface distance volumes in same space as T1
-    # p = Pool(cores)
+    p = Pool(cores)
     surf_points = np.zeros((40962*2, 3), dtype='float32')
 
     for i in range(total_subjects):
@@ -163,25 +162,16 @@ def make_abide(path, label_file):
         surface_distance_volume, output_filename = distance_to_surf(surf_points, patient_id)
         nib.save(surface_distance_volume, os.path.join(output_path, output_filename))
 
-        # p.map(distance_to_surf, args=(surf_points, i,), callback = save_result)
+        p.apply_async(distance_to_surf, args=(surf_points, i,))
 
-        print("Done ", str(i), 'of', total_subjects)
+    p.close()
+    p.join()
 
-    # p.close()
-    # p.join()
+    print("Done ", str(i), 'of', total_subjects)
 
     f.close()
 
     return 0
-
-def compute_gradient(img):
-
-    return
-
-def save_result(vol_info):
-
-    nib.save(vol_info['surface'], os.path.join(output_path, str(vol_info['index']) + '.nii.gz'))
-
 
 def distance_to_surf(surface_points, patient_id):
     surface_distance = np.ones((181, 217, 181), dtype='float32')
@@ -192,12 +182,21 @@ def distance_to_surf(surface_points, patient_id):
     floatY = np.zeros(np.shape(surface_distance)[1], dtype='float32')
     floatZ = np.zeros(np.shape(surface_distance)[2], dtype='float32')
 
-    print("building KDTree...")
+    for xx in range(np.shape(floatX)[0]):
+        floatX[xx] = float(xx)
+
+    for yy in range(np.shape(floatY)[0]):
+        floatY[yy] = float(yy)
+
+    for zz in range(np.shape(floatZ)[0]):
+        floatZ[zz] = float(zz)
+
+    # print("building KDTree...")
     tree = KDTree(surface_points, leaf_size=10000)
-    print("built KDTree!")
+    # print("built KDTree!")
 
     for z in range(np.shape(surface_distance)[0]):
-        print("z: ", z)
+        # print("z: ", z)
         for y in range(np.shape(surface_distance)[1]):
             for x in range(np.shape(surface_distance)[2]):
                 (distance, index) = tree.query(np.reshape([floatZ[z], floatY[y], floatX[x]], (1, 3)), return_distance = True)
@@ -210,6 +209,8 @@ def distance_to_surf(surface_points, patient_id):
                 #         surface_distance[z,y,x] = d
 
     output_filename = patient_id + '_surface_distance.nii.gz'
+
+    nib.save(surface_distance, output_filename)
     return surface_distance, output_filename
 
 
