@@ -104,19 +104,19 @@ def make_abide(path, label_file):
 
 
     # load images and compute gradient
-    for filename in os.listdir(path + '/T1_downsampled/'):
-        if '.mnc' in filename:
-            patient_id = filename.split('.')[0]
-
-            i = patient_data[patient_id]['index']
-            print(i, 'of', len(os.listdir(path + '/T1_downsampled/')))
-
-            img = nib.load(os.path.join(path + '/T1_downsampled/', filename)).get_data()  # load image data
-
-            f['images'][i, :, :, :, 0] = img
-            f['images'][i, :, :, :, 1] = np.sum(np.gradient(img), axis=0)
-        else:
-            print(filename, 'should not be here')
+    # for filename in os.listdir(path + '/T1_downsampled/'):
+    #     if '.mnc' in filename:
+    #         patient_id = filename.split('.')[0]
+    #
+    #         i = patient_data[patient_id]['index']
+    #         print(i, 'of', len(os.listdir(path + '/T1_downsampled/')))
+    #
+    #         img = nib.load(os.path.join(path + '/T1_downsampled/', filename)).get_data()  # load image data
+    #
+    #         f['images'][i, :, :, :, 0] = img
+    #         f['images'][i, :, :, :, 1] = np.sum(np.gradient(img), axis=0)
+    #     else:
+    #         print(filename, 'should not be here')
 
     # extract surfaces from combined left/right surface objs
     for filename in os.listdir(path + '/surfaces/'):
@@ -187,10 +187,9 @@ def distance_to_surf(surface_points, patient_id):
 
     print("surface points: ", np.shape(surface_points))
 
-    floatX = np.zeros(np.shape(surface_distance)[0])
-    floatY = np.zeros(np.shape(surface_distance)[1])
-    floatZ = np.zeros(np.shape(surface_distance)[2])
-
+    floatX = np.zeros(np.shape(surface_distance)[0], dtype='float32')
+    floatY = np.zeros(np.shape(surface_distance)[1], dtype='float32')
+    floatZ = np.zeros(np.shape(surface_distance)[2], dtype='float32')
 
     print("building KDTree...")
     tree = KDTree(surface_points, leaf_size=10000)
