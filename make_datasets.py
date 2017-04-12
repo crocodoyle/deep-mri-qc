@@ -148,7 +148,8 @@ def make_abide(path, label_file):
 
         print('patient:', patient_id, 'label:', label, 'line: ', line)
 
-        patient_data[patient_id]['label'] = label
+        if not 'followup' in line and not 'anat_2' in line and not 'anat_3' in line and not 'anat_4' in line and not 'anat_5' in line and not 'anat_6' in line:
+            patient_data[patient_id]['label'] = label
 
     print("Computing surface distances... Could take a while")
 
