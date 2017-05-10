@@ -90,7 +90,7 @@ def make_abide(path, label_file):
         if '.mnc' in filename:
             patient_id = filename[:-4]
             patient_data[patient_id] = {}
-            
+
             print(filename, patient_id)
             patient_data[patient_id]['index'] = index
         else:
@@ -165,7 +165,7 @@ def make_abide(path, label_file):
 
         # p.apply_async(distance_to_surf, args=(surf_points, i,))
         distance_to_surf(surf_points, i)
-	print("Launched job", i)
+        print("Launched job", i)
 
     p.close()
     p.join()
