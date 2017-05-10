@@ -163,8 +163,9 @@ def make_abide(path, label_file):
     for i in range(total_subjects):
         surf_points = f['surfacepoints'][i, :, :]
 
-        p.apply_async(distance_to_surf, args=(surf_points, i,))
-        print("Launched job", i)
+        # p.apply_async(distance_to_surf, args=(surf_points, i,))
+        distance_to_surf(surf_points, i)
+	print("Launched job", i)
 
     p.close()
     p.join()
@@ -193,12 +194,12 @@ def distance_to_surf(surface_points, patient_id):
     for zz in range(np.shape(floatZ)[0]):
         floatZ[zz] = float(zz)
 
-    # print("building KDTree...")
+    print("building KDTree...")
     tree = KDTree(surface_points, leaf_size=10000)
-    # print("built KDTree!")
+    print("built KDTree!")
 
     for z in range(np.shape(surface_distance)[0]):
-        # print("z: ", z)
+        print("z: ", z)
         for y in range(np.shape(surface_distance)[1]):
             for x in range(np.shape(surface_distance)[2]):
                 (distance, index) = tree.query(np.reshape([floatZ[z], floatY[y], floatX[x]], (1, 3)), return_distance = True)
@@ -210,9 +211,10 @@ def distance_to_surf(surface_points, patient_id):
                 #     if surface_distance[z,y,x] > d:
                 #         surface_distance[z,y,x] = d
 
-    output_filename = patient_id + '_surface_distance.nii.gz'
+    output_filename = os.path.join(output_path, str(patient_id) + '_surface_distance.nii.gz')
+    img = nib.Nifti1Image(surface_distance, np.eye(4))
 
-    nib.save(surface_distance, output_filename)
+    nib.save(img, output_filename)
     return surface_distance, output_filename
 
 
