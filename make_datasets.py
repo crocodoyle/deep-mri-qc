@@ -14,11 +14,14 @@ from multiprocessing import Pool, Process
 
 
 output_path = '/data1/data/ABIDE/'
-cores = 8
+cores = 10
 
 
 def make_ibis(input_path, output_path, label_file):
     f = h5py.File(output_path + 'ibis.hdf5', 'w')
+
+    pass_path = '~/T1_Minc_Pass/'
+    fail_path = '~/T1_Minc_Fail/'
 
     #store a maximum number of "pass" images
     max_pass = 1000
@@ -31,7 +34,7 @@ def make_ibis(input_path, output_path, label_file):
         for name in files:
             numImgs += 1
             if x_dim == 0:
-               img =  nibabel.load(os.path.join(root, name)).get_data()
+               img =  nib.load(os.path.join(root, name)).get_data()
                print(np.shape(img))
                x_dim = np.shape(img)[0]
                y_dim = np.shape(img)[1]
@@ -52,7 +55,7 @@ def make_ibis(input_path, output_path, label_file):
     i = 0
     for root, dirs, files in os.walk(fail_path, topdown=False):
         for name in files:
-            img = nibabel.load(os.path.join(root, name)).get_data()
+            img = nib.load(os.path.join(root, name)).get_data()
             if np.shape(img) == (x_dim, y_dim, z_dim):
                 images[i] = img
                 labels[i] = [1, 0]
@@ -62,7 +65,7 @@ def make_ibis(input_path, output_path, label_file):
 
     for root, dirs, files in os.walk(pass_path, topdown=False):
         for name in files:
-            img = nibabel.load(os.path.join(root, name)).get_data()
+            img = nib.load(os.path.join(root, name)).get_data()
             if np.shape(img) == (x_dim, y_dim, z_dim):
                 images[i] = img
                 labels[i] = [0, 1]
@@ -130,6 +133,7 @@ def make_abide(path, label_file):
 
         for j, line in enumerate(surface_obj.readlines()):
             coords = line.split(" ")
+            print('xyz coordinates', coords)
             if len(coords) != 3:
                 break
             f['surfacespoints'][i, j, :] = [float(coords[0]) + 72.5, float(coords[1]) + 126.5,
