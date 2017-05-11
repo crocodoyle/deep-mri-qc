@@ -285,18 +285,18 @@ if __name__ == "__main__":
     parser.add_argument("--epochs", help="number of epochs to train the model", type=int)
     args = parser.parse_args()
 
-    if args.imagesdir:
+    if args.imagesdir is not None:
         images_dir = args.imagesdir
-    if args.cluster:
+    if args.cluster is not None:
         cluster = args.cluster
-    if args.scratchdir:
+    if args.scratchdir is not None:
         scratch_dir = args.scratchdir
-    if args.train:
+    if args.train is not None:
         do_training = True
-    if args.model:
+    if args.model is not None:
         load_model = True
         model_to_load = args.model
-    if args.epochs:
+    if args.epochs is not None:
         nb_epoch = args.epochs
 
     print("command line arguments")
