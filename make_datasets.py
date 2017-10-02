@@ -39,7 +39,7 @@ def make_ping(input_path, f, label_file, subject_index):
                 elif label == 2:
                     f['qc_label'][subject_index, :] = [0, 0, 1]
 
-                f['qc_comments'][subject_index] = comment
+                f['qc_comment'][subject_index] = comment
 
                 print(t1_filename, np.shape(t1_data))
 
@@ -283,9 +283,9 @@ if __name__ == "__main__":
 
     f = h5py.File(output_file, 'w')
     f.create_dataset('MRI', (1154, 166, 256, 256), maxshape=(None, 166, 256, 256), dtype='float32')
-    f.create_dataset('qc_labels', (1154, 3), maxshape=(None, 3), dtype='uint8')
+    f.create_dataset('qc_label', (1154, 3), maxshape=(None, 3), dtype='uint8')
     dt = h5py.special_dtype(vlen=bytes)
-    f.create_dataset('qc_comments', (1154,), dtype=dt)
+    f.create_dataset('qc_comment', (1154,), dtype=dt)
 
 
 
