@@ -16,9 +16,8 @@ from multiprocessing import Pool, Process
 output_file = '/data1/data/deepqc/deepqc.hdf5'
 cores = 10
 
-subject_index = 0
 
-def make_ping(input_path, f, label_file):
+def make_ping(input_path, f, label_file, subject_index):
 
     with open(os.path.join(input_path, label_file)) as label_file:
         qc_reader = csv.reader(label_file)
@@ -48,6 +47,7 @@ def make_ping(input_path, f, label_file):
             except FileNotFoundError as e:
                 print('File not found:'. t1_filename)
 
+    return subject_index
 
 
 def make_ibis(input_path, output_path, label_file):
@@ -288,7 +288,10 @@ if __name__ == "__main__":
     f.create_dataset('qc_comments', (1154,), dtype=dt)
 
 
-    make_ping('/data1/data/PING/', f, 't1_qc.csv')
+
+    subject_index = 0
+
+    subject_index = make_ping('/data1/data/PING/', f, 't1_qc.csv', subject_index)
 
     f.close()
 
