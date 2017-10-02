@@ -284,7 +284,8 @@ if __name__ == "__main__":
     f = h5py.File(output_file, 'w')
     f.create_dataset('MRI', (1154, 166, 256, 256), maxshape=(None, 166, 256, 256), dtype='float32')
     f.create_dataset('qc_labels', (1154, 3), maxshape=(None, 3), dtype='uint8')
-    f.create_dataset('qc_comments', (1154,), dtype='bytes')
+    dt = h5py.special_dtype(vlen=bytes)
+    f.create_dataset('qc_comments', (1154,), dtype=dt)
 
 
     make_ping('/data1/data/PING/', f, 't1_qc.csv')
