@@ -13,9 +13,24 @@ import nibabel as nib
 from multiprocessing import Pool, Process
 
 
-output_path = '/data1/data/ABIDE/'
+output_file = '/data1/data/deepqc/deepqc.hdf5'
 cores = 10
 
+
+
+def make_ping(input_path, f, label_file):
+
+    label_file = open(os.path.join(input_path, label_file))
+    lines = label_file.readlines()
+
+    for line in lines:
+        t1_filename = line[0][-4] + '.mnc'
+        label = int(line[1])                                                #0, 1, or 2
+        comment = line[2]
+
+        t1_data = nib.load(input_path + t1_filename).get_data()
+
+        print(t1_filename, np.shape(t1_data))
 
 def make_ibis(input_path, output_path, label_file):
     f = h5py.File(output_path + 'ibis.hdf5', 'w')
@@ -78,9 +93,9 @@ def make_ibis(input_path, output_path, label_file):
 
     return
 
-def make_nihpd(input_path, output_path, label_file):
-
-  f = h5py.File(output_path + 'nihpd.hdf5', 'w')
+# def make_nihpd(input_path, output_path, label_file):
+#
+#   f = h5py.File(output_path + 'nihpd.hdf5', 'w')
 
 
 def make_abide(path, label_file):
@@ -248,7 +263,9 @@ if __name__ == "__main__":
     #     except:
     #         print filename
 
+    f = h5py.File(output_file, 'w')
 
+    make_ping('/data1/data/PING/', f, 't1_qc.csv')
 
-    make_abide('/data1/data/ABIDE/', 'labels.csv')
+    # make_abide('/data1/data/ABIDE/', 'labels.csv')
   # make_nihpd('/data1/data/NIHPD/assembly/', 'data1/data/dl-datasets/')
