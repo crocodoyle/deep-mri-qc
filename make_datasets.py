@@ -24,6 +24,7 @@ def make_ping(input_path, f, label_file):
     lines = label_file.readlines()
 
     for line in lines:
+        print(line)
         t1_filename = line[0][-4] + '.mnc'
         label = int(line[1])                                                #0, 1, or 2
         comment = line[2]
