@@ -24,7 +24,7 @@ def make_ping(input_path, f, label_file):
         qc_reader = csv.reader(label_file)
 
         for line in qc_reader:
-            t1_filename = line[0][-4] + '.mnc'
+            t1_filename = line[0][0:-4] + '.mnc'
             label = int(line[1])                                                #0, 1, or 2
             comment = line[2]
 
