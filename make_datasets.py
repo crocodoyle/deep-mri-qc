@@ -36,6 +36,7 @@ def make_ping(input_path, f, label_file, subject_index):
 
                 if not t1_data.shape == (166, 256, 256):
                     t1_data = resize_image_with_crop_or_pad(t1_data, img_size=[166, 256, 256], mode='constant')
+                    print('resizing...')
 
                 f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
 
@@ -48,7 +49,7 @@ def make_ping(input_path, f, label_file, subject_index):
 
                 f['qc_comment'][subject_index] = comment
 
-                print(t1_filename, np.shape(t1_data))
+                print(subject_index, t1_filename, np.shape(t1_data))
 
                 subject_index += 1
             except FileNotFoundError as e:
