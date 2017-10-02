@@ -45,7 +45,7 @@ def make_ping(input_path, f, label_file, subject_index):
 
                 subject_index += 1
             except FileNotFoundError as e:
-                print('File not found:'. t1_filename)
+                print('File not found:', line)
 
     return subject_index
 
