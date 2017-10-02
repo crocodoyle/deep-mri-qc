@@ -3,6 +3,10 @@ from scipy.spatial.distance import euclidean
 
 import os, sys, time, csv, subprocess
 
+from dltk.core.io.preprocessing import normalise_zero_one, resize_image_with_crop_or_pad
+import dltk
+
+
 import h5py
 import sklearn
 
@@ -30,7 +34,10 @@ def make_ping(input_path, f, label_file, subject_index):
 
                 t1_data = nib.load(input_path + t1_filename).get_data()
 
-                f['MRI'][subject_index, ...] = t1_data
+                if not t1_data.shape == (166, 256, 256):
+                    t1_data = resize_image_with_crop_or_pad(t1_data, img_size=[166, 256, 256])
+
+                f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
 
                 if label == 0:
                     f['qc_label'][subject_index, :] = [1, 0, 0]
