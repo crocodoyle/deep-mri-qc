@@ -16,7 +16,7 @@ from multiprocessing import Pool, Process
 output_file = '/data1/data/deepqc/deepqc.hdf5'
 cores = 10
 
-
+subject_index = 0
 
 def make_ping(input_path, f, label_file):
 
@@ -24,13 +24,31 @@ def make_ping(input_path, f, label_file):
         qc_reader = csv.reader(label_file)
 
         for line in qc_reader:
-            t1_filename = line[0][0:-4] + '.mnc'
-            label = int(line[1])                                                #0, 1, or 2
-            comment = line[2]
+            try:
+                t1_filename = line[0][0:-4] + '.mnc'
+                label = int(line[1])                                                #0, 1, or 2
+                comment = line[2]
 
-            t1_data = nib.load(input_path + t1_filename).get_data()
+                t1_data = nib.load(input_path + t1_filename).get_data()
 
-            print(t1_filename, np.shape(t1_data))
+                f['MRI'][subject_index, ...] = t1_data
+
+                if label == 0:
+                    f['qc_label'][subject_index, :] = [1, 0, 0]
+                elif label == 1:
+                    f['qc_label'][subject_index, :] = [0, 1, 0]
+                elif label == 2:
+                    f['qc_label'][subject_index, :] = [0, 0, 1]
+
+                f['qc_comments'][subject_index] = comment
+
+                print(t1_filename, np.shape(t1_data))
+
+                subject_index += 1
+            except FileNotFoundError as e:
+                print('File not found:'. t1_filename)
+
+
 
 def make_ibis(input_path, output_path, label_file):
     f = h5py.File(output_path + 'ibis.hdf5', 'w')
@@ -264,8 +282,14 @@ if __name__ == "__main__":
     #         print filename
 
     f = h5py.File(output_file, 'w')
+    f.create_dataset('MRI', (1154, 166, 256, 256), maxshape=(None, 166, 256, 256), dtype='float32')
+    f.create_dataset('qc_labels', (1154, 3), maxshape=(None, 3), dtype='uint8')
+    f.create_dataset('qc_comments', (1154,), dtype='str')
+
 
     make_ping('/data1/data/PING/', f, 't1_qc.csv')
+
+    f.close()
 
     # make_abide('/data1/data/ABIDE/', 'labels.csv')
   # make_nihpd('/data1/data/NIHPD/assembly/', 'data1/data/dl-datasets/')
