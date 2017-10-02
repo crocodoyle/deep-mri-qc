@@ -20,18 +20,17 @@ cores = 10
 
 def make_ping(input_path, f, label_file):
 
-    label_file = open(os.path.join(input_path, label_file))
-    lines = label_file.readlines()
+    with open(os.path.join(input_path, label_file)) as label_file:
+        qc_reader = csv.reader(label_file)
 
-    for line in lines:
-        print(line)
-        t1_filename = line[0][-4] + '.mnc'
-        label = int(line[1])                                                #0, 1, or 2
-        comment = line[2]
+        for line in qc_reader:
+            t1_filename = line[0][-4] + '.mnc'
+            label = int(line[1])                                                #0, 1, or 2
+            comment = line[2]
 
-        t1_data = nib.load(input_path + t1_filename).get_data()
+            t1_data = nib.load(input_path + t1_filename).get_data()
 
-        print(t1_filename, np.shape(t1_data))
+            print(t1_filename, np.shape(t1_data))
 
 def make_ibis(input_path, output_path, label_file):
     f = h5py.File(output_path + 'ibis.hdf5', 'w')
