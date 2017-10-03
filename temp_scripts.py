@@ -26,7 +26,7 @@ def flatten_IBIS():
 
                 print(filename)
                 print('/data1/data/IBIS/' + filename)
-                # os.rename(os.path.join(root, orig_filename), '/data1/data/IBIS/' + filename)
+                os.rename(os.path.join(root, orig_filename), '/data1/data/IBIS/' + filename)
 
 
 if __name__ == "__main__":
