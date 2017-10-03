@@ -25,14 +25,14 @@ def flatten_IBIS():
                 if '.mnc' in file:
                     filename = file.split('//')[-1]
                     qc_writer.writerow([filename, '0'])
+                    os.rename(os.path.join(root, file), os.path.join('/data1/data/IBIS') + filename)
 
         for root, dirs, files in os.walk('/data1/data/IBIS/T1_Minc_Pass', topdown=False):
             for file in files:
                 if '.mnc' in file:
                     filename = file.split('//')[-1]
                     qc_writer.writerow([filename, '2'])
-
-
+                    os.rename(os.path.join(root, file), os.path.join('/data1/data/IBIS') + filename)
 
 
 if __name__ == "__main__":
