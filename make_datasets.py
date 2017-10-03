@@ -34,8 +34,8 @@ def make_ping(input_path, f, label_file, subject_index):
                 t1_data = nib.load(input_path + t1_filename).get_data()
 
                 if not t1_data.shape == (192, 256, 256):
-                    t1_data = resize_image_with_crop_or_pad(t1_data, img_size=[192, 256, 256], mode='constant')
                     print('resizing from', t1_data.shape)
+                    t1_data = resize_image_with_crop_or_pad(t1_data, img_size=[192, 256, 256], mode='constant')
 
                 f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
 
