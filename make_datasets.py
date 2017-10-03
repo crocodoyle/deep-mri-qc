@@ -92,7 +92,7 @@ def make_ibis(input_path, f, label_file, subject_index):
 def make_abide(input_path, f, label_file, subject_index):
     with open(os.path.join(input_path, label_file)) as label_file:
         qc_reader = csv.reader(label_file)
-        qc_reader.next()
+        qc_reader.__next__()
 
         for line in qc_reader:
             try:
@@ -125,7 +125,7 @@ def make_abide(input_path, f, label_file, subject_index):
 def make_ds030(input_path, f, label_file, subject_index):
     with open(os.path.join(input_path, label_file)) as label_file:
         qc_reader = csv.reader(label_file)
-        qc_reader.next()
+        qc_reader.__next__()
 
         for line in qc_reader:
             try:
