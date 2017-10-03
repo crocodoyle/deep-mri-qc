@@ -17,23 +17,15 @@ import nibabel as nib
 from multiprocessing import Pool, Process
 
 def flatten_IBIS():
-    with open(os.path.join('/data1/data/IBIS', 't1_qc.csv'), 'w') as label_file:
-        qc_writer = csv.writer(label_file)
 
-        for root, dirs, files in os.walk('/data1/data/IBIS/T1_Minc_Fail', topdown=False):
-            for file in files:
-                if '.mnc' in file:
-                    filename = file.split('//')[-1]
-                    qc_writer.writerow([filename, '0'])
-                    # os.rename(os.path.join(root, file), os.path.join('/data1/data/IBIS') + filename)
-                    print(os.path.join('/data1/data/IBIS') + filename)
+    for root, dirs, files in os.walk('/data1/data'):
+        for file in files:
+            if '.mnc' in file and 'IBIS' in file:
+                filename = file.split('//')[-1][4:]
 
-        for root, dirs, files in os.walk('/data1/data/IBIS/T1_Minc_Pass', topdown=False):
-            for file in files:
-                if '.mnc' in file:
-                    filename = file.split('//')[-1]
-                    qc_writer.writerow([filename, '2'])
-                    # os.rename(os.path.join(root, file), os.path.join('/data1/data/IBIS') + filename)
+                print(filename)
+                print('/data1/data/IBIS/' + filename)
+                # os.rename(os.path.join(root, file), os.path.join('/data1/data/IBIS') + filename)
 
 
 if __name__ == "__main__":
