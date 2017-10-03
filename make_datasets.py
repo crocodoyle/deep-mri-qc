@@ -22,7 +22,6 @@ cores = 10
 
 
 def make_ping(input_path, f, label_file, subject_index):
-
     with open(os.path.join(input_path, label_file)) as label_file:
         qc_reader = csv.reader(label_file)
 
@@ -34,9 +33,9 @@ def make_ping(input_path, f, label_file, subject_index):
 
                 t1_data = nib.load(input_path + t1_filename).get_data()
 
-                if not t1_data.shape == (166, 256, 256):
-                    t1_data = resize_image_with_crop_or_pad(t1_data, img_size=[166, 256, 256], mode='constant')
-                    print('resizing...')
+                if not t1_data.shape == (192, 256, 256):
+                    t1_data = resize_image_with_crop_or_pad(t1_data, img_size=[192, 256, 256], mode='constant')
+                    print('resizing from', t1_data.shape)
 
                 f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
 
@@ -58,73 +57,108 @@ def make_ping(input_path, f, label_file, subject_index):
     return subject_index
 
 
-def make_ibis(input_path, output_path, label_file):
-    f = h5py.File(output_path + 'ibis.hdf5', 'w')
+def make_ibis(input_path, f, label_file, subject_index):
+    with open(os.path.join(input_path, label_file)) as label_file:
+        qc_reader = csv.reader(label_file)
 
-    pass_path = '~/T1_Minc_Pass/'
-    fail_path = '~/T1_Minc_Fail/'
+        for line in qc_reader:
+            try:
+                t1_filename = line[0][0:-4] + '.mnc'
+                label = int(line[1])                                                #0, 1, or 2
 
-    #store a maximum number of "pass" images
-    max_pass = 1000
+                t1_data = nib.load(input_path + t1_filename).get_data()
 
-    # First loop through the data we need to count the number of files
-    # also check dims
-    numImgs = 0
-    x_dim, y_dim, z_dim = 0, 0, 0
-    for root, dirs, files in os.walk(fail_path, topdown=False):
-        for name in files:
-            numImgs += 1
-            if x_dim == 0:
-               img =  nib.load(os.path.join(root, name)).get_data()
-               print(np.shape(img))
-               x_dim = np.shape(img)[0]
-               y_dim = np.shape(img)[1]
-               z_dim = np.shape(img)[2]
-    for root, dirs, files in os.walk(pass_path, topdown=False):
-        for name in files:
-            numImgs += 1
-            if numImgs > max_pass:
-                break
-        if numImgs > max_pass:
-            break
+                if not t1_data.shape == (192, 256, 256):
+                    print('resizing from', t1_data.shape)
+                    t1_data = resize_image_with_crop_or_pad(t1_data, img_size=[192, 256, 256], mode='constant')
 
-    images    = f.create_dataset('T1', (numImgs, x_dim, y_dim, z_dim), dtype='float32')
-    labels    = f.create_dataset('T1_QC_labels', (numImgs,2), dtype='bool')
-    filenames = f.create_dataset('T1_filenames', (numImgs,), dtype='str')
+                f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
 
-    # Second time through, write the image data to the HDF5 file
-    i = 0
-    for root, dirs, files in os.walk(fail_path, topdown=False):
-        for name in files:
-            img = nib.load(os.path.join(root, name)).get_data()
-            if np.shape(img) == (x_dim, y_dim, z_dim):
-                images[i] = img
-                labels[i] = [1, 0]
-                filenames.append(os.path.join(root, name))
-                i += 1
+                if label == 0:
+                    f['qc_label'][subject_index, :] = [1, 0, 0]
+                elif label == 1:
+                    f['qc_label'][subject_index, :] = [0, 1, 0]
+                elif label == 2:
+                    f['qc_label'][subject_index, :] = [0, 0, 1]
 
+                print(subject_index, t1_filename)
 
-    for root, dirs, files in os.walk(pass_path, topdown=False):
-        for name in files:
-            img = nib.load(os.path.join(root, name)).get_data()
-            if np.shape(img) == (x_dim, y_dim, z_dim):
-                images[i] = img
-                labels[i] = [0, 1]
-                filenames.append(os.path.join(root, name))
-                i += 1
-            if i > max_pass:
-                break
-        if i > max_pass:
-            break
+                subject_index += 1
+            except FileNotFoundError as e:
+                print('File not found:', line)
 
-    return
+    return subject_index
 
-# def make_nihpd(input_path, output_path, label_file):
-#
-#   f = h5py.File(output_path + 'nihpd.hdf5', 'w')
+def make_abide(input_path, f, label_file, subject_index):
+    with open(os.path.join(input_path, label_file)) as label_file:
+        qc_reader = csv.reader(label_file)
 
+        for line in qc_reader:
+            try:
+                t1_filename = line[0] + '.nii.gz'
+                label1 = int(line[3]) + 1                #-1, 0, or 1
+                label2 = int(line[4]) + 1
 
-def make_abide(path, label_file):
+                t1_data = nib.load(input_path + t1_filename).get_data()
+
+                if not t1_data.shape == (192, 256, 256):
+                    print('resizing from', t1_data.shape)
+                    t1_data = resize_image_with_crop_or_pad(t1_data, img_size=[192, 256, 256], mode='constant')
+
+                f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
+
+                one_hot = [0, 0, 0]
+                one_hot[label1] += 0.5
+                one_hot[label2] += 0.5
+
+                f['qc_label'][subject_index, :] = one_hot
+
+                print(subject_index, t1_filename)
+
+                subject_index += 1
+            except FileNotFoundError as e:
+                print('File not found:', line)
+
+    return subject_index
+
+def make_ds030(input_path, f, label_file, subject_index):
+    with open(os.path.join(input_path, label_file)) as label_file:
+        qc_reader = csv.reader(label_file)
+
+        for line in qc_reader:
+            try:
+                t1_filename = line[0] + 'nii.gz'
+                label = line[8]
+
+                if len(label) > 0:
+
+                    t1_data = nib.load(input_path + t1_filename).get_data()
+
+                    if not t1_data.shape == (192, 256, 256):
+                        print('resizing from', t1_data.shape)
+                        t1_data = resize_image_with_crop_or_pad(t1_data, img_size=[192, 256, 256], mode='constant')
+
+                    f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
+
+                    if 'ok' in label:
+                        one_hot = [0, 0, 1]
+                    elif 'maybe' in label:
+                        one_hot = [0, 1, 0]
+                    elif 'exclude' in label:
+                        one_hot = [1, 0, 0]
+
+                    f['qc_label'][subject_index, :] = one_hot
+
+                    print(subject_index, t1_filename)
+
+                    subject_index += 1
+
+            except FileNotFoundError as e:
+                print('File not found:', line)
+
+    return subject_index
+
+def make_abide_surfaces(path, label_file):
     patient_data = {}
 
     for index, filename in enumerate(os.listdir(path + '/T1_downsampled/')):
@@ -265,8 +299,6 @@ def combine_objs(obj1, obj2, newname):
     print(newname)
     subprocess.Popen(['objconcat', obj1, obj2, 'none', 'none', newname, 'none'])
 
-
-
 if __name__ == "__main__":
     path = '/data1/data/ABIDE/'
 
@@ -289,17 +321,28 @@ if __name__ == "__main__":
     #     except:
     #         print filename
 
+
+
+    #PING: 1154
+    #IBIS: 468
+    #ABIDE: 1113
+    #ds030: 282
+
     f = h5py.File(output_file, 'w')
-    f.create_dataset('MRI', (1154, 166, 256, 256), maxshape=(None, 166, 256, 256), dtype='float32')
+    f.create_dataset('MRI', (1154+468+113+282, 192, 256, 256), maxshape=(None, 192, 256, 256), dtype='float32')
     f.create_dataset('qc_label', (1154, 3), maxshape=(None, 3), dtype='uint8')
     dt = h5py.special_dtype(vlen=bytes)
     f.create_dataset('qc_comment', (1154,), dtype=dt)
 
-
-
     subject_index = 0
 
-    subject_index = make_ping('/data1/data/PING/', f, 't1_qc.csv', subject_index)
+    ping_end_index = make_ping('/data1/data/PING/', f, 't1_qc.csv', subject_index) - 1
+    abide_end_index = make_abide('/data1/data/deep_abide/', f, 'abide_t1_qc.csv', ping_end_index + 1) - 1
+    ibis_end_index = make_ibis('/data1/data/IBIS/', f, 't1_qc.csv', abide_end_index + 1) - 1
+    ds030_end_index = make_ds030('/data1/data/ds030/', f, 'ds030_DB.csv', ibis_end_index + 1) - 1
+
+    print(ping_end_index, abide_end_index, ibis_end_index, ds030_end_index)
+    print(1154+468+113+282)
 
     f.close()
 
