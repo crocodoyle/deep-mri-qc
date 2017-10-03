@@ -21,6 +21,7 @@ def flatten_IBIS():
         for file in files:
             if '.mnc' in file:
                 print(root + file)
+                print(file.split('//')[-1])
 
 if __name__ == "__main__":
     flatten_IBIS()
