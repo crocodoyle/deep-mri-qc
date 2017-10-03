@@ -97,8 +97,17 @@ def make_abide(input_path, f, label_file, subject_index):
         for line in qc_reader:
             try:
                 t1_filename = line[0] + '.nii.gz'
-                label1 = int(line[3]) + 1                #-1, 0, or 1
-                label2 = int(line[4]) + 1
+
+                one_hot = [0, 0, 0]
+
+                if len(line[3]) > 0:
+                    label1 = int(line[3]) + 1                #-1, 0, or 1
+                    one_hot[label1] += 0.5
+                if len(line[4]) > 0:
+                    label2 = int(line[4]) + 1
+                    one_hot[label2] += 0.5
+
+                f['qc_label'][subject_index, :] = one_hot
 
                 t1_data = nib.load(input_path + t1_filename).get_data()
 
@@ -108,11 +117,7 @@ def make_abide(input_path, f, label_file, subject_index):
 
                 f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
 
-                one_hot = [0, 0, 0]
-                one_hot[label1] += 0.5
-                one_hot[label2] += 0.5
 
-                f['qc_label'][subject_index, :] = one_hot
 
                 print(subject_index, t1_filename)
 
