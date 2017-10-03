@@ -21,11 +21,12 @@ def flatten_IBIS():
     for root, dirs, files in os.walk('/data1/data'):
         for file in files:
             if '.mnc' in file and 'IBIS' in file:
+                orig_filename = file.split('//')[-1]
                 filename = file.split('//')[-1][4:]
 
                 print(filename)
                 print('/data1/data/IBIS/' + filename)
-                # os.rename(os.path.join(root, file), os.path.join('/data1/data/IBIS') + filename)
+                os.rename(os.path.join(root, orig_filename), '/data1/data/IBIS/' + filename)
 
 
 if __name__ == "__main__":
