@@ -134,7 +134,7 @@ def make_ds030(input_path, f, label_file, subject_index):
 
         for line in qc_reader:
             try:
-                t1_filename = line[0] + 'nii.gz'
+                t1_filename = line[0] + '.nii.gz'
                 label = line[8]
 
                 if len(label) > 0:
