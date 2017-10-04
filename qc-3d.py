@@ -67,10 +67,10 @@ def batch(indices, f):
 
 if __name__ == "__main__":
 
-    ping_end_index = 0
-    abide_end_index = 0
-    ibis_end_index = 0
-    ds030_end_index = 0
+    ping_end_index = 1153
+    abide_end_index = 2124
+    ibis_end_index = 2592
+    ds030_end_index = 2857
 
     f = h5py.File('/data1/data/deepqc/deepqc.hdf5')
 
