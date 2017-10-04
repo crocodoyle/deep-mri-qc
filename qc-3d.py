@@ -1,169 +1,97 @@
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Activation, Convolution3D, MaxPooling3D, Flatten, BatchNormalization, SpatialDropout3D
-from keras.optimizers import SGD
+from keras.layers import Dense, Dropout, Activation, Conv3D, MaxPooling3D, Flatten, BatchNormalization
 
 import numpy as np
 import h5py
 
-import os
-import nibabel
-import cPickle as pkl
-import argparse
-
 import matplotlib.pyplot as plt
 
-from sklearn.cross_validation import StratifiedShuffleSplit
-
-images_dir = '/gs/scratch/adoyle/'
-cluster = False
-
-if cluster:
-    images_dir  = '/gs/scratch/adoyle/' 
-    scratch_dir = os.environ.get('RAMDISK') + '/'
-else:
-    images_dir   = '/home/adoyle/'
-    scratch_dir  = images_dir
-
-print 'SCRATCH', scratch_dir
-print 'IMAGES:', images_dir
-
-
-def load_data(fail_path, pass_path):
-    print "loading data..."
-    filenames = []
-    labels = []
-
-    f = h5py.File(scratch_dir + 'ibis.hdf5', 'w')
-
-
-    # First loop through the data we need to count the number of files
-    # also check dims
-    numImgs = 0
-    x_dim, y_dim, z_dim = 0, 0, 0
-    for root, dirs, files in os.walk(fail_path, topdown=False):
-	for name in files:
-            numImgs += 1
-	    if x_dim == 0:
-               img =  nibabel.load(os.path.join(root, name)).get_data()
-               print np.shape(img)
-               x_dim = np.shape(img)[0]
-               y_dim = np.shape(img)[1]
-               z_dim = np.shape(img)[2]
-    for root, dirs, files in os.walk(pass_path, topdown=False):
-        for name in files:
-            numImgs += 1
-
-    images = f.create_dataset('ibis_t1', (numImgs, x_dim, y_dim, z_dim), dtype='float32')
-    labels = np.zeros((numImgs, 2), dtype='bool')
-
-    # Second time through, write the image data to the HDF5 file
-    i = 0
-    for root, dirs, files in os.walk(fail_path, topdown=False):
-        for name in files:
-            img = nibabel.load(os.path.join(root, name)).get_data()
-            if np.shape(img) == (x_dim, y_dim, z_dim):
-                images[i] = img
-                labels[i] = [1, 0]
-                filenames.append(os.path.join(root, name))
-    	        i += 1
-
-
-    for root, dirs, files in os.walk(pass_path, topdown=False):
-        for name in files:
-            img = nibabel.load(os.path.join(root, name)).get_data()
-            if np.shape(img) == (x_dim, y_dim, z_dim):
-                images[i] = img
-                labels[i] = [0, 1]
-                filenames.append(os.path.join(root, name))
-    	        i += 1
-
-    indices = StratifiedShuffleSplit(labels, test_size=0.4, n_iter=1, random_state=None)
-
-    train_index, test_index = None, None
-    for train_indices, test_indices in indices:
-        train_index = train_indices
-        test_index  = test_indices
-
-    filename_test = []
-    for i, f in enumerate(filenames):
-        if i in test_index:
-            filename_test.append(f)
-
-    return train_index, test_index, labels, filename_test
-
+from sklearn.model_selection import StratifiedKFold
 
 def qc_model():
-#    data_dim = 160*256*224
-    nb_classes = 2
+    nb_classes = 3
 
     model = Sequential()
 
-    model.add(Convolution3D(7, 3, 3, 3, activation='relu', input_shape=(1, 160, 256, 224)))
+    model.add(Conv3D(8, (3, 3, 3), activation='relu', input_shape=(1, 192, 256, 256)))
+    model.add(Dropout(0.2))
+    model.add(Conv3D(8, (3, 3, 3), activation='relu'))
+    model.add(Dropout(0.2))
     model.add(BatchNormalization())
     model.add(MaxPooling3D(pool_size=(2, 2, 2)))
-#    model.add(SpatialDropout2D(0.5))
 
-    model.add(Convolution3D(8, 3, 3, 3, activation='relu'))
-    model.add(BatchNormalization())
-#    model.add(MaxPooling2D(pool_size=(3, 3)))
-#    model.add(SpatialDropout2D(0.5))
-
-    model.add(Convolution3D(12, 3, 3, 3, activation='relu'))
+    model.add(Conv3D(16, (3, 3, 3), activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(Conv3D(16, (3, 3, 3), activation='relu'))
+    model.add(Dropout(0.2))
     model.add(BatchNormalization())
     model.add(MaxPooling3D(pool_size=(2, 2, 2)))
-#    model.add(SpatialDropout2D(0.2))
+
+
+    model.add(Conv3D(32, (3, 3, 3), activation='relu'))
+    model.add(Dropout(0.3))
+    model.add(Conv3D(32, (3, 3, 3), activation='relu'))
+    model.add(Dropout(0.3))
+    model.add(BatchNormalization())
+    model.add(MaxPooling3D(pool_size=(2, 2, 2)))
 #
+    model.add(Conv3D(64, (3, 3, 3), activation='relu'))
+    model.add(Dropout(0.4))
+
     model.add(Flatten())
     model.add(Dense(10, init='uniform', activation='relu'))
-#    model.add(Dropout(0.5))
+    model.add(Dropout(0.5))
     model.add(Dense(10, init='uniform', activation='relu'))
+    model.add(Dropout(0.5))
     model.add(Dense(nb_classes, init='uniform'))
     model.add(Activation('softmax'))
 
     model.compile(loss='categorical_crossentropy',
-                  optimizer='sgd',
+                  optimizer='adam',
                   metrics=["accuracy"])
 
     return model
 
-# generator that produces batches of size n so that we don't overload memory
-def batch(train_indices, labels, n):
-    f = h5py.File(scratch_dir + 'ibis.hdf5', 'r')
-    images = f.get('ibis_t1')
+def batch(indices, f):
+    images = f['MRI']
+    labels = f['qc_label']    #already in one-hot
 
-    print images
-    x_train = np.zeros((n, 1, 160, 256, 224), dtype=np.float32)
-    y_train = np.zeros((n, 2), dtype=np.int8)
-
-    indices = train_indices
     while True:
         np.random.shuffle(indices)
 
-        samples_this_batch = 0
-        for i, index in enumerate(indices):
-            x_train[i%n, 0, :, :, :] = images[index]
-            y_train[i%n, :]   = labels[index]
-            samples_this_batch += 1
-            if (i+1) % n == 0:
-                yield (x_train, y_train)
-                samples_this_batch = 0
-            elif i == len(indices)-1:
-                yield (x_train[0:samples_this_batch, ...], y_train[0:samples_this_batch, :])
-		samples_this_batch = 0
-
-
+        for index in indices:
+            try:
+                yield (images[index, ...], labels[index, ...])
+            except:
+                yield (images[index, ...])
 
 if __name__ == "__main__":
-    print "Running automatic QC"
-    fail_data = images_dir + "T1_Minc_Fail"
-    pass_data = images_dir + "T1_Minc_Pass"
-	
-	parser = argparse.ArgumentParser("Learn an automatic Quality Control system")
-	parser.add_argument("--images_dir", metavar="i", help="The root of the directory that holds the QC images")
-	parser.add_argument("--labels_file", metavar="l", help="CSV file that contains the labels for the images. The first column should specify a filename, and the second column should include a 0 for FAIL or 1 for PASS.")
-	args = parser.parse_args()
-	
-    train_indices, test_indices, labels, filename_test = load_data(fail_data, pass_data)
+
+    ping_end_index = 0
+    abide_end_index = 0
+    ibis_end_index = 0
+    ds030_end_index = 0
+
+    f = h5py.File('/data1/data/deepqc/deepqc.hdf5')
+
+    ping_indices = np.linspace(0, ping_end_index)
+    abide_indices = np.linspace(ping_end_index + 1, abide_end_index)
+    ibis_indices = np.linspace(abide_end_index + 1, ibis_end_index)
+    ds030_indices = np.linspace(ibis_end_index + 1, ds030_end_index)
+
+    train_indices = ping_indices + abide_indices + ibis_indices
+
+    train_labels = f['qc_label'][train_indices]
+
+    skf = StratifiedKFold(n_splits=1, test_size = 0.1)
+
+    train_indices, validation_indices = skf.split(train_indices, train_labels)
+
+    test_indices = ds030_indices
+
+    print('train:', train_indices)
+    print('test:', test_indices)
+
 
     # define model
     model = qc_model()
@@ -171,15 +99,13 @@ if __name__ == "__main__":
     # print summary of model
     model.summary()
 
-    num_epochs = 100
+    num_epochs = 300
 
-    # for epoch in range(num_epochs):
-	   # print 'epoch', epoch, 'of', str(num_epochs)
-    model.fit_generator(batch(train_indices, labels, 2), nb_epoch=num_epochs, samples_per_epoch=len(train_indices), validation_data=batch(test_indices, labels, 2), nb_val_samples=len(test_indices))
-
-    model_config = model.get_config()
-    pkl.dumps(model_config, 'convnet_model' + str(num_epochs) + '.pkl')
-
-
-    score = model.evaluate_generator(batch(test_indices, labels, 2), len(test_indices))
-    print score
+    hist = model.fit_generator(
+        batch(train_indices, f),
+        len(train_indices),
+        epochs=num_epochs,
+        samples_per_epoch=len(train_indices),
+        validation_data=batch(validation_indices, f),
+        validation_steps=len(validation_indices)
+    )
