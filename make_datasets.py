@@ -335,7 +335,7 @@ if __name__ == "__main__":
     #ABIDE: 1113
     #ds030: 282
 
-    total_subjects = 1154 + 468 + 113 + 282
+    total_subjects = 1154 + 468 + 1113 + 282
 
     f = h5py.File(output_file, 'w')
     # f.create_dataset('MRI', (1154+468+113+282, 192, 256, 256), maxshape=(None, 192, 256, 256), dtype='float32')
