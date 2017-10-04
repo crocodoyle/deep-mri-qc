@@ -346,11 +346,11 @@ if __name__ == "__main__":
     ping_end_index, abide_end_index, ibis_end_index, ds030_end_index = 0, 0, 0, 0
     # ping_end_index = make_ping('/data1/data/PING/', f, 't1_qc.csv', subject_index) - 1
     # abide_end_index = make_abide('/data1/data/deep_abide/', f, 'abide_t1_qc.csv', ping_end_index + 1) - 1
-    ibis_end_index = make_ibis('/data1/data/IBIS/', f, 'ibis_t1_qc.csv', abide_end_index + 1) - 1
+    # ibis_end_index = make_ibis('/data1/data/IBIS/', f, 'ibis_t1_qc.csv', abide_end_index + 1) - 1
     ds030_end_index = make_ds030('/data1/data/ds030/', f, 'ds030_DB.csv', ibis_end_index + 1) - 1
 
-    print(ping_end_index, abide_end_index, ibis_end_index, ds030_end_index)
-    print(1154+468+113+282)
+    # print(ping_end_index, abide_end_index, ibis_end_index, ds030_end_index)
+    # print(1154+468+113+282)
 
     f.close()
 
