@@ -4,11 +4,9 @@ from scipy.spatial.distance import euclidean
 import os, sys, time, csv, subprocess
 
 from dltk.core.io.preprocessing import normalise_zero_one, resize_image_with_crop_or_pad
-import dltk
-
 
 import h5py
-import sklearn
+from skimage.transform import resize
 
 from sklearn.neighbors import KDTree
 
@@ -113,11 +111,13 @@ def make_abide(input_path, f, label_file, subject_index):
 
                 if not t1_data.shape == (192, 256, 256):
                     print('resizing from', t1_data.shape)
+                    if t1_data.shape[1] > 400:
+                        print('resampling from', t1_data.shape)
+                        t1_data = resize(t1_data, (t1_data.shape[0], t1_data.shape[1]/2, t1_data.shape[2]/2), order=1)
+
                     t1_data = resize_image_with_crop_or_pad(t1_data, img_size=[192, 256, 256], mode='constant')
 
                 f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
-
-
 
                 print(subject_index, t1_filename)
 
@@ -345,8 +345,8 @@ if __name__ == "__main__":
 
     ping_end_index, abide_end_index, ibis_end_index, ds030_end_index = 0, 0, 0, 0
     # ping_end_index = make_ping('/data1/data/PING/', f, 't1_qc.csv', subject_index) - 1
-    abide_end_index = make_abide('/data1/data/deep_abide/', f, 'abide_t1_qc.csv', ping_end_index + 1) - 1
-    ibis_end_index = make_ibis('/data1/data/IBIS/', f, 't1_qc.csv', abide_end_index + 1) - 1
+    # abide_end_index = make_abide('/data1/data/deep_abide/', f, 'abide_t1_qc.csv', ping_end_index + 1) - 1
+    ibis_end_index = make_ibis('/data1/data/IBIS/', f, 'ibis_t1_qc.csv', abide_end_index + 1) - 1
     ds030_end_index = make_ds030('/data1/data/ds030/', f, 'ds030_DB.csv', ibis_end_index + 1) - 1
 
     print(ping_end_index, abide_end_index, ibis_end_index, ds030_end_index)
