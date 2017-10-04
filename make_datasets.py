@@ -335,12 +335,14 @@ if __name__ == "__main__":
     #ABIDE: 1113
     #ds030: 282
 
+    total_subjects = 1154 + 468 + 113 + 282
+
     f = h5py.File(output_file, 'w')
     # f.create_dataset('MRI', (1154+468+113+282, 192, 256, 256), maxshape=(None, 192, 256, 256), dtype='float32')
-    f.create_dataset('MRI', (1154+468+113+282, 192, 256, 256), dtype='float32')
-    f.create_dataset('qc_label', (1154, 3), maxshape=(None, 3), dtype='uint8')
+    f.create_dataset('MRI', (total_subjects, 192, 256, 256), dtype='float32')
+    f.create_dataset('qc_label', (total_subjects, 3), maxshape=(None, 3), dtype='uint8')
     dt = h5py.special_dtype(vlen=bytes)
-    f.create_dataset('qc_comment', (1154,), dtype=dt)
+    f.create_dataset('qc_comment', (total_subjects,), dtype=dt)
 
     subject_index = 0
 
