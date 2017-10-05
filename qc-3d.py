@@ -81,7 +81,7 @@ if __name__ == "__main__":
 
     train_indices = ping_indices + abide_indices + ibis_indices
 
-    train_labels = np.zeros(len(train_indices), 3)
+    train_labels = np.zeros((len(train_indices), 3))
     for index in train_indices:
         train_labels[index, ...] = f['qc_label'][index, ...]
 
