@@ -81,7 +81,7 @@ if __name__ == "__main__":
 
     train_indices = ping_indices + abide_indices + ibis_indices
 
-    train_labels = f['qc_label'][train_indices]
+    train_labels = f['qc_label'][train_indices, ...]
 
     skf = StratifiedKFold(n_splits=1, test_size = 0.1)
 
