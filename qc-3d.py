@@ -74,10 +74,10 @@ if __name__ == "__main__":
 
     f = h5py.File('/data1/data/deepqc/deepqc.hdf5')
 
-    ping_indices = np.linspace(0, ping_end_index)
-    abide_indices = np.linspace(ping_end_index + 1, abide_end_index)
-    ibis_indices = np.linspace(abide_end_index + 1, ibis_end_index)
-    ds030_indices = np.linspace(ibis_end_index + 1, ds030_end_index)
+    ping_indices = range(0, ping_end_index)
+    abide_indices = range(ping_end_index + 1, abide_end_index)
+    ibis_indices = range(abide_end_index + 1, ibis_end_index)
+    ds030_indices = range(ibis_end_index + 1, ds030_end_index)
 
     print('ping:', ping_indices)
     print('abide:', abide_indices)
