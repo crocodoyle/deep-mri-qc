@@ -75,9 +75,9 @@ if __name__ == "__main__":
     f = h5py.File('/data1/data/deepqc/deepqc.hdf5')
 
     ping_indices = list(range(0, ping_end_index))
-    abide_indices = list(range(ping_end_index + 1, abide_end_index))
-    ibis_indices = list(range(abide_end_index + 1, ibis_end_index))
-    ds030_indices = list(range(ibis_end_index + 1, ds030_end_index))
+    abide_indices = list(range(ping_end_index, abide_end_index))
+    ibis_indices = list(range(abide_end_index, ibis_end_index))
+    ds030_indices = list(range(ibis_end_index, ds030_end_index))
 
     print('ping:', ping_indices)
     print('abide:', abide_indices)
