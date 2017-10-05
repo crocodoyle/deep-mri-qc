@@ -100,7 +100,6 @@ if __name__ == "__main__":
 
     skf = StratifiedShuffleSplit(n_splits=1, test_size = 0.1)
 
-    train_indices, validation_indices = 0, 0
 
     for train, val in skf.split(train_indices, train_labels):
         train_indices = train
