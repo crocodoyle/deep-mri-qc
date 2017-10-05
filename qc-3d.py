@@ -67,10 +67,10 @@ def batch(indices, f):
 
 if __name__ == "__main__":
 
-    ping_end_index = 1152
-    abide_end_index = 2123
-    ibis_end_index = 2591
-    ds030_end_index = 2856
+    ping_end_index = 1153
+    abide_end_index = 2124
+    ibis_end_index = 2592
+    ds030_end_index = 2857
 
     f = h5py.File('/data1/data/deepqc/deepqc.hdf5')
 
@@ -79,15 +79,14 @@ if __name__ == "__main__":
     ibis_indices = list(range(abide_end_index + 1, ibis_end_index))
     ds030_indices = list(range(ibis_end_index + 1, ds030_end_index))
 
-    print('ping:', ping_indices)
-    print('abide:', abide_indices)
-    print('ibis:', ibis_indices)
-    print('ds030', ds030_indices)
+    # print('ping:', ping_indices)
+    # print('abide:', abide_indices)
+    # print('ibis:', ibis_indices)
+    # print('ds030', ds030_indices)
 
     train_indices = ping_indices + abide_indices + ibis_indices
-    print(train_indices)
 
-    train_labels = np.zeros((len(train_indices), 3))
+    train_labels = np.zeros((len(train_indices) + 1, 3))
     for index in train_indices:
         train_labels[index, ...] = f['qc_label'][index, ...]
 
