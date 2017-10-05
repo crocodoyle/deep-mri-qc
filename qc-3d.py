@@ -13,7 +13,7 @@ def qc_model():
 
     model = Sequential()
 
-    model.add(Conv3D(8, (3, 3, 3), activation='relu', input_shape=(None, 192, 256, 256)))
+    model.add(Conv3D(8, (3, 3, 3), activation='relu', input_shape=(192, 256, 256)))
     model.add(Dropout(0.2))
     model.add(Conv3D(8, (3, 3, 3), activation='relu'))
     model.add(Dropout(0.2))
@@ -61,9 +61,9 @@ def batch(indices, f):
         for index in indices:
             try:
                 print(images[index, ...][np.newaxis, ...].shape)
-                yield (images[index, ...][np.newaxis, ..., np.newaxis], labels[index, ...][np.newaxis, ..., np.newaxis])
+                yield (images[index, ...][np.newaxis, ...], labels[index, ...][np.newaxis, ...])
             except:
-                yield (images[index, ...][np.newaxis, ..., np.newaxis])
+                yield (images[index, ...][np.newaxis, ...])
 
 if __name__ == "__main__":
 
