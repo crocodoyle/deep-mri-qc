@@ -86,6 +86,11 @@ if __name__ == "__main__":
 
     train_indices = ping_indices + abide_indices + ibis_indices
 
+    print('PING samples:', len(ping_indices))
+    print('ABIDE samples:', len(abide_indices))
+    print('IBIS samples:', len(ibis_indices))
+    print('training samples:', len(train_indices), len(ping_indices), len(abide_indices), len(ibis_indices))
+
     train_labels = np.zeros((len(train_indices) + 1, 3))
     for index in train_indices:
         label = f['qc_label'][index, ...]
