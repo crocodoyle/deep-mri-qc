@@ -38,12 +38,11 @@ def qc_model():
     model.add(Conv3D(64, (3, 3, 3), activation='relu'))
     model.add(Dropout(0.4))
 
-    model.add(Flatten())
-    model.add(Dense(10, init='uniform', activation='relu'))
+    model.add(Conv3D(256, (1, 1, 1), activation=('relu')))
     model.add(Dropout(0.5))
-    model.add(Dense(10, init='uniform', activation='relu'))
+    model.add(Conv3D(128, (1, 1, 1), activation=('relu')))
     model.add(Dropout(0.5))
-    model.add(Dense(nb_classes, init='uniform'))
+    model.add(Dense(nb_classes))
     model.add(Activation('softmax'))
 
     model.compile(loss='categorical_crossentropy',
