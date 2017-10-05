@@ -88,7 +88,8 @@ if __name__ == "__main__":
 
     train_labels = np.zeros((len(train_indices) + 1, 3))
     for index in train_indices:
-        train_labels[index, ...] = f['qc_label'][index, ...]
+        label = f['qc_label'][index, ...]
+        train_labels[index, ...] = label
 
     skf = StratifiedKFold(n_splits=1, test_size = 0.1)
 
