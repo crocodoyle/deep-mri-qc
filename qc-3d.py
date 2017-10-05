@@ -17,14 +17,14 @@ def qc_model():
     model.add(Dropout(0.2))
     model.add(Conv3D(8, (3, 3, 3), activation='relu'))
     model.add(Dropout(0.2))
-    model.add(BatchNormalization())
+    # model.add(BatchNormalization())
     model.add(MaxPooling3D(pool_size=(2, 2, 2)))
 
     model.add(Conv3D(16, (3, 3, 3), activation='relu'))
     model.add(Dropout(0.2))
     model.add(Conv3D(16, (3, 3, 3), activation='relu'))
     model.add(Dropout(0.2))
-    model.add(BatchNormalization())
+    # model.add(BatchNormalization())
     model.add(MaxPooling3D(pool_size=(2, 2, 2)))
 
 
@@ -32,7 +32,7 @@ def qc_model():
     model.add(Dropout(0.3))
     model.add(Conv3D(32, (3, 3, 3), activation='relu'))
     model.add(Dropout(0.3))
-    model.add(BatchNormalization())
+    # model.add(BatchNormalization())
     model.add(MaxPooling3D(pool_size=(2, 2, 2)))
 #
     model.add(Conv3D(64, (3, 3, 3), activation='relu'))
@@ -61,9 +61,9 @@ def batch(indices, f):
         for index in indices:
             try:
                 print(images[index, ...][np.newaxis, ...].shape)
-                yield (np.reshape(images[index, ...], (192, 256, 256, 1))[np.newaxis, ...], labels[index, ...][np.newaxis, ...])
+                yield (np.reshape(images[index, ...], (192, 256, 256, 1))[np.newaxis, ...], np.reshape(labels[index, ...], (3, 1))[np.newaxis, ...])
             except:
-                yield (images[index, ...][np.newaxis, ...])
+                yield (np.reshape(images[index, ...], (192, 256, 256, 1))[np.newaxis, ...])
 
 if __name__ == "__main__":
 
