@@ -6,7 +6,7 @@ import h5py
 
 import matplotlib.pyplot as plt
 
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
 
 def qc_model():
     nb_classes = 3
@@ -79,28 +79,26 @@ if __name__ == "__main__":
     ibis_indices = list(range(abide_end_index, ibis_end_index))
     ds030_indices = list(range(ibis_end_index, ds030_end_index))
 
-    print('ping:', ping_indices)
-    print('abide:', abide_indices)
-    print('ibis:', ibis_indices)
-    print('ds030', ds030_indices)
+    # print('ping:', ping_indices)
+    # print('abide:', abide_indices)
+    # print('ibis:', ibis_indices)
+    # print('ds030', ds030_indices)
 
     train_indices = ping_indices + abide_indices + ibis_indices
-
-
 
     print('PING samples:', len(ping_indices))
     print('ABIDE samples:', len(abide_indices))
     print('IBIS samples:', len(ibis_indices))
     print('training samples:', len(train_indices), len(ping_indices) + len(abide_indices) + len(ibis_indices))
 
-    train_labels = np.zeros((len(train_indices) + 1, 3))
+    train_labels = np.zeros((len(train_indices), 3))
     print('labels shape:', train_labels.shape)
 
     for index in train_indices:
         label = f['qc_label'][index, ...]
         train_labels[index, ...] = label
 
-    skf = StratifiedKFold(n_splits=1, test_size = 0.1)
+    skf = StratifiedShuffleSplit(n_splits=1, test_size = 0.1)
 
     train_indices, validation_indices = skf.split(train_indices, train_labels)
 
