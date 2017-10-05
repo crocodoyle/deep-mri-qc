@@ -61,9 +61,9 @@ def batch(indices, f):
 
         for index in indices:
             try:
-                yield (images[index, ...][np.newaxis, ..., np.newaxis], labels[index, ..., np.newaxis][np.newaxis, ..., np.newaxis])
+                yield (images[index, ...][np.newaxis, ...], labels[index, ...][np.newaxis, ...])
             except:
-                yield (images[index, ...][np.newaxis, ..., np.newaxis])
+                yield (images[index, ...][np.newaxis, ...])
 
 if __name__ == "__main__":
 
