@@ -123,7 +123,6 @@ if __name__ == "__main__":
         batch(train_indices, f),
         len(train_indices),
         epochs=num_epochs,
-        samples_per_epoch=len(train_indices),
         validation_data=batch(validation_indices, f),
         validation_steps=len(validation_indices)
     )
