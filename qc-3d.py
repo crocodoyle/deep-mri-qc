@@ -79,7 +79,13 @@ if __name__ == "__main__":
     ibis_indices = np.linspace(abide_end_index + 1, ibis_end_index)
     ds030_indices = np.linspace(ibis_end_index + 1, ds030_end_index)
 
+    print('ping:', ping_indices)
+    print('abide:', abide_indices)
+    print('ibis:', ibis_indices)
+    print('ds030', ds030_indices)
+
     train_indices = ping_indices + abide_indices + ibis_indices
+    print(train_indices)
 
     train_labels = np.zeros((len(train_indices), 3))
     for index in train_indices:
