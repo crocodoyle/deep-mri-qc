@@ -79,19 +79,21 @@ if __name__ == "__main__":
     ibis_indices = list(range(abide_end_index + 1, ibis_end_index))
     ds030_indices = list(range(ibis_end_index + 1, ds030_end_index))
 
-    # print('ping:', ping_indices)
-    # print('abide:', abide_indices)
-    # print('ibis:', ibis_indices)
-    # print('ds030', ds030_indices)
+    print('ping:', ping_indices)
+    print('abide:', abide_indices)
+    print('ibis:', ibis_indices)
+    print('ds030', ds030_indices)
 
     train_indices = ping_indices + abide_indices + ibis_indices
+
+
 
     print('PING samples:', len(ping_indices))
     print('ABIDE samples:', len(abide_indices))
     print('IBIS samples:', len(ibis_indices))
     print('training samples:', len(train_indices), len(ping_indices) + len(abide_indices) + len(ibis_indices))
 
-    train_labels = np.zeros((len(train_indices), 3))
+    train_labels = np.zeros((len(train_indices) + 1, 3))
     print('labels shape:', train_labels.shape)
 
     for index in train_indices:
