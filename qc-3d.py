@@ -42,6 +42,7 @@ def qc_model():
     model.add(Dropout(0.5))
     model.add(Conv3D(128, (1, 1, 1), activation=('relu')))
     model.add(Dropout(0.5))
+    model.add(Flatten())
     model.add(Dense(nb_classes))
     model.add(Activation('softmax'))
 
