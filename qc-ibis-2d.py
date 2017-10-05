@@ -172,6 +172,7 @@ def qc_model():
     model.add(Dense(256, init='uniform'))
     model.add(Activation('relu'))
     model.add(Dropout(0.5))
+    model.add(Flatten())
 
     model.add(Dense(nb_classes, init='uniform'))
     model.add(Activation('softmax'))
