@@ -42,7 +42,6 @@ def qc_model():
     model.add(Dropout(0.5))
     model.add(Conv3D(128, (1, 1, 1), activation=('relu')))
     model.add(Dropout(0.5))
-    model.add(Flatten())
     model.add(Dense(nb_classes))
     model.add(Activation('softmax'))
 
@@ -62,7 +61,7 @@ def batch(indices, f):
         for index in indices:
             try:
                 print(images[index, ...][np.newaxis, ...].shape)
-                yield (np.reshape(images[index, ...], (192, 256, 256, 1))[np.newaxis, ...], np.reshape(labels[index, ...], (3, 1))[np.newaxis, ...])
+                yield (np.reshape(images[index, ...], (192, 256, 256, 1))[np.newaxis, ...], labels[index, ...][np.newaxis, ...])
             except:
                 yield (np.reshape(images[index, ...], (192, 256, 256, 1))[np.newaxis, ...])
 
