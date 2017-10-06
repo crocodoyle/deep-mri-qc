@@ -11,37 +11,41 @@ from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
 def qc_model():
     nb_classes = 3
 
+    conv_size = (5, 5, 5)
+    pool_size = (2, 2, 2)
+
     model = Sequential()
 
-    model.add(Conv3D(8, (3, 3, 3), activation='relu', input_shape=(192, 256, 256, 1)))
+    model.add(Conv3D(8, conv_size, activation='relu', input_shape=(192, 256, 256, 1)))
     model.add(Dropout(0.2))
-    model.add(Conv3D(8, (3, 3, 3), activation='relu'))
-    model.add(Dropout(0.2))
-    # model.add(BatchNormalization())
-    model.add(MaxPooling3D(pool_size=(2, 2, 2)))
-
-    model.add(Conv3D(16, (3, 3, 3), activation='relu'))
-    model.add(Dropout(0.2))
-    model.add(Conv3D(16, (3, 3, 3), activation='relu'))
+    model.add(Conv3D(8, conv_size, activation='relu'))
     model.add(Dropout(0.2))
     # model.add(BatchNormalization())
-    model.add(MaxPooling3D(pool_size=(2, 2, 2)))
+    model.add(MaxPooling3D(pool_size=pool_size))
+
+    model.add(Conv3D(16, conv_size, activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(Conv3D(16, conv_size, activation='relu'))
+    model.add(Dropout(0.2))
+    # model.add(BatchNormalization())
+    model.add(MaxPooling3D(pool_size=pool_size))
 
 
-    model.add(Conv3D(32, (3, 3, 3), activation='relu'))
+    model.add(Conv3D(32, conv_size, activation='relu'))
     model.add(Dropout(0.3))
-    model.add(Conv3D(32, (3, 3, 3), activation='relu'))
+    model.add(Conv3D(32, conv_size, activation='relu'))
     model.add(Dropout(0.3))
     # model.add(BatchNormalization())
-    model.add(MaxPooling3D(pool_size=(2, 2, 2)))
+    model.add(MaxPooling3D(pool_size=pool_size))
 #
-    model.add(Conv3D(64, (3, 3, 3), activation='relu'))
+    model.add(Conv3D(64, conv_size, activation='relu'))
     model.add(Dropout(0.4))
 
     model.add(Conv3D(256, (1, 1, 1), activation=('relu')))
     model.add(Dropout(0.5))
     model.add(Conv3D(128, (1, 1, 1), activation=('relu')))
     model.add(Dropout(0.5))
+    model.add(Flatten())
     model.add(Dense(nb_classes))
     model.add(Activation('softmax'))
 
