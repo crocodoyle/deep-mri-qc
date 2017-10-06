@@ -13,5 +13,7 @@ if __name__ == '__main__':
     images = f['MRI']
 
     for i, image in enumerate(images):
+        filename = workdir + str(i) + '-' + slice + '.png'
+
         plt.imshow(image[96, ...])
-        plt.savefig(workdir + str(i) + '-' + slice + '.png')
+        plt.savefig(filename)
