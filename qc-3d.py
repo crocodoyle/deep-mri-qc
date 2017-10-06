@@ -1,5 +1,6 @@
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Conv3D, MaxPooling3D, Flatten, BatchNormalization
+from keras.callbacks import ModelCheckpoint
 
 import numpy as np
 import h5py
@@ -7,6 +8,10 @@ import h5py
 import matplotlib.pyplot as plt
 
 from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
+
+
+workdir = '/data1/data/deepqc/'
+
 
 def qc_model():
     nb_classes = 3
@@ -64,7 +69,7 @@ def batch(indices, f):
 
         for index in indices:
             try:
-                print(images[index, ...][np.newaxis, ...].shape)
+                # print(images[index, ...][np.newaxis, ...].shape)
                 yield (np.reshape(images[index, ...], (192, 256, 256, 1))[np.newaxis, ...], labels[index, ...][np.newaxis, ...])
             except:
                 yield (np.reshape(images[index, ...], (192, 256, 256, 1))[np.newaxis, ...])
@@ -76,7 +81,7 @@ if __name__ == "__main__":
     ibis_end_index = 2592
     ds030_end_index = 2857
 
-    f = h5py.File('/data1/data/deepqc/deepqc.hdf5')
+    f = h5py.File(workdir + 'deepqc.hdf5')
 
     ping_indices = list(range(0, ping_end_index))
     abide_indices = list(range(ping_end_index, abide_end_index))
@@ -123,10 +128,24 @@ if __name__ == "__main__":
 
     num_epochs = 300
 
+    model_checkpoint = ModelCheckpoint( workdir + 'best_qc_model.hdf5',
+                                        monitor="val_acc",
+                                        save_best_only=True)
+
+
     hist = model.fit_generator(
         batch(train_indices, f),
         len(train_indices),
         epochs=num_epochs,
+        callbacks=[model_checkpoint],
         validation_data=batch(validation_indices, f),
-        validation_steps=len(validation_indices)
+        validation_steps=len(validation_indices),
+        use_multiprocessing=True
     )
+
+    model.load_weights(workdir + 'best_qc_model.hdf5')
+    model.save(workdir + 'qc_model.hdf5')
+
+
+
+
