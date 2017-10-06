@@ -14,4 +14,4 @@ if __name__ == '__main__':
 
     for i, image in enumerate(images):
         plt.imshow(image[96, ...])
-        plt.savefig(str(i) + '-' + slice + '.png')
+        plt.savefig(workdir + str(i) + '-' + slice + '.png')
