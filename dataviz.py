@@ -1,8 +1,8 @@
 import h5py
 
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
-
-
 
 workdir = '/data1/data/deepqc/'
 
