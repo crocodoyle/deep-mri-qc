@@ -56,7 +56,7 @@ def make_ping(input_path, f, label_file, subject_index):
 
                 plt.imshow(t1_data[96, ...])
                 plt.tight_layout()
-                plt.axes('off')
+                plt.axis('off')
                 plt.savefig(output_dir + t1_filename[:-4] + '.png')
 
                 subject_index += 1
@@ -94,7 +94,7 @@ def make_ibis(input_path, f, label_file, subject_index):
 
                 plt.imshow(t1_data[96, ...])
                 plt.tight_layout()
-                plt.axes('off')
+                plt.axis('off')
                 plt.savefig(output_dir + t1_filename[:-4] + '.png')
 
                 subject_index += 1
@@ -140,7 +140,7 @@ def make_abide(input_path, f, label_file, subject_index):
 
                 plt.imshow(t1_data[96, ...])
                 plt.tight_layout()
-                plt.axes('off')
+                plt.axis('off')
                 plt.savefig(output_dir + t1_filename[:-4] + '.png')
 
                 subject_index += 1
@@ -182,7 +182,7 @@ def make_ds030(input_path, f, label_file, subject_index):
 
                     plt.imshow(t1_data[96, ...])
                     plt.tight_layout()
-                    plt.axes('off')
+                    plt.axis('off')
                     plt.savefig(output_dir + t1_filename[:-4] + '.png')
 
                     subject_index += 1
