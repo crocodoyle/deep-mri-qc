@@ -139,8 +139,6 @@ def make_abide(input_path, f, label_file, subject_index):
 
                     t1_data = resize_image_with_crop_or_pad(t1_data, img_size=[192, 256, 256], mode='constant')
 
-                    plt.imshow(t1_data[96, ...])
-                    plt.savefig(input_path + t1_filename)
 
                 f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
 
