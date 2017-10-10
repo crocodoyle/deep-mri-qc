@@ -7,14 +7,17 @@ from dltk.core.io.preprocessing import normalise_zero_one, resize_image_with_cro
 
 import h5py
 from skimage.transform import resize
-
 from sklearn.neighbors import KDTree
 
 import nibabel as nib
 
 from multiprocessing import Pool, Process
 
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
 
+output_dir = '/data1/data/deepqc/'
 output_file = '/data1/data/deepqc/deepqc.hdf5'
 cores = 10
 
@@ -47,6 +50,11 @@ def make_ping(input_path, f, label_file, subject_index):
                 f['qc_comment'][subject_index] = comment
 
                 print(subject_index, t1_filename, np.shape(t1_data))
+
+                plt.imshow(t1_data[96, ...])
+                plt.tight_layout()
+                plt.axes('off')
+                plt.savefig(output_dir + t1_filename[:-4] + '.png')
 
                 subject_index += 1
             except FileNotFoundError as e:
@@ -81,6 +89,11 @@ def make_ibis(input_path, f, label_file, subject_index):
 
                 print(subject_index, t1_filename)
 
+                plt.imshow(t1_data[96, ...])
+                plt.tight_layout()
+                plt.axes('off')
+                plt.savefig(output_dir + t1_filename[:-4] + '.png')
+
                 subject_index += 1
             except FileNotFoundError as e:
                 print('File not found:', line)
@@ -113,13 +126,18 @@ def make_abide(input_path, f, label_file, subject_index):
                     print('resizing from', t1_data.shape)
                     if t1_data.shape[1] > 400:
                         print('resampling from', t1_data.shape)
-                        t1_data = resize(t1_data, (t1_data.shape[0], t1_data.shape[1]/2, t1_data.shape[2]/2), order=1)
+                        t1_data = resize(t1_data, (t1_data.shape[0]/2, t1_data.shape[1]/2, t1_data.shape[2]/2), order=1)
 
                     t1_data = resize_image_with_crop_or_pad(t1_data, img_size=[192, 256, 256], mode='constant')
 
                 f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
 
                 print(subject_index, t1_filename)
+
+                plt.imshow(t1_data[96, ...])
+                plt.tight_layout()
+                plt.axes('off')
+                plt.savefig(output_dir + t1_filename[:-4] + '.png')
 
                 subject_index += 1
             except FileNotFoundError as e:
@@ -157,6 +175,11 @@ def make_ds030(input_path, f, label_file, subject_index):
                     f['qc_label'][subject_index, :] = one_hot
 
                     print(subject_index, t1_filename)
+
+                    plt.imshow(t1_data[96, ...])
+                    plt.tight_layout()
+                    plt.axes('off')
+                    plt.savefig(output_dir + t1_filename[:-4] + '.png')
 
                     subject_index += 1
 
