@@ -21,6 +21,9 @@ output_dir = '/data1/data/deepqc/'
 output_file = '/data1/data/deepqc/deepqc.hdf5'
 cores = 10
 
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
 
 def make_ping(input_path, f, label_file, subject_index):
     with open(os.path.join(input_path, label_file)) as label_file:
@@ -37,6 +40,9 @@ def make_ping(input_path, f, label_file, subject_index):
                 if not t1_data.shape == (192, 256, 256):
                     print('resizing from', t1_data.shape)
                     t1_data = resize_image_with_crop_or_pad(t1_data, img_size=[192, 256, 256], mode='constant')
+
+                plt.imshow(t1_data[96, ...])
+                plt.savefig(input_path + t1_filename)
 
                 f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
 
@@ -79,6 +85,9 @@ def make_ibis(input_path, f, label_file, subject_index):
                     t1_data = resize_image_with_crop_or_pad(t1_data, img_size=[192, 256, 256], mode='constant')
 
                 f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
+
+                plt.imshow(t1_data[96, ...])
+                plt.savefig(input_path + t1_filename)
 
                 if label == 0:
                     f['qc_label'][subject_index, :] = [1, 0, 0]
@@ -130,6 +139,9 @@ def make_abide(input_path, f, label_file, subject_index):
 
                     t1_data = resize_image_with_crop_or_pad(t1_data, img_size=[192, 256, 256], mode='constant')
 
+                    plt.imshow(t1_data[96, ...])
+                    plt.savefig(input_path + t1_filename)
+
                 f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
 
                 print(subject_index, t1_filename)
@@ -164,6 +176,9 @@ def make_ds030(input_path, f, label_file, subject_index):
                         t1_data = resize_image_with_crop_or_pad(t1_data, img_size=[192, 256, 256], mode='constant')
 
                     f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
+
+                    plt.imshow(t1_data[96, ...])
+                    plt.savefig(input_path + t1_filename)
 
                     if 'ok' in label:
                         one_hot = [0, 0, 1]
