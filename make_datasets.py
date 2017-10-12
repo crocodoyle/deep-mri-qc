@@ -124,6 +124,7 @@ def make_abide(input_path, f, label_file, subject_index):
                                     '-keep_real_range',
                                     '-like',
                                     exemplar_file,
+                                    output_dir + t1_filename,
                                     output_file]
 
                 one_hot = [0, 0, 0]
