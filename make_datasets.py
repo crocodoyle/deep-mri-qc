@@ -114,6 +114,8 @@ def make_abide(input_path, f, label_file, subject_index):
 
                 output_file = output_dir + t1_filename
 
+                print(t1_filename, output_file)
+
                 resample_command = ['mincresample',
                                     '-clobber',
                                     '-nearest',
