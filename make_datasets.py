@@ -25,7 +25,7 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 
-exemplar_file = '/data1/data/PING/p0007_20100128_144417_2_mri.mnc'
+exemplar_file = '/data1/data/PING/p0086_20100316_193008_2_mri.mnc'
 
 def make_ping(input_path, f, label_file, subject_index):
     with open(os.path.join(input_path, label_file)) as label_file:
@@ -190,12 +190,14 @@ def make_ds030(input_path, f, label_file, subject_index):
                                         '-keep_real_range',
                                         '-like',
                                         exemplar_file,
-                                        output_file]
+                                        input_path + t1_filename,
+                                        input_path + "/resampled/" + t1_filename]
 
                     subprocess.run(['nii2mnc', input_path + t1_filename])
                     subprocess.run(resample_command)
 
                     t1_filename = t1_filename[:-7] + '.mnc'
+
                     t1_data = nib.load(input_path + t1_filename).get_data()
 
                     if not t1_data.shape == (192, 256, 256):
