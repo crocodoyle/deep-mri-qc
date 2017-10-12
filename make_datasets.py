@@ -121,7 +121,7 @@ def make_abide(input_path, f, label_file, subject_index):
                                     '-like',
                                     exemplar_file,
                                     input_path + t1_filename,
-                                    output_dir + t1_filename]
+                                    input_path + "/resampled/" + t1_filename]
 
                 one_hot = [0, 0, 0]
 
@@ -145,7 +145,7 @@ def make_abide(input_path, f, label_file, subject_index):
 
                 subprocess.run(resample_command)
 
-                t1_data = nib.load(output_dir + t1_filename).get_data()
+                t1_data = nib.load(input_path + '/resampled/' + t1_filename).get_data()
 
                 if not t1_data.shape == (192, 256, 256):
                     print('resizing from', t1_data.shape)
