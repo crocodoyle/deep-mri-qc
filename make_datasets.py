@@ -112,10 +112,6 @@ def make_abide(input_path, f, label_file, subject_index):
             try:
                 t1_filename = line[0] + '.mnc'
 
-                output_file = output_dir + t1_filename
-
-                print(t1_filename, output_file)
-
                 resample_command = ['mincresample',
                                     '-clobber',
                                     '-nearest',
@@ -125,7 +121,7 @@ def make_abide(input_path, f, label_file, subject_index):
                                     '-like',
                                     exemplar_file,
                                     output_dir + t1_filename,
-                                    output_file]
+                                    output_dir + t1_filename]
 
                 one_hot = [0, 0, 0]
 
