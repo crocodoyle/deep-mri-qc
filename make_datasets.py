@@ -184,6 +184,20 @@ def make_ds030(input_path, f, label_file, subject_index):
 
                 if len(label) > 0:
 
+                    resample_command = ['mincresample',
+                                        '-clobber',
+                                        '-nearest',
+                                        '-unsigned',
+                                        '-byte',
+                                        '-keep_real_range',
+                                        '-like',
+                                        exemplar_file,
+                                        output_file]
+
+                    subprocess.run(['nii2mnc', input_path + t1_filename])
+                    subprocess.run(resample_command)
+
+                    t1_filename = t1_filename[:-7] + '.mnc'
                     t1_data = nib.load(input_path + t1_filename).get_data()
 
                     if not t1_data.shape == (192, 256, 256):
@@ -204,7 +218,6 @@ def make_ds030(input_path, f, label_file, subject_index):
                     print(subject_index, t1_filename)
 
                     plt.imshow(t1_data[96, ...])
-                    plt.tight_layout()
                     plt.axis('off')
                     plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight')
 
