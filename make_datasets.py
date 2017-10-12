@@ -25,6 +25,9 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 
+
+exemplar_file = '/data1/data/PING/p0007_20100128_144417_2_mri.mnc'
+
 def make_ping(input_path, f, label_file, subject_index):
     with open(os.path.join(input_path, label_file)) as label_file:
         qc_reader = csv.reader(label_file)
@@ -55,9 +58,8 @@ def make_ping(input_path, f, label_file, subject_index):
                 print(subject_index, t1_filename, np.shape(t1_data))
 
                 plt.imshow(t1_data[96, ...])
-                plt.tight_layout()
                 plt.axis('off')
-                plt.savefig(output_dir + t1_filename[:-4] + '.png')
+                plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight')
 
                 subject_index += 1
             except FileNotFoundError as e:
@@ -93,9 +95,8 @@ def make_ibis(input_path, f, label_file, subject_index):
                 print(subject_index, t1_filename)
 
                 plt.imshow(t1_data[96, ...])
-                plt.tight_layout()
                 plt.axis('off')
-                plt.savefig(output_dir + t1_filename[:-4] + '.png')
+                plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight')
 
                 subject_index += 1
             except FileNotFoundError as e:
@@ -110,26 +111,49 @@ def make_abide(input_path, f, label_file, subject_index):
 
         for line in qc_reader:
             try:
-                t1_filename = line[0] + '.nii.gz'
+                t1_filename = line[0] + '.mnc'
+
+                output_file = output_dir + t1_filename
+
+                resample_command = ['mincresample',
+                                    '-clobber',
+                                    '-nearest',
+                                    '-unsigned',
+                                    '-byte',
+                                    '-keep_real_range',
+                                    '-like',
+                                    exemplar_file,
+                                    output_file]
 
                 one_hot = [0, 0, 0]
 
+                total_labels = 0
                 if len(line[3]) > 0:
                     label1 = int(line[3]) + 1                #-1, 0, or 1
-                    one_hot[label1] += 0.5
+                    one_hot[label1] = 1
+                    total_labels += 1
                 if len(line[4]) > 0:
                     label2 = int(line[4]) + 1
-                    one_hot[label2] += 0.5
+                    one_hot[label2] = 1
+                    total_labels += 1
+                if len(line[5]) > 0:
+                    label3 = int(line[5]) + 1
+                    one_hot[label3] = 1
+                    total_labels += 1
+
+                one_hot = np.multiply(one_hot, 1/total_labels)
 
                 f['qc_label'][subject_index, :] = one_hot
 
-                t1_data = nib.load(input_path + t1_filename).get_data()
+                subprocess.run(resample_command)
+
+                t1_data = nib.load(output_dir + t1_filename).get_data()
 
                 if not t1_data.shape == (192, 256, 256):
                     print('resizing from', t1_data.shape)
-                    if t1_data.shape[1] > 400:
-                        print('resampling from', t1_data.shape)
-                        t1_data = resize(t1_data, (t1_data.shape[0]/2, t1_data.shape[1]/2, t1_data.shape[2]/2), order=1)
+                    # if t1_data.shape[1] > 400:
+                    #     print('resampling from', t1_data.shape)
+                    #     t1_data = resize(t1_data, (t1_data.shape[0]/2, t1_data.shape[1]/2, t1_data.shape[2]/2), order=1)
 
                     t1_data = resize_image_with_crop_or_pad(t1_data, img_size=[192, 256, 256], mode='constant')
 
@@ -139,9 +163,8 @@ def make_abide(input_path, f, label_file, subject_index):
                 print(subject_index, t1_filename)
 
                 plt.imshow(t1_data[96, ...])
-                plt.tight_layout()
                 plt.axis('off')
-                plt.savefig(output_dir + t1_filename[:-4] + '.png')
+                plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight')
 
                 subject_index += 1
             except FileNotFoundError as e:
@@ -183,7 +206,7 @@ def make_ds030(input_path, f, label_file, subject_index):
                     plt.imshow(t1_data[96, ...])
                     plt.tight_layout()
                     plt.axis('off')
-                    plt.savefig(output_dir + t1_filename[:-4] + '.png')
+                    plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight')
 
                     subject_index += 1
 
@@ -375,7 +398,7 @@ if __name__ == "__main__":
 
     ping_end_index, abide_end_index, ibis_end_index, ds030_end_index = 0, 0, 0, 0
     ping_end_index = make_ping('/data1/data/PING/', f, 't1_qc.csv', subject_index) - 1
-    abide_end_index = make_abide('/data1/data/deep_abide/', f, 'abide_t1_qc.csv', ping_end_index + 1) - 1
+    abide_end_index = make_abide('/data1/data/deep_abide/', f, 't1_qc.csv', ping_end_index + 1) - 1
     ibis_end_index = make_ibis('/data1/data/IBIS/', f, 'ibis_t1_qc.csv', abide_end_index + 1) - 1
     ds030_end_index = make_ds030('/data1/data/ds030/', f, 'ds030_DB.csv', ibis_end_index + 1) - 1
 
