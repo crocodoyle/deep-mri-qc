@@ -5,6 +5,8 @@ from keras.callbacks import ModelCheckpoint
 import numpy as np
 import h5py
 
+import keras.backend as K
+
 import matplotlib.pyplot as plt
 
 from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
@@ -56,7 +58,7 @@ def qc_model():
 
     model.compile(loss='categorical_crossentropy',
                   optimizer='adam',
-                  metrics=["accuracy"])
+                  metrics=["accuracy", sens_spec])
 
     return model
 
@@ -73,6 +75,44 @@ def batch(indices, f):
                 yield (np.reshape(images[index, ...], (192, 256, 256, 1))[np.newaxis, ...], labels[index, ...][np.newaxis, ...])
             except:
                 yield (np.reshape(images[index, ...], (192, 256, 256, 1))[np.newaxis, ...])
+
+def plot_training_error(hist):
+    epoch_num = range(len(hist.history['acc']))
+    train_error = np.subtract(1, np.array(hist.history['acc']))
+    test_error  = np.subtract(1, np.array(hist.history['val_acc']))
+
+    plt.clf()
+    plt.plot(epoch_num, train_error, label='Training Error')
+    plt.plot(epoch_num, test_error, label="Validation Error")
+    plt.legend(shadow=True)
+    plt.xlabel("Training Epoch Number")
+    plt.ylabel("Error")
+    plt.savefig(workdir + 'results.png')
+    plt.close()
+
+# sensitivity = true positives / (true positives + false negatives)
+# specificity = true negatives / (true negatives + false positives)
+def sens_spec(y_true, y_pred):
+    true_positives, true_negatives, false_positives, false_negatives = 0, 0, 0, 0
+
+    for y, y_hat in zip(y_true, y_pred):
+        y_int = K.argmax(y)
+        y_hat_int = K.argmax(y_hat)
+
+        if y_int >= 1:
+            if y_int == y_hat_int:
+                true_positives += 1
+            else:
+                false_positives += 1
+        else:
+            if y_int == y_hat_int:
+                true_negatives += 1
+            else:
+                false_negatives += 1
+
+    return (true_positives / (true_positives + false_negatives + 0.0001), true_negatives / (true_negatives + false_negatives + 0.0001))
+
+
 
 if __name__ == "__main__":
 
@@ -109,7 +149,6 @@ if __name__ == "__main__":
 
     skf = StratifiedShuffleSplit(n_splits=1, test_size = 0.1)
 
-
     for train, val in skf.split(train_indices, train_labels):
         train_indices = train
         validation_indices = val
@@ -132,7 +171,6 @@ if __name__ == "__main__":
                                         monitor="val_acc",
                                         save_best_only=True)
 
-
     hist = model.fit_generator(
         batch(train_indices, f),
         len(train_indices),
@@ -146,6 +184,33 @@ if __name__ == "__main__":
     model.load_weights(workdir + 'best_qc_model.hdf5')
     model.save(workdir + 'qc_model.hdf5')
 
+    predicted = []
+    actual = []
+
+    for index in test_indices:
+        prediction = model.predict(f['MRI'][index, ...])
+        ground_truth = f['qc_label'][index, ...]
 
 
 
+
+        predicted.append()
+        actual.append(f['qc_label'])
+
+
+
+
+
+
+    epoch_num = range(len(hist.history['acc']))
+    train_error = np.subtract(1,np.array(hist.history['acc']))
+    test_error  = np.subtract(1,np.array(hist.history['val_acc']))
+
+    plt.clf()
+    plt.plot(epoch_num, train_error, label='Training Error')
+    plt.plot(epoch_num, test_error, label="Validation Error")
+    plt.legend(shadow=True)
+    plt.xlabel("Training Epoch Number")
+    plt.ylabel("Error")
+    plt.savefig('results.png')
+    plt.close()
