@@ -58,7 +58,7 @@ def make_ping(input_path, f, label_file, subject_index):
 
                 plt.imshow(t1_data[96, ...])
                 plt.axis('off')
-                plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight')
+                plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
 
                 subject_index += 1
             except FileNotFoundError as e:
@@ -95,7 +95,7 @@ def make_ibis(input_path, f, label_file, subject_index):
 
                 plt.imshow(t1_data[96, ...])
                 plt.axis('off')
-                plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight')
+                plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
 
                 subject_index += 1
             except FileNotFoundError as e:
@@ -162,7 +162,7 @@ def make_abide(input_path, f, label_file, subject_index):
 
                 plt.imshow(t1_data[96, ...])
                 plt.axis('off')
-                plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight')
+                plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
 
                 subject_index += 1
             except FileNotFoundError as e:
@@ -219,7 +219,7 @@ def make_ds030(input_path, f, label_file, subject_index):
 
                     plt.imshow(t1_data[96, ...])
                     plt.axis('off')
-                    plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight')
+                    plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
 
                     subject_index += 1
 
