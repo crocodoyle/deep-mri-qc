@@ -188,29 +188,7 @@ if __name__ == "__main__":
     actual = []
 
     for index in test_indices:
-        prediction = model.predict(f['MRI'][index, ...])
-        ground_truth = f['qc_label'][index, ...]
+        scores = model.test_on_batch(f['MRI'][index, ...], f['qc_label'][index, ...])
+        print(scores)
 
-
-
-
-        predicted.append()
-        actual.append(f['qc_label'])
-
-
-
-
-
-
-    epoch_num = range(len(hist.history['acc']))
-    train_error = np.subtract(1,np.array(hist.history['acc']))
-    test_error  = np.subtract(1,np.array(hist.history['val_acc']))
-
-    plt.clf()
-    plt.plot(epoch_num, train_error, label='Training Error')
-    plt.plot(epoch_num, test_error, label="Validation Error")
-    plt.legend(shadow=True)
-    plt.xlabel("Training Epoch Number")
-    plt.ylabel("Error")
-    plt.savefig('results.png')
-    plt.close()
+    plot_training_error(hist)
