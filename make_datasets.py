@@ -197,6 +197,7 @@ def make_ds030(input_path, f, label_file, subject_index):
                     subprocess.run(resample_command)
 
                     t1_filename = t1_filename[:-7] + '.mnc'
+                    print(t1_filename)
 
                     t1_data = nib.load(input_path + t1_filename).get_data()
 
