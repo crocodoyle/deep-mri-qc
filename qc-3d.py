@@ -98,12 +98,14 @@ def sens_spec(y_true, y_pred):
     shape = K.get_variable_shape(y_true)
     print('samples', shape)
 
-    for index in range(shape[0]):
-        y = y_true[index, ...]
-        y_hat = y_pred[index, ...]
+    y = K.argmax(y_true)
+    y_hat = K.argmax(y_pred)
 
-        y_int = K.argmax(y)
-        y_hat_int = K.argmax(y_hat)
+    print(y, y_hat)
+
+    for index in range(len(y)):
+        y_int = y[index]
+        y_int_hat = y_hat[index]
 
         if y_int >= 1:
             if y_int == y_hat_int:
