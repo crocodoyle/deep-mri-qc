@@ -95,7 +95,12 @@ def plot_training_error(hist):
 def sens_spec(y_true, y_pred):
     true_positives, true_negatives, false_positives, false_negatives = 0, 0, 0, 0
 
-    for y, y_hat in zip(list(y_true), y_pred):
+    total = len(y_true)
+
+    for index in range(total):
+        y = y_true[index, ...]
+        y_hat = y_pred[index, ...]
+
         y_int = K.argmax(y)
         y_hat_int = K.argmax(y_hat)
 
