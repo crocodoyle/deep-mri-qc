@@ -95,7 +95,8 @@ def plot_training_error(hist):
 def sens_spec(y_true, y_pred):
     true_positives, true_negatives, false_positives, false_negatives = 0, 0, 0, 0
 
-    total = len(y_true)
+    total = y_true.shape[0]
+    print('samples', total)
 
     for index in range(total):
         y = y_true[index, ...]
