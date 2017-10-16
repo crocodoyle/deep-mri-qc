@@ -95,13 +95,10 @@ def plot_training_error(hist):
 def sens_spec(y_true, y_pred):
     true_positives, true_negatives, false_positives, false_negatives = 0, 0, 0, 0
 
-    print(y_true.shape, y_pred.shape)
+    shape = K.get_variable_shape(y_true)
+    print('samples', shape)
 
-
-    total = y_pred.shape[0]
-    print('samples', total)
-
-    for index in range(total):
+    for index in range(shape[0]):
         y = y_true[index, ...]
         y_hat = y_pred[index, ...]
 
