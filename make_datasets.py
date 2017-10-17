@@ -122,6 +122,9 @@ def make_abide(input_path, f, label_file, subject_index):
                                     input_path + 'transform.xfm'
                                     ]
 
+                subprocess.run(register_command)
+
+
                 resample_command1 = ['mincresample',
                                      '-clobber',
                                      '-nearest',
@@ -144,7 +147,7 @@ def make_abide(input_path, f, label_file, subject_index):
                                     '-keep_real_range',
                                     '-like',
                                     exemplar_file,
-                                    input_path + t1_filename,
+                                    input_path + '/resampled1/' + t1_filename,
                                     input_path + "/resampled2/" + t1_filename
                                      ]
 
