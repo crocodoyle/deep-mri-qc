@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 
 from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
 
+from custom_loss import sensitivity, specificity
 
 workdir = '/data1/data/deepqc/'
 
@@ -58,7 +59,7 @@ def qc_model():
 
     model.compile(loss='categorical_crossentropy',
                   optimizer='adam',
-                  metrics=["accuracy", sens_spec])
+                  metrics=["accuracy", sensitivity, specificity])
 
     return model
 
@@ -89,30 +90,6 @@ def plot_training_error(hist):
     plt.ylabel("Error")
     plt.savefig(workdir + 'results.png')
     plt.close()
-
-# sensitivity = true positives / (true positives + false negatives)
-# specificity = true negatives / (true negatives + false positives)
-def sens_spec(y_true, y_pred):
-    true_positives, true_negatives, false_positives, false_negatives = 0, 0, 0, 0
-
-    for y, y_hat in zip(y_true, y_pred):
-        y_int = K.argmax(y)
-        y_hat_int = K.argmax(y_hat)
-
-        if y_int >= 1:
-            if y_int == y_hat_int:
-                true_positives += 1
-            else:
-                false_positives += 1
-        else:
-            if y_int == y_hat_int:
-                true_negatives += 1
-            else:
-                false_negatives += 1
-
-    return (true_positives / (true_positives + false_negatives + 0.0001), true_negatives / (true_negatives + false_negatives + 0.0001))
-
-
 
 if __name__ == "__main__":
 
