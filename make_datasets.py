@@ -27,6 +27,8 @@ import matplotlib.pyplot as plt
 
 exemplar_file = '/data1/data/PING/p0086_20100316_193008_2_mri.mnc'
 
+atlas = '/data1/data/mni_icbm152_t1_tal_nlin_asym_09a.mnc'
+
 def make_ping(input_path, f, label_file, subject_index):
     with open(os.path.join(input_path, label_file)) as label_file:
         qc_reader = csv.reader(label_file)
@@ -112,7 +114,29 @@ def make_abide(input_path, f, label_file, subject_index):
             try:
                 t1_filename = line[0] + '.mnc'
 
-                resample_command = ['mincresample',
+
+                register_command = ['minctracc',
+                                    '-clobber',
+                                    input_path + t1_filename,
+                                    atlas,
+                                    input_path + 'transform.xfm'
+                                    ]
+
+                resample_command1 = ['mincresample',
+                                     '-clobber',
+                                     '-nearest',
+                                     '-unsigned',
+                                     '-byte',
+                                     '-keep_real_range',
+                                     '-transformation',
+                                     input_path + 'transform.xfm',
+                                     input_path + t1_filename,
+                                     input_path + '/resampled1/' + t1_filename
+                                     ]
+
+                subprocess.run(resample_command1)
+
+                resample_command2 = ['mincresample',
                                     '-clobber',
                                     '-nearest',
                                     '-unsigned',
@@ -121,7 +145,10 @@ def make_abide(input_path, f, label_file, subject_index):
                                     '-like',
                                     exemplar_file,
                                     input_path + t1_filename,
-                                    input_path + "/resampled/" + t1_filename]
+                                    input_path + "/resampled2/" + t1_filename
+                                     ]
+
+                subprocess.run(resample_command2)
 
                 one_hot = [0, 0, 0]
 
@@ -143,9 +170,7 @@ def make_abide(input_path, f, label_file, subject_index):
 
                 f['qc_label'][subject_index, :] = one_hot
 
-                subprocess.run(resample_command)
-
-                t1_data = nib.load(input_path + '/resampled/' + t1_filename).get_data()
+                t1_data = nib.load(input_path + '/resampled2/' + t1_filename).get_data()
 
                 if not t1_data.shape == (192, 256, 256):
                     print('resizing from', t1_data.shape)
@@ -399,7 +424,8 @@ if __name__ == "__main__":
     #ABIDE: 1113
     #ds030: 282
 
-    total_subjects = 1154 + 468 + 1113 + 282
+    # total_subjects = 1154 + 468 + 1113 + 282
+    total_subjects = 1113
 
     f = h5py.File(output_file, 'w')
     # f.create_dataset('MRI', (1154+468+113+282, 192, 256, 256), maxshape=(None, 192, 256, 256), dtype='float32')
@@ -411,10 +437,12 @@ if __name__ == "__main__":
     subject_index = 0
 
     ping_end_index, abide_end_index, ibis_end_index, ds030_end_index = 0, 0, 0, 0
-    ping_end_index = make_ping('/data1/data/PING/', f, 't1_qc.csv', subject_index) - 1
-    abide_end_index = make_abide('/data1/data/deep_abide/', f, 't1_qc.csv', ping_end_index + 1) - 1
-    ibis_end_index = make_ibis('/data1/data/IBIS/', f, 'ibis_t1_qc.csv', abide_end_index + 1) - 1
-    ds030_end_index = make_ds030('/data1/data/ds030/', f, 'ds030_DB.csv', ibis_end_index + 1) - 1
+    # ping_end_index = make_ping('/data1/data/PING/', f, 't1_qc.csv', subject_index) - 1
+    abide_end_index = make_abide('/data1/data/deep_abide/', f, 't1_qc.csv', ping_end_index) - 1
+    ibis_end_index = abide_end_index
+    # ibis_end_index = make_ibis('/data1/data/IBIS/', f, 'ibis_t1_qc.csv', abide_end_index) - 1
+
+    ds030_end_index = make_ds030('/data1/data/ds030/', f, 'ds030_DB.csv', ibis_end_index) - 1
 
     print(ping_end_index, abide_end_index, ibis_end_index, ds030_end_index)
     print(1154+468+1113+282)
