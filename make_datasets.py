@@ -399,6 +399,8 @@ def combine_objs(obj1, obj2, newname):
     subprocess.Popen(['objconcat', obj1, obj2, 'none', 'none', newname, 'none'])
 
 if __name__ == "__main__":
+
+    subprocess.run(['source', '~/.bash_profile'])
     path = '/data1/data/ABIDE/'
 
     # for filename in os.listdir(path + '/surfaces/'):
