@@ -112,7 +112,7 @@ def make_abide(input_path, f, label_file, subject_index):
         pool = Pool(cores)
         lines = list(qc_reader)
         indices = range(subject_index, len(lines))
-        input_paths = input_path * len(lines)
+        input_paths = [input_path] * len(lines)
 
         print('lines', len(lines))
         print('indices', len(indices))
