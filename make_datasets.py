@@ -109,56 +109,65 @@ def make_abide(input_path, f, label_file, subject_index):
         qc_reader = csv.reader(label_file)
         qc_reader.__next__()
 
-        for line in qc_reader:
-            try:
-                t1_filename = line[0] + '.mnc'
+        pool = Pool(cores)
+        lines = list(qc_reader)
+        indices = range(subject_index, len(lines))
+        input_paths = input_path * len(lines)
 
-                register(input_path + t1_filename, atlas, input_path + '/resampled/' + t1_filename)
+        index_list = pool.map(make_abide_subject, zip(lines, indices, input_paths))
 
-                one_hot = [0, 0, 0]
+    return index_list[-1]
 
-                total_labels = 0
-                if len(line[2]) > 0:
-                    label1 = int(line[2]) + 1                #-1, 0, or 1
-                    one_hot[label1] = 1
-                    total_labels += 1
-                if len(line[3]) > 0:
-                    label2 = int(line[3]) + 1
-                    one_hot[label2] = 1
-                    total_labels += 1
-                if len(line[4]) > 0:
-                    label3 = int(line[4]) + 1
-                    one_hot[label3] = 1
-                    total_labels += 1
+def make_abide_subject(line, subject_index, input_path):
+    try:
+        t1_filename = line[0] + '.mnc'
 
-                one_hot = np.multiply(one_hot, 1/total_labels)
+        register(input_path + t1_filename, atlas, input_path + '/resampled/' + t1_filename)
 
-                f['qc_label'][subject_index, :] = one_hot
+        one_hot = [0, 0, 0]
 
-                t1_data = nib.load(input_path + '/resampled/' + t1_filename).get_data()
+        total_labels = 0
+        if len(line[2]) > 0:
+            label1 = int(line[2]) + 1  # -1, 0, or 1
+            one_hot[label1] = 1
+            total_labels += 1
+        if len(line[3]) > 0:
+            label2 = int(line[3]) + 1
+            one_hot[label2] = 1
+            total_labels += 1
+        if len(line[4]) > 0:
+            label3 = int(line[4]) + 1
+            one_hot[label3] = 1
+            total_labels += 1
 
-                if not t1_data.shape == (192, 256, 256):
-                    print('resizing from', t1_data.shape)
-                    # if t1_data.shape[1] > 400:
-                    #     print('resampling from', t1_data.shape)
-                    #     t1_data = resize(t1_data, (t1_data.shape[0]/2, t1_data.shape[1]/2, t1_data.shape[2]/2), order=1)
+        one_hot = np.multiply(one_hot, 1 / total_labels)
 
-                    t1_data = resize_image_with_crop_or_pad(t1_data, img_size=[192, 256, 256], mode='constant')
+        f['qc_label'][subject_index, :] = one_hot
 
+        t1_data = nib.load(input_path + '/resampled/' + t1_filename).get_data()
 
-                f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
+        if not t1_data.shape == (192, 256, 256):
+            print('resizing from', t1_data.shape)
+            # if t1_data.shape[1] > 400:
+            #     print('resampling from', t1_data.shape)
+            #     t1_data = resize(t1_data, (t1_data.shape[0]/2, t1_data.shape[1]/2, t1_data.shape[2]/2), order=1)
 
-                print(subject_index, t1_filename)
+            t1_data = resize_image_with_crop_or_pad(t1_data, img_size=[192, 256, 256], mode='constant')
 
-                plt.imshow(t1_data[96, ...])
-                plt.axis('off')
-                plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
+        f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
 
-                subject_index += 1
-            except FileNotFoundError as e:
-                print('File not found:', line)
+        print(subject_index, t1_filename)
 
-    return subject_index
+        plt.imshow(t1_data[96, ...])
+        plt.axis('off')
+        plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
+
+        subject_index += 1
+    except FileNotFoundError as e:
+        print('File not found:', line)
+
+    return
+
 
 def make_ds030(input_path, f, label_file, subject_index):
     with open(os.path.join(input_path, label_file)) as label_file:
@@ -369,26 +378,25 @@ def register(moving_image, atlas, output_image):
     reg.inputs.output_transform_prefix = 'transform'
     reg.inputs.output_warped_image = output_image
     reg.inputs.output_transform_prefix = "stx-152"
-    reg.inputs.transforms = ['Translation', 'Rigid', 'Affine']
-    reg.inputs.transform_parameters = [(0.1,), (0.1,), (0.1,)]
-    reg.inputs.number_of_iterations = ([[10000, 111110, 11110]] * 3)
+    reg.inputs.transforms = ['Translation']
+    reg.inputs.transform_parameters = [(0.1,)]
+    reg.inputs.number_of_iterations = ([[10000, 111110, 11110]])
     reg.inputs.dimension = 3
     reg.inputs.write_composite_transform = True
     reg.inputs.collapse_output_transforms = False
-    reg.inputs.metric = ['Mattes'] * 3
-    reg.inputs.metric_weight = [1] * 3
-    reg.inputs.radius_or_number_of_bins = [32] * 3
-    reg.inputs.sampling_strategy = ['Regular'] * 3
-    reg.inputs.sampling_percentage = [0.3] * 3
-    reg.inputs.convergence_threshold = [1.e-8] * 3
-    reg.inputs.convergence_window_size = [20] * 3
-    reg.inputs.smoothing_sigmas = [[4, 2, 1]] * 3
-    reg.inputs.sigma_units = ['vox'] * 3
-    reg.inputs.shrink_factors = [[6, 4, 2]] + [[3, 2, 1]] * 2
-    reg.inputs.use_estimate_learning_rate_once = [True] * 3
-    reg.inputs.use_histogram_matching = [False] * 3
+    reg.inputs.metric = ['Mattes']
+    reg.inputs.metric_weight = [1]
+    reg.inputs.radius_or_number_of_bins = [32]
+    reg.inputs.sampling_strategy = ['Regular']
+    reg.inputs.sampling_percentage = [0.3]
+    reg.inputs.convergence_threshold = [1.e-6]
+    reg.inputs.convergence_window_size = [20]
+    reg.inputs.smoothing_sigmas = [[4, 2, 1]]
+    reg.inputs.sigma_units = ['vox']
+    reg.inputs.shrink_factors = [[32, 16, 4]]
+    reg.inputs.use_estimate_learning_rate_once = [True]
+    reg.inputs.use_histogram_matching = [False]
     reg.inputs.initial_moving_transform_com = True
-    reg.inputs.terminal_output = 'stream'
 
     reg.run()
 
