@@ -131,6 +131,7 @@ def make_abide(input_path, f, label_file, subject_index):
                                      '-unsigned',
                                      '-byte',
                                      '-keep_real_range',
+                                     '-use_input_sampling',
                                      '-transformation',
                                      input_path + 'transform.xfm',
                                      input_path + t1_filename,
