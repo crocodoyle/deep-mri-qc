@@ -388,6 +388,7 @@ def register(moving_image, atlas, output_image):
     reg.inputs.use_estimate_learning_rate_once = [True] * 3
     reg.inputs.use_histogram_matching = [False] * 3
     reg.inputs.initial_moving_transform_com = True
+    reg.inputs.terminal_output = 'stream'
 
     reg.run()
 
@@ -395,7 +396,7 @@ def register(moving_image, atlas, output_image):
 if __name__ == "__main__":
     os.environ["LD_LIBRARY_PATH"] = "/home/users/adoyle/quarantines/Linux-x86_64/lib"
 
-    path = '/data1/data/ABIDE/'
+    # path = '/data1/data/ABIDE/'
 
     # for filename in os.listdir(path + '/surfaces/'):
     #     if "right" in filename:
