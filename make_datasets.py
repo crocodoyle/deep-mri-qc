@@ -13,9 +13,8 @@ import nibabel as nib
 
 from multiprocessing import Pool, Process
 
-import matplotlib as mpl
-mpl.use('Agg')
-import matplotlib.pyplot as plt
+from nipype.interfaces.ants import Registration
+
 
 output_dir = '/data1/data/deepqc/'
 output_file = '/data1/data/deepqc/deepqc.hdf5'
@@ -114,46 +113,7 @@ def make_abide(input_path, f, label_file, subject_index):
             try:
                 t1_filename = line[0] + '.mnc'
 
-
-                register_command = ['minctracc',
-                                    '-clobber',
-                                    input_path + t1_filename,
-                                    atlas,
-                                    input_path + 'transform.xfm'
-                                    ]
-
-                subprocess.run(register_command)
-
-
-                resample_command1 = ['mincresample',
-                                     '-clobber',
-                                     '-nearest',
-                                     '-unsigned',
-                                     '-byte',
-                                     '-keep_real_range',
-                                     '-like',
-                                     atlas,
-                                     '-transformation',
-                                     input_path + 'transform.xfm',
-                                     input_path + t1_filename,
-                                     input_path + '/resampled1/' + t1_filename
-                                     ]
-
-                subprocess.run(resample_command1)
-
-                resample_command2 = ['mincresample',
-                                    '-clobber',
-                                    '-nearest',
-                                    '-unsigned',
-                                    '-byte',
-                                    '-keep_real_range',
-                                    '-like',
-                                    exemplar_file,
-                                    input_path + '/resampled1/' + t1_filename,
-                                    input_path + "/resampled2/" + t1_filename
-                                     ]
-
-                subprocess.run(resample_command2)
+                register(input_path + t1_filename, atlas, input_path + '/resampled/' + t1_filename)
 
                 one_hot = [0, 0, 0]
 
@@ -175,7 +135,7 @@ def make_abide(input_path, f, label_file, subject_index):
 
                 f['qc_label'][subject_index, :] = one_hot
 
-                t1_data = nib.load(input_path + '/resampled2/' + t1_filename).get_data()
+                t1_data = nib.load(input_path + '/resampled/' + t1_filename).get_data()
 
                 if not t1_data.shape == (192, 256, 256):
                     print('resizing from', t1_data.shape)
@@ -399,6 +359,38 @@ def combine_objs(obj1, obj2, newname):
     print(obj2)
     print(newname)
     subprocess.Popen(['objconcat', obj1, obj2, 'none', 'none', newname, 'none'])
+
+
+def register(moving_image, atlas, output_image):
+    reg = Registration()
+
+    reg.inputs.fixed_image = atlas
+    reg.inputs.moving_image = moving_image
+    reg.inputs.output_transform_prefix = 'transform'
+    reg.inputs.output_warped_image = output_image
+    reg.inputs.output_transform_prefix = "stx-152"
+    reg.inputs.transforms = ['Translation', 'Rigid', 'Affine']
+    reg.inputs.transform_parameters = [(0.1,), (0.1,), (0.1,)]
+    reg.inputs.number_of_iterations = ([[10000, 111110, 11110]] * 3)
+    reg.inputs.dimension = 3
+    reg.inputs.write_composite_transform = True
+    reg.inputs.collapse_output_transforms = False
+    reg.inputs.metric = ['Mattes'] * 3
+    reg.inputs.metric_weight = [1] * 3
+    reg.inputs.radius_or_number_of_bins = [32] * 3
+    reg.inputs.sampling_strategy = ['Regular'] * 3
+    reg.inputs.sampling_percentage = [0.3] * 3
+    reg.inputs.convergence_threshold = [1.e-8] * 3
+    reg.inputs.convergence_window_size = [20] * 3
+    reg.inputs.smoothing_sigmas = [[4, 2, 1]] * 3
+    reg.inputs.sigma_units = ['vox'] * 3
+    reg.inputs.shrink_factors = [[6, 4, 2]] + [[3, 2, 1]] * 2
+    reg.inputs.use_estimate_learning_rate_once = [True] * 3
+    reg.inputs.use_histogram_matching = [False] * 3
+    reg.inputs.initial_moving_transform_com = True
+
+    reg.run()
+
 
 if __name__ == "__main__":
     os.environ["LD_LIBRARY_PATH"] = "/home/users/adoyle/quarantines/Linux-x86_64/lib"
