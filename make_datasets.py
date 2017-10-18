@@ -114,7 +114,7 @@ def make_abide(input_path, f, label_file, subject_index):
         indices = range(subject_index, len(lines))
         input_paths = input_path * len(lines)
 
-        index_list = pool.map(make_abide_subject, zip(lines, indices, input_paths))
+        index_list = pool.starmap(make_abide_subject, zip(lines, indices, input_paths))
 
     return index_list[-1]
 
