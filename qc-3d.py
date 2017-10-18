@@ -97,9 +97,9 @@ def plot_training_error(hist):
 if __name__ == "__main__":
 
     ping_end_index = 1153
-    abide_end_index = 2124
-    ibis_end_index = 2592
-    ds030_end_index = 2857
+    abide_end_index = 2255
+    ibis_end_index = 2723
+    ds030_end_index = 2988
 
     f = h5py.File(workdir + 'deepqc.hdf5')
 
