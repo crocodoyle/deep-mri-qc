@@ -4,6 +4,7 @@ from keras.callbacks import ModelCheckpoint
 
 import numpy as np
 import h5py
+import pickle
 
 import keras.backend as K
 
@@ -15,6 +16,8 @@ from custom_loss import sensitivity, specificity
 
 workdir = '/data1/data/deepqc/'
 
+image_size = (192, 256, 192)
+
 
 def qc_model():
     nb_classes = 3
@@ -24,7 +27,7 @@ def qc_model():
 
     model = Sequential()
 
-    model.add(Conv3D(16, conv_size, activation='relu', input_shape=(192, 256, 256, 1)))
+    model.add(Conv3D(64, conv_size, activation='relu', input_shape=(image_size[0], image_size[1], image_size[2], 1)))
     # model.add(Dropout(0.2))
     # model.add(Conv3D(16, conv_size, activation='relu'))
     # model.add(Dropout(0.2))
@@ -33,7 +36,7 @@ def qc_model():
 
     # model.add(Conv3D(32, conv_size, activation='relu'))
     # model.add(Dropout(0.2))
-    model.add(Conv3D(32, conv_size, activation='relu'))
+    model.add(Conv3D(64, conv_size, activation='relu'))
     # model.add(Dropout(0.2))
     # model.add(BatchNormalization())
     model.add(MaxPooling3D(pool_size=pool_size))
@@ -45,7 +48,7 @@ def qc_model():
     # model.add(BatchNormalization())
     model.add(MaxPooling3D(pool_size=pool_size))
 #
-    model.add(Conv3D(128, conv_size, activation='relu'))
+    model.add(Conv3D(64, conv_size, activation='relu'))
     # model.add(Dropout(0.4))
 
     model.add(Flatten())
@@ -76,9 +79,9 @@ def batch(indices, f):
         for index in indices:
             try:
                 # print(images[index, ...][np.newaxis, ...].shape)
-                yield (np.reshape(images[index, ...], (192, 256, 256, 1))[np.newaxis, ...], labels[index, ...][np.newaxis, ...])
+                yield (np.reshape(images[index, ...], image_size + (1,))[np.newaxis, ...], labels[index, ...][np.newaxis, ...])
             except:
-                yield (np.reshape(images[index, ...], (192, 256, 256, 1))[np.newaxis, ...])
+                yield (np.reshape(images[index, ...], image_size + (1,))[np.newaxis, ...])
 
 def plot_training_error(hist):
     epoch_num = range(len(hist.history['acc']))
@@ -96,29 +99,29 @@ def plot_training_error(hist):
 
 if __name__ == "__main__":
 
-    ping_end_index = 1153
-    abide_end_index = 2255
-    ibis_end_index = 2723
-    ds030_end_index = 2988
+    abide_indices = pickle.load(open('/data1/data/deepqc/abide_indices.pkl', 'r'))
+    ds030_indices = pickle.load(open('/data1/data/deepqc/abide_indices.pkl', 'r'))
 
     f = h5py.File(workdir + 'deepqc.hdf5')
 
-    ping_indices = list(range(0, ping_end_index))
-    abide_indices = list(range(ping_end_index, abide_end_index))
-    ibis_indices = list(range(abide_end_index, ibis_end_index))
-    ds030_indices = list(range(ibis_end_index, ds030_end_index))
+    # ping_indices = list(range(0, ping_end_index))
+    # abide_indices = list(range(ping_end_index, abide_end_index))
+    # ibis_indices = list(range(abide_end_index, ibis_end_index))
+    # ds030_indices = list(range(ibis_end_index, ds030_end_index))
 
     # print('ping:', ping_indices)
     # print('abide:', abide_indices)
     # print('ibis:', ibis_indices)
     # print('ds030', ds030_indices)
 
-    train_indices = ping_indices + abide_indices + ibis_indices
+    # train_indices = ping_indices + abide_indices + ibis_indices
+    train_indices = abide_indices
 
-    print('PING samples:', len(ping_indices))
-    print('ABIDE samples:', len(abide_indices))
-    print('IBIS samples:', len(ibis_indices))
-    print('training samples:', len(train_indices), len(ping_indices) + len(abide_indices) + len(ibis_indices))
+    # print('PING samples:', len(ping_indices))
+    # print('ABIDE samples:', len(abide_indices))
+    # print('IBIS samples:', len(ibis_indices))
+    # print('training samples:', len(train_indices), len(ping_indices) + len(abide_indices) + len(ibis_indices))
+
 
     train_labels = np.zeros((len(train_indices), 3))
     print('labels shape:', train_labels.shape)

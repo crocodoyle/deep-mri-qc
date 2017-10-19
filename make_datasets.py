@@ -122,15 +122,16 @@ def make_abide(input_path, f, label_file, subject_index):
 
         index_list = pool.starmap(make_abide_subject, zip(lines, indices, input_paths))
 
-        index_list = index_list[index_list > 0]
+        good_indices = [x for x in index_list if x > 0]
 
-    return index_list
+
+    return good_indices
 
 def make_abide_subject(line, subject_index, input_path):
     try:
         t1_filename = line[0] + '.mnc'
 
-        register_MINC(input_path + t1_filename, atlas, input_path + '/resampled/' + t1_filename)
+        # register_MINC(input_path + t1_filename, atlas, input_path + '/resampled/' + t1_filename)
 
         one_hot = [0, 0, 0]
 
@@ -166,9 +167,9 @@ def make_abide_subject(line, subject_index, input_path):
 
         print(subject_index, t1_filename)
 
-        plt.imshow(t1_data[96, ...])
-        plt.axis('off')
-        plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
+        # plt.imshow(t1_data[96, ...])
+        # plt.axis('off')
+        # plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
 
         return subject_index
     except Exception as e:

@@ -32,10 +32,10 @@ def gif_my_brain(input_file):
         plt.savefig('E:/brains/andrew/' + str(y) + '.png', bbox_inches='tight')
 
     images = []
-    for y in range(y_range-1, 56, -1):
+    for y in range(202, 56, -1):
         images.append(imageio.imread('E:/brains/andrew/' + str(y) + '.png'))
 
-    for y in range(56, y_range):
+    for y in range(56, 202):
         images.append(imageio.imread('E:/brains/andrew/' + str(y) + '.png'))
 
     imageio.mimsave('E:/brains/andrew/andrew.gif', images)
@@ -54,9 +54,9 @@ def rename_abide(input_path, output_path):
 if __name__ == '__main__':
 
 
-    # gif_my_brain('E:/brains/andrew_mri_nov_2015.nii.gz')
+    gif_my_brain('E:/brains/andrew_mri_nov_2015.nii.gz')
 
-    rename_abide('E:/abide1/natives/', 'E:/abide1/abide/')
+    # rename_abide('E:/abide1/natives/', 'E:/abide1/abide/')
 
     # f = h5py.File(workdir + 'deepqc.hdf5')
     #
