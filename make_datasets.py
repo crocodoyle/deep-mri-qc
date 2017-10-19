@@ -473,7 +473,7 @@ if __name__ == "__main__":
     abide_indices = make_abide('/data1/data/deep_abide/', f, 't1_qc.csv', 0)
     # ibis_end_index = make_ibis('/data1/data/IBIS/', f, 'ibis_t1_qc.csv', abide_end_index) - 1
 
-    ds030_indices = make_ds030('/data1/data/ds030/', f, 'ds030_DB.csv', sorted(abide_indices[1]) + 1)
+    ds030_indices = make_ds030('/data1/data/ds030/', f, 'ds030_DB.csv', sorted(abide_indices)[0] + 1)
 
     pickle.dump(abide_indices, open('/data1/data/deepqc/abide_indices.pkl', 'w'))
     pickle.dump(ds030_indices, open('/data1/data/deepqc/ds030_indices.pkl', 'w'))
