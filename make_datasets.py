@@ -18,7 +18,7 @@ from nipype.interfaces.ants import Registration
 
 output_dir = '/data1/data/deepqc/'
 output_file = '/data1/data/deepqc/deepqc.hdf5'
-cores = 10
+cores = 12
 
 import matplotlib as mpl
 mpl.use('Agg')
@@ -451,8 +451,6 @@ if __name__ == "__main__":
     #     except:
     #         print filename
 
-
-
     #PING: 1154
     #IBIS: 468
     #ABIDE: 1113
@@ -475,8 +473,8 @@ if __name__ == "__main__":
 
     ds030_indices = make_ds030('/data1/data/ds030/', f, 'ds030_DB.csv', sorted(abide_indices)[0] + 1)
 
-    pickle.dump(abide_indices, open('/data1/data/deepqc/abide_indices.pkl', 'w'))
-    pickle.dump(ds030_indices, open('/data1/data/deepqc/ds030_indices.pkl', 'w'))
+    pickle.dump(abide_indices, open('/data1/data/deepqc/abide_indices.pkl', 'wb'))
+    pickle.dump(ds030_indices, open('/data1/data/deepqc/ds030_indices.pkl', 'wb'))
 
     f.close()
 
