@@ -22,7 +22,7 @@ image_size = (192, 256, 192)
 def qc_model():
     nb_classes = 3
 
-    conv_size = (5, 5, 5)
+    conv_size = (3, 3, 3)
     pool_size = (2, 2, 2)
 
     model = Sequential()
@@ -31,7 +31,7 @@ def qc_model():
     # model.add(Dropout(0.2))
     # model.add(Conv3D(16, conv_size, activation='relu'))
     # model.add(Dropout(0.2))
-    # model.add(BatchNormalization())
+    model.add(BatchNormalization())
     model.add(MaxPooling3D(pool_size=pool_size))
 
     # model.add(Conv3D(32, conv_size, activation='relu'))
@@ -56,6 +56,8 @@ def qc_model():
     # model.add(Dropout(0.4))
     model.add(MaxPooling3D(pool_size=pool_size))
 
+    model.add(Conv3D(32, conv_size, activation='relu'))
+    model.add(Dropout(0.3))
 
     model.add(Flatten())
     model.add(Dense(100, activation='relu'))

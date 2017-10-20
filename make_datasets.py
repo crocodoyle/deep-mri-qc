@@ -242,8 +242,10 @@ def make_ds030_subject(line, subject_index, input_path, atlas_image):
             plt.axis('off')
             plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
 
-    except:
+    except Exception as e:
         print('Error:', line)
+
+        return -1
 
     return subject_index
 
