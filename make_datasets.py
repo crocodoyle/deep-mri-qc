@@ -154,11 +154,11 @@ def make_abide_subject(line, subject_index, input_path):
         one_hot = np.multiply(one_hot, 1 / total_labels)
 
         f['qc_label'][subject_index, :] = one_hot
-
+        print('t1_filename', one_hot)
         t1_data = nib.load(input_path + '/resampled/' + t1_filename).get_data()
 
         if not t1_data.shape == target_size:
-            print('resizing from', t1_data.shape)
+            # print('resizing from', t1_data.shape)
             # if t1_data.shape[1] > 400:
             #     print('resampling from', t1_data.shape)
             #     t1_data = resize(t1_data, (t1_data.shape[0]/2, t1_data.shape[1]/2, t1_data.shape[2]/2), order=1)
@@ -167,7 +167,6 @@ def make_abide_subject(line, subject_index, input_path):
 
         f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
 
-        print(subject_index, t1_filename)
 
         # plt.imshow(t1_data[96, ...])
         # plt.axis('off')
