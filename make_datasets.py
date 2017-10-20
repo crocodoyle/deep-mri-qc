@@ -227,20 +227,24 @@ def make_ds030_subject(line, subject_index, input_path, atlas_image):
 
             f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
 
+            one_hot = [0, 0, 0]
+
             if 'ok' in label:
                 one_hot = [0, 0, 1]
             elif 'maybe' in label:
                 one_hot = [0, 1, 0]
             elif 'exclude' in label:
                 one_hot = [1, 0, 0]
+            else:
+                raise Exception
 
             f['qc_label'][subject_index, :] = one_hot
 
             print(subject_index, t1_filename)
 
-            plt.imshow(t1_data[96, ...])
-            plt.axis('off')
-            plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
+            # plt.imshow(t1_data[96, ...])
+            # plt.axis('off')
+            # plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
 
     except Exception as e:
         print('Error:', line)
