@@ -123,7 +123,11 @@ if __name__ == "__main__":
     # print('training samples:', len(train_indices), len(ping_indices) + len(abide_indices) + len(ibis_indices))
 
 
-    train_labels = np.zeros((len(train_indices), 3))
+    train_size = 1113
+    test_size = 282
+
+
+    train_labels = np.zeros((train_size, 3))
     print('labels shape:', train_labels.shape)
 
     for index in train_indices:
