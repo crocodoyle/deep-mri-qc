@@ -189,7 +189,7 @@ def make_abide_subject(line, subject_index, input_path):
 def make_ds030(input_path, f, label_file, subject_index):
     print('starting ds030...')
     print('csv file:', os.path.join(input_path, label_file))
-    with open(os.path.join(input_path, label_file)) as label_file:
+    with open(os.path.join(input_path, label_file), 'r') as label_file:
         print('yayyy')
         qc_reader = csv.reader(label_file)
         qc_reader.__next__()
