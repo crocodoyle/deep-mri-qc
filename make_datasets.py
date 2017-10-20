@@ -187,6 +187,7 @@ def make_abide_subject(line, subject_index, input_path):
 
 
 def make_ds030(input_path, f, label_file, subject_index):
+    print('starting ds030...')
     with open(os.path.join(input_path, label_file)) as label_file:
         qc_reader = csv.reader(label_file)
         qc_reader.__next__()
@@ -202,6 +203,7 @@ def make_ds030(input_path, f, label_file, subject_index):
 
         index_list = []
         for line, index, input_path in zip(lines, indices, input_paths):
+            print('starting subject:', line)
             returned_index = make_ds030_subject(line, index, input_path, atlas_image)
             index_list.append(returned_index)
 
@@ -489,7 +491,9 @@ if __name__ == "__main__":
     abide_indices = make_abide('/data1/data/deep_abide/', f, 't1_qc.csv', 0)
     # ibis_end_index = make_ibis('/data1/data/IBIS/', f, 'ibis_t1_qc.csv', abide_end_index) - 1
 
+    print('finished ABIDE, starting ds030')
     ds030_indices = make_ds030('/data1/data/ds030/', f, 'ds030_DB.csv', sorted(abide_indices)[-1] + 1)
+    print('finished ds030')
 
     pickle.dump(abide_indices, open('/data1/data/deepqc/abide_indices.pkl', 'wb'))
     pickle.dump(ds030_indices, open('/data1/data/deepqc/ds030_indices.pkl', 'wb'))
