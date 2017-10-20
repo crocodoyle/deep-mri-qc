@@ -140,15 +140,15 @@ def make_abide_subject(line, subject_index, input_path):
         total_labels = 0
         if len(line[2]) > 0:
             label1 = int(line[2]) + 1  # -1, 0, or 1
-            one_hot[label1] = 1
+            one_hot[label1] += 1
             total_labels += 1
         if len(line[3]) > 0:
             label2 = int(line[3]) + 1
-            one_hot[label2] = 1
+            one_hot[label2] += 1
             total_labels += 1
         if len(line[4]) > 0:
             label3 = int(line[4]) + 1
-            one_hot[label3] = 1
+            one_hot[label3] += 1
             total_labels += 1
 
         one_hot = np.multiply(one_hot, 1 / total_labels)
