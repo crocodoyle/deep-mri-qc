@@ -123,16 +123,14 @@ if __name__ == "__main__":
     # print('training samples:', len(train_indices), len(ping_indices) + len(abide_indices) + len(ibis_indices))
 
 
-    train_size = 1113
-    test_size = 282
-
-
-    train_labels = np.zeros((train_size, 3))
+    train_labels = np.zeros((1113, 3))
     print('labels shape:', train_labels.shape)
 
     for index in train_indices:
         label = f['qc_label'][index, ...]
         train_labels[index, ...] = label
+
+    train_labels = [label for label in train_labels if np.sum(label) > 0]
 
     skf = StratifiedShuffleSplit(n_splits=1, test_size = 0.1)
 
