@@ -470,7 +470,7 @@ if __name__ == "__main__":
     # total_subjects = 1154 + 468 + 1113 + 282
     total_subjects = 1113 + 282
 
-    f = h5py.File(output_file, 'w', driver='mpio', comm=MPI.COMM_WORLD)
+    f = h5py.File(output_file, 'w')
     # f.create_dataset('MRI', (1154+468+113+282, 192, 256, 256), maxshape=(None, 192, 256, 256), dtype='float32')
     f.create_dataset('MRI', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float32')
     f.create_dataset('qc_label', (total_subjects, 3), maxshape=(None, 3), dtype='uint8')
