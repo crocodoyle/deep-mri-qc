@@ -187,44 +187,55 @@ def make_ds030(input_path, f, label_file, subject_index):
 
         atlas_image = nib.load(atlas)
 
-        for line in qc_reader:
-            try:
-                t1_filename = line[0] + '.nii.gz'
-                label = line[8]
+        pool = Pool(cores)
+        lines = list(qc_reader)
+        indices = range(subject_index, len(lines))
+        input_paths = [input_path] * len(lines)
 
-                if len(label) > 0:
-                    t1 = nib.load(input_path + t1_filename)
+        index_list = pool.starmap(make_abide_subject, zip(lines, indices, input_paths))
 
-                    t1_resampled = resample_from_to(t1, atlas_image)
-                    t1_data = t1_resampled.get_data()
+        good_indices = [x for x in index_list if x > 0]
 
-                    if not t1_data.shape == target_size:
-                        print('resizing from', t1_data.shape)
-                        t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
+    return good_indices
 
-                    f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
 
-                    if 'ok' in label:
-                        one_hot = [0, 0, 1]
-                    elif 'maybe' in label:
-                        one_hot = [0, 1, 0]
-                    elif 'exclude' in label:
-                        one_hot = [1, 0, 0]
+def make_ds030_subject(line, subject_index, input_path, atlas_image):
+    try:
+        t1_filename = line[0] + '.nii.gz'
+        label = line[8]
 
-                    f['qc_label'][subject_index, :] = one_hot
+        if len(label) > 0:
+            t1 = nib.load(input_path + t1_filename)
 
-                    print(subject_index, t1_filename)
+            t1_resampled = resample_from_to(t1, atlas_image)
+            t1_data = t1_resampled.get_data()
 
-                    plt.imshow(t1_data[96, ...])
-                    plt.axis('off')
-                    plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
+            if not t1_data.shape == target_size:
+                print('resizing from', t1_data.shape)
+                t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
-                    subject_index += 1
+            f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
 
-            except:
-                print('Error:', line)
+            if 'ok' in label:
+                one_hot = [0, 0, 1]
+            elif 'maybe' in label:
+                one_hot = [0, 1, 0]
+            elif 'exclude' in label:
+                one_hot = [1, 0, 0]
+
+            f['qc_label'][subject_index, :] = one_hot
+
+            print(subject_index, t1_filename)
+
+            plt.imshow(t1_data[96, ...])
+            plt.axis('off')
+            plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
+
+    except:
+        print('Error:', line)
 
     return subject_index
+
 
 def make_abide_surfaces(path, label_file):
     patient_data = {}
