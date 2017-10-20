@@ -183,31 +183,18 @@ def make_ds030(input_path, f, label_file, subject_index):
         qc_reader = csv.reader(label_file)
         qc_reader.__next__()
 
+        atlas_image = nib.load(atlas)
+
         for line in qc_reader:
             try:
                 t1_filename = line[0] + '.nii.gz'
                 label = line[8]
 
                 if len(label) > 0:
+                    t1 = nib.load(input_path + t1_filename)
 
-                    # resample_command = ['mincresample',
-                    #                     '-clobber',
-                    #                     '-nearest',
-                    #                     '-unsigned',
-                    #                     '-byte',
-                    #                     '-keep_real_range',
-                    #                     '-like',
-                    #                     exemplar_file,
-                    #                     input_path + t1_filename,
-                    #                     input_path + "/resampled/" + t1_filename]
-                    #
-                    # subprocess.run(['nii2mnc', input_path + t1_filename])
-                    # subprocess.run(resample_command)
-                    #
-                    # t1_filename = t1_filename[:-7] + '.mnc'
-                    # print(t1_filename)
-
-                    t1_data = nib.load(input_path + t1_filename).get_data()
+                    t1_resampled = nib.processing.resample_from_to(t1, atlas_image)
+                    t1_data = t1_resampled.get_data()
 
                     if not t1_data.shape == target_size:
                         print('resizing from', t1_data.shape)
