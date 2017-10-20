@@ -130,8 +130,8 @@ if __name__ == "__main__":
         label = f['qc_label'][index, ...]
         train_labels[index, ...] = label
 
-    train_labels[~np.all(train_labels == 0, axis=1)]
-    
+    train_labels = train_labels[~np.all(train_labels == 0, axis=1)]
+
     skf = StratifiedShuffleSplit(n_splits=1, test_size = 0.1)
 
     for train, val in skf.split(train_indices, train_labels):
