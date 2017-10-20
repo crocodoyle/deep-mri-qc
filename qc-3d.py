@@ -123,14 +123,14 @@ if __name__ == "__main__":
     # print('training samples:', len(train_indices), len(ping_indices) + len(abide_indices) + len(ibis_indices))
 
 
-    train_labels = np.zeros((1113, 3))
+    train_labels = np.zeros((len(abide_indices), 3))
     print('labels shape:', train_labels.shape)
 
+    good_subject_index = 0
     for index in train_indices:
         label = f['qc_label'][index, ...]
-        train_labels[index, ...] = label
-
-    train_labels = train_labels[~np.all(train_labels == 0, axis=1)]
+        train_labels[good_subject_index, ...] = label
+        good_subject_index += 1
 
     skf = StratifiedShuffleSplit(n_splits=1, test_size = 0.1)
 
