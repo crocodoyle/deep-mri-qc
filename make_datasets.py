@@ -212,6 +212,7 @@ def make_ds030(input_path, f, label_file, subject_index):
 
 def make_ds030_subject(line, subject_index, input_path, atlas_image):
     try:
+        print(line)
         t1_filename = line[0] + '.nii.gz'
         label = line[8]
 
