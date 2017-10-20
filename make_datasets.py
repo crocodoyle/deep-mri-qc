@@ -10,6 +10,8 @@ from skimage.transform import resize
 from sklearn.neighbors import KDTree
 
 import nibabel as nib
+from nibabel.processing import resample_from_to
+
 
 from multiprocessing import Pool, Process
 
@@ -193,7 +195,7 @@ def make_ds030(input_path, f, label_file, subject_index):
                 if len(label) > 0:
                     t1 = nib.load(input_path + t1_filename)
 
-                    t1_resampled = nib.processing.resample_from_to(t1, atlas_image)
+                    t1_resampled = resample_from_to(t1, atlas_image)
                     t1_data = t1_resampled.get_data()
 
                     if not t1_data.shape == target_size:
@@ -219,8 +221,8 @@ def make_ds030(input_path, f, label_file, subject_index):
 
                     subject_index += 1
 
-            except FileNotFoundError as e:
-                print('File not found:', line)
+            except:
+                print('Error:', line)
 
     return subject_index
 
