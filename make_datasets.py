@@ -5,6 +5,8 @@ import os, sys, time, csv, subprocess, pickle
 
 from dltk.core.io.preprocessing import normalise_zero_one, resize_image_with_crop_or_pad
 
+from mpi4py import MPI
+
 import h5py
 from skimage.transform import resize
 from sklearn.neighbors import KDTree
@@ -124,7 +126,7 @@ def make_abide(input_path, f, label_file, subject_index):
 
         index_list = pool.starmap(make_abide_subject, zip(lines, indices, input_paths))
 
-        good_indices = [x for x in index_list if x > 0]
+        good_indices = [x for x in index_list if x > 0] # get rid of subjects who didn't have all info
 
 
     return good_indices
@@ -154,7 +156,7 @@ def make_abide_subject(line, subject_index, input_path):
         one_hot = np.multiply(one_hot, 1 / total_labels)
 
         f['qc_label'][subject_index, :] = one_hot
-        print('t1_filename', one_hot)
+        print(t1_filename, one_hot)
         t1_data = nib.load(input_path + '/resampled/' + t1_filename).get_data()
 
         if not t1_data.shape == target_size:
@@ -191,7 +193,7 @@ def make_ds030(input_path, f, label_file, subject_index):
         indices = range(subject_index, len(lines))
         input_paths = [input_path] * len(lines)
 
-        index_list = pool.starmap(make_abide_subject, zip(lines, indices, input_paths))
+        index_list = pool.starmap(make_ds030_subject, zip(lines, indices, input_paths))
 
         good_indices = [x for x in index_list if x > 0]
 
@@ -458,7 +460,7 @@ if __name__ == "__main__":
     # total_subjects = 1154 + 468 + 1113 + 282
     total_subjects = 1113 + 282
 
-    f = h5py.File(output_file, 'w')
+    f = h5py.File(output_file, 'w', driver='mpio', comm=MPI.COMM_WORLD)
     # f.create_dataset('MRI', (1154+468+113+282, 192, 256, 256), maxshape=(None, 192, 256, 256), dtype='float32')
     f.create_dataset('MRI', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float32')
     f.create_dataset('qc_label', (total_subjects, 3), maxshape=(None, 3), dtype='uint8')

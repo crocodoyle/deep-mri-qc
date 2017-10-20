@@ -105,10 +105,10 @@ def plot_training_error(hist):
 
 if __name__ == "__main__":
 
-    abide_indices = pickle.load(open('/data1/data/deepqc/abide_indices.pkl', 'rb'))
-    ds030_indices = pickle.load(open('/data1/data/deepqc/abide_indices.pkl', 'rb'))
+    abide_indices = pickle.load(open(workdir + 'abide_indices.pkl', 'rb'))
+    ds030_indices = pickle.load(open(workdir + 'abide_indices.pkl', 'rb'))
 
-    f = h5py.File(workdir + 'deepqc.hdf5')
+    f = h5py.File(workdir + 'deepqc.hdf5', 'r')
 
     # ping_indices = list(range(0, ping_end_index))
     # abide_indices = list(range(ping_end_index, abide_end_index))
