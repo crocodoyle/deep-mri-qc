@@ -56,7 +56,7 @@ def qc_model():
     # # model.add(Dropout(0.4))
     # model.add(MaxPooling3D(pool_size=pool_size))
 
-    model.add(Conv3D(64, conv_size, strides=[2, 2, 2], activation='relu'))
+    model.add(Conv3D(32, conv_size, strides=[2, 2, 2], activation='relu'))
     model.add(Dropout(0.3))
 
     model.add(Flatten())
