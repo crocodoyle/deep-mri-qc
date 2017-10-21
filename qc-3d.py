@@ -27,7 +27,7 @@ def qc_model():
 
     model = Sequential()
 
-    model.add(Conv3D(8, conv_size, activation='relu', strides=[2, 2, 2], input_shape=(image_size[0], image_size[1], image_size[2], 1)))
+    model.add(Conv3D(7, conv_size, activation='relu', strides=[2, 2, 2], input_shape=(image_size[0], image_size[1], image_size[2], 1)))
     # model.add(Dropout(0.2))
     # model.add(Conv3D(16, conv_size, activation='relu'))
     # model.add(Dropout(0.2))
@@ -48,7 +48,7 @@ def qc_model():
     # model.add(BatchNormalization())
     # model.add(MaxPooling3D(pool_size=pool_size))
 #
-    model.add(Conv3D(32, conv_size, strides=[2, 2, 2], activation='relu'))
+    model.add(Conv3D(16, conv_size, strides=[2, 2, 2], activation='relu'))
     # model.add(Dropout(0.4))
     # model.add(MaxPooling3D(pool_size=pool_size))
 
@@ -59,7 +59,7 @@ def qc_model():
     model.add(Conv3D(32, conv_size, strides=[2, 2, 2], activation='relu'))
     model.add(Dropout(0.3))
 
-    model.add(Conv3D(64, conv_size, activation='relu'))
+    model.add(Conv3D(32, conv_size, activation='relu'))
     model.add(Dropout(0.3))
 
     model.add(Conv3D(32, (1, 1, 1), activation='relu'))
