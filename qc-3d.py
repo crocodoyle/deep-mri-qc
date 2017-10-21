@@ -27,7 +27,7 @@ def qc_model():
 
     model = Sequential()
 
-    model.add(Conv3D(64, conv_size, activation='relu', input_shape=(image_size[0], image_size[1], image_size[2], 1)))
+    model.add(Conv3D(32, conv_size, activation='relu', input_shape=(image_size[0], image_size[1], image_size[2], 1)))
     # model.add(Dropout(0.2))
     # model.add(Conv3D(16, conv_size, activation='relu'))
     # model.add(Dropout(0.2))
