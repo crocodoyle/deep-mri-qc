@@ -22,7 +22,7 @@ image_size = (192, 256, 192)
 def qc_model():
     nb_classes = 3
 
-    conv_size = (3, 3, 3)
+    conv_size = (5, 5, 5)
     pool_size = (2, 2, 2)
 
     model = Sequential()
@@ -36,25 +36,25 @@ def qc_model():
 
     # model.add(Conv3D(32, conv_size, activation='relu'))
     # model.add(Dropout(0.2))
-    model.add(Conv3D(64, conv_size, activation='relu'))
+    model.add(Conv3D(32, conv_size, activation='relu'))
     # model.add(Dropout(0.2))
     # model.add(BatchNormalization())
     model.add(MaxPooling3D(pool_size=pool_size))
 
     # model.add(Conv3D(64, conv_size, activation='relu'))
     # model.add(Dropout(0.3))
-    model.add(Conv3D(64, conv_size, activation='relu'))
+    model.add(Conv3D(32, conv_size, activation='relu'))
     # model.add(Dropout(0.3))
     # model.add(BatchNormalization())
     model.add(MaxPooling3D(pool_size=pool_size))
 #
-    model.add(Conv3D(64, conv_size, activation='relu'))
+    model.add(Conv3D(32, conv_size, activation='relu'))
     # model.add(Dropout(0.4))
     model.add(MaxPooling3D(pool_size=pool_size))
 
-    model.add(Conv3D(64, conv_size, activation='relu'))
-    # model.add(Dropout(0.4))
-    model.add(MaxPooling3D(pool_size=pool_size))
+    # model.add(Conv3D(64, conv_size, activation='relu'))
+    # # model.add(Dropout(0.4))
+    # model.add(MaxPooling3D(pool_size=pool_size))
 
     model.add(Conv3D(64, conv_size, activation='relu'))
     model.add(Dropout(0.3))
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     good_subject_index = 0
     for index in train_indices:
         label = f['qc_label'][index, ...]
-        print(label)
+        # print(label)
         train_labels[good_subject_index, ...] = label
         good_subject_index += 1
 
