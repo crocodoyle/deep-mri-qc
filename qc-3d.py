@@ -36,14 +36,14 @@ def qc_model():
 
     # model.add(Conv3D(32, conv_size, activation='relu'))
     # model.add(Dropout(0.2))
-    model.add(Conv3D(16, conv_size, activation='relu'))
+    model.add(Conv3D(8, conv_size, activation='relu'))
     # model.add(Dropout(0.2))
     # model.add(BatchNormalization())
     model.add(MaxPooling3D(pool_size=pool_size))
 
     # model.add(Conv3D(64, conv_size, activation='relu'))
     # model.add(Dropout(0.3))
-    model.add(Conv3D(32, conv_size, activation='relu'))
+    model.add(Conv3D(16, conv_size, activation='relu'))
     # model.add(Dropout(0.3))
     # model.add(BatchNormalization())
     model.add(MaxPooling3D(pool_size=pool_size))
