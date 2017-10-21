@@ -62,7 +62,7 @@ def qc_model():
     model.add(Conv3D(64, conv_size, activation='relu'))
     model.add(Dropout(0.3))
 
-    model.add(Conv3D(256, (1, 1, 1), activation='relu'))
+    model.add(Conv3D(32, (1, 1, 1), activation='relu'))
 
     model.add(Flatten())
     model.add(Dense(32, activation='relu'))
