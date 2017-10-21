@@ -190,16 +190,16 @@ def make_ds030(input_path, f, label_file, subject_index):
     print('starting ds030...')
     print('csv file:', os.path.join(input_path, label_file))
     with open(os.path.join(input_path, label_file), 'r') as label_file:
-        print('yayyy')
         qc_reader = csv.reader(label_file)
-        qc_reader.__next__()
 
         atlas_image = nib.load(atlas)
 
-        pool = Pool(cores)
-        lines = list(qc_reader)
-        indices = range(subject_index, len(lines))
+        # pool = Pool(cores)
+        lines = list(qc_reader)[1:]
+        indices = range(subject_index, subject_index + len(lines))
         input_paths = [input_path] * len(lines)
+
+        print(len(lines), len(indices), len(input_paths))
 
         # index_list = pool.starmap(make_ds030_subject, zip(lines, indices, input_paths))
 
