@@ -187,8 +187,6 @@ def make_abide_subject(line, subject_index, input_path):
 
 
 def make_ds030(input_path, f, label_file, subject_index):
-    print('starting ds030...')
-    print('csv file:', os.path.join(input_path, label_file))
     with open(os.path.join(input_path, label_file), 'r') as label_file:
         qc_reader = csv.reader(label_file)
 
@@ -198,8 +196,6 @@ def make_ds030(input_path, f, label_file, subject_index):
         lines = list(qc_reader)[1:]
         indices = range(subject_index, subject_index + len(lines))
         input_paths = [input_path] * len(lines)
-
-        print(len(lines), len(indices), len(input_paths))
 
         # index_list = pool.starmap(make_ds030_subject, zip(lines, indices, input_paths))
 
@@ -216,7 +212,6 @@ def make_ds030(input_path, f, label_file, subject_index):
 
 def make_ds030_subject(line, subject_index, input_path, atlas_image):
     try:
-        print(line)
         t1_filename = line[0] + '.nii.gz'
         label = line[8]
 
@@ -244,8 +239,6 @@ def make_ds030_subject(line, subject_index, input_path, atlas_image):
                 raise Exception
 
             f['qc_label'][subject_index, :] = one_hot
-
-            print(subject_index, t1_filename)
 
             # plt.imshow(t1_data[96, ...])
             # plt.axis('off')
@@ -484,7 +477,7 @@ if __name__ == "__main__":
     f = h5py.File(output_file, 'w')
     # f.create_dataset('MRI', (1154+468+113+282, 192, 256, 256), maxshape=(None, 192, 256, 256), dtype='float32')
     f.create_dataset('MRI', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float32')
-    f.create_dataset('qc_label', (total_subjects, 3), maxshape=(None, 3), dtype='uint8')
+    f.create_dataset('qc_label', (total_subjects, 3), maxshape=(None, 3), dtype='float32')
     dt = h5py.special_dtype(vlen=bytes)
     f.create_dataset('qc_comment', (total_subjects,), dtype=dt)
 
