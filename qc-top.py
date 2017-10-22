@@ -74,9 +74,9 @@ def batch(indices, f):
             try:
                 # print(images[index, ...][np.newaxis, ...].shape)
 
-                yield (images[index, ...], labels[index, ...][np.newaxis, ...])
+                yield (images[index, ...][np.newaxis, ...], labels[index, ...][np.newaxis, ...])
             except:
-                yield (images[index, ...])
+                yield (images[index, ...][np.newaxis, ...])
 
 def plot_training_error(hist):
     epoch_num = range(len(hist.history['acc']))
