@@ -17,7 +17,7 @@ from custom_loss import sensitivity, specificity
 workdir = '/data1/data/deepqc/'
 
 image_size = (192, 256, 192)
-slice_size = (192, 192)
+slice_size = (192, 256)
 
 
 def qc_model():
@@ -28,7 +28,7 @@ def qc_model():
 
     model = Sequential()
 
-    model.add(Conv2D(64, conv_size, activation='relu', input_shape=(192, 192, 1)))
+    model.add(Conv2D(64, conv_size, activation='relu', input_shape=(192, 256, 192)))
     model.add(BatchNormalization())
     model.add(Conv2D(64, conv_size, activation='relu'))
 
@@ -73,9 +73,10 @@ def batch(indices, f):
         for index in indices:
             try:
                 # print(images[index, ...][np.newaxis, ...].shape)
-                yield (np.reshape(images[index, :, 128, :], slice_size + (1,))[np.newaxis, ...], labels[index, ...][np.newaxis, ...])
+
+                yield (images[index, ...], labels[index, ...][np.newaxis, ...])
             except:
-                yield (np.reshape(images[index, :, 128, :], slice_size + (1,))[np.newaxis, ...])
+                yield (images[index, ...])
 
 def plot_training_error(hist):
     epoch_num = range(len(hist.history['acc']))
