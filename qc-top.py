@@ -64,6 +64,7 @@ def qc_model():
     return model
 
 def pass_fail_label(labels, index):
+    print(labels.shape)
     return [labels[index, 0], labels[index, 1] + labels[index, 2]]
 
 def batch(indices, f):
