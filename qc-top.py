@@ -21,7 +21,7 @@ slice_size = (192, 256)
 
 
 def qc_model():
-    nb_classes = 3
+    nb_classes = 2
 
     conv_size = (3, 3)
     pool_size = (2, 2)
@@ -63,6 +63,10 @@ def qc_model():
 
     return model
 
+def pass_fail_label(labels, index):
+
+    return [labels[index, 0], np.sum(labels[index, 1:2])]
+
 def batch(indices, f):
     images = f['MRI']
     labels = f['qc_label']    #already in one-hot
@@ -74,7 +78,7 @@ def batch(indices, f):
             try:
                 # print(images[index, ...][np.newaxis, ...].shape)
 
-                yield (images[index, ...][np.newaxis, ...], labels[index, ...][np.newaxis, ...])
+                yield (images[index, ...][np.newaxis, ...], pass_fail_label(labels, index)[np.newaxis, ...])
             except:
                 yield (images[index, ...][np.newaxis, ...])
 
@@ -169,7 +173,7 @@ if __name__ == "__main__":
     actual = []
 
     for index in test_indices:
-        scores = model.test_on_batch(f['MRI'][index, ...], f['qc_label'][index, ...])
+        scores = model.test_on_batch(f['MRI'][index, ...][np.newaxis, ...], pass_fail_label(f['qc_label'], index)[np.newaxis, ...])
         print(scores)
 
     plot_training_error(hist)
