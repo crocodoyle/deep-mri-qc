@@ -25,95 +25,64 @@ image_size = (192, 256, 192)
 slice_size = (192, 256)
 
 
-def top_model():
+def qc_model():
     nb_classes = 2
+
     conv_size = (3, 3)
     pool_size = (2, 2)
 
-    inputs = [Input(shape=(192, 256, 192)), Input(shape=(192, 192, 256)), Input(shape=(192, 256, 192))]
+    model = Sequential()
 
-    # XY plane
-    xy_conv1 = Conv2D(16, conv_size, activation='relu')(inputs[0])
-    xy_norm1 = BatchNormalization()(xy_conv1)
-    xy_drop1 = Dropout(0.2)(xy_norm1)
-    xy_pool1 = MaxPooling2D(pool_size=pool_size)(xy_drop1)
+    model.add(Conv2D(16, conv_size, activation='relu', input_shape=(192, 256, 192)))
+    model.add(BatchNormalization())
+    model.add(MaxPooling2D(pool_size=pool_size))
+    model.add(Dropout(0.3))
 
-    xy_conv2 = Conv2D(32, conv_size, activation='relu')(xy_pool1)
-    xy_norm2 = BatchNormalization()(xy_conv2)
-    xy_drop2 = Dropout(0.2)(xy_norm2)
-    xy_pool2 = MaxPooling2D(pool_size=pool_size)(xy_drop2)
+    model.add(Conv2D(32, conv_size, activation='relu'))
+    model.add(BatchNormalization())
+    model.add(MaxPooling2D(pool_size=pool_size))
+    model.add(Dropout(0.3))
 
-    xy_conv3 = Conv2D(64, conv_size, activation='relu')(xy_pool2)
-    xy_norm3 = BatchNormalization()(xy_conv3)
-    xy_drop3 = Dropout(0.2)(xy_norm3)
-    xy_pool3 = MaxPooling2D(pool_size=pool_size)(xy_drop3)
+    model.add(Conv2D(32, conv_size, activation='relu'))
+    # model.add(MaxPooling2D(pool_size=pool_size))
+    model.add(Dropout(0.3))
 
-    xy_conv4 = Conv2D(128, conv_size, activation='relu')(xy_pool3)
-    xy_norm4 = BatchNormalization()(xy_conv4)
-    xy_drop4 = Dropout(0.2)(xy_norm4)
-    xy_pool4 = MaxPooling2D(pool_size=pool_size)(xy_drop4)
+    model.add(Conv2D(64, conv_size, activation='relu'))
+    model.add(MaxPooling2D(pool_size=pool_size))
+    model.add(Dropout(0.3))
 
-    xy_fully = Conv2D(256, (1, 1, 1), activation='relu')(xy_pool4)
+    model.add(Conv2D(64, conv_size, activation='relu'))
+    # model.add(MaxPooling2D(pool_size=pool_size))
+    model.add(Dropout(0.3))
 
-    # XZ plane
-    xz_conv1 = Conv2D(16, conv_size, activation='relu')(inputs[1])
-    xz_norm1 = BatchNormalization()(xz_conv1)
-    xz_drop1 = Dropout(0.2)(xz_norm1)
-    xz_pool1 = MaxPooling2D(pool_size=pool_size)(xz_drop1)
+    model.add(Conv2D(128, conv_size, activation='relu'))
+    model.add(MaxPooling2D(pool_size=pool_size))
+    model.add(Dropout(0.4))
 
-    xz_conv2 = Conv2D(32, conv_size, activation='relu')(xz_pool1)
-    xz_norm2 = BatchNormalization()(xz_conv2)
-    xz_drop2 = Dropout(0.2)(xz_norm2)
-    xz_pool2 = MaxPooling2D(pool_size=pool_size)(xz_drop2)
+    model.add(Conv2D(256, conv_size, activation='relu'))
+    model.add(MaxPooling2D(pool_size=pool_size))
+    model.add(Dropout(0.3))
 
-    xz_conv3 = Conv2D(64, conv_size, activation='relu')(xz_pool2)
-    xz_norm3 = BatchNormalization()(xz_conv3)
-    xz_drop3 = Dropout(0.2)(xz_norm3)
-    xz_pool3 = MaxPooling2D(pool_size=pool_size)(xz_drop3)
+    model.add(Flatten())
+    model.add(Dense(256, activation='relu'))
+    model.add(Dropout(0.5))
 
-    xz_conv4 = Conv2D(128, conv_size, activation='relu')(xz_pool3)
-    xz_norm4 = BatchNormalization()(xz_conv4)
-    xz_drop4 = Dropout(0.2)(xz_norm4)
-    xz_pool4 = MaxPooling2D(pool_size=pool_size)(xz_drop4)
+    model.add(Dense(256, activation='relu'))
+    model.add(Dropout(0.5))
 
-    xz_fully = Conv2D(256, (1, 1, 1), activation='relu')(xz_pool4)
+    model.add(Dense(nb_classes))
+    model.add(Activation('softmax'))
 
-    # YZ plane
-    yz_conv1 = Conv2D(16, conv_size, activation='relu')(inputs[2])
-    yz_norm1 = BatchNormalization()(yz_conv1)
-    yz_drop1 = Dropout(0.2)(yz_norm1)
-    yz_pool1 = MaxPooling2D(pool_size=pool_size)(yz_drop1)
-
-    yz_conv2 = Conv2D(32, conv_size, activation='relu')(yz_pool1)
-    yz_norm2 = BatchNormalization()(yz_conv2)
-    yz_drop2 = Dropout(0.2)(yz_norm2)
-    yz_pool2 = MaxPooling2D(pool_size=pool_size)(yz_drop2)
-
-    yz_conv3 = Conv2D(64, conv_size, activation='relu')(yz_pool2)
-    yz_norm3 = BatchNormalization()(yz_conv3)
-    yz_drop3 = Dropout(0.2)(yz_norm3)
-    yz_pool3 = MaxPooling2D(pool_size=pool_size)(yz_drop3)
-
-    yz_conv4 = Conv2D(128, conv_size, activation='relu')(yz_pool3)
-    yz_norm4 = BatchNormalization()(yz_conv4)
-    yz_drop4 = Dropout(0.2)(yz_norm4)
-    yz_pool4 = MaxPooling2D(pool_size=pool_size)(yz_drop4)
-
-    yz_fully = Conv2D(256, (1, 1, 1), activation='relu')(yz_pool4)
-
-    allplanes = concatenate([xy_fully, xz_fully, yz_fully])
-
-    output = Dense(nb_classes, activation='softmax')(allplanes)
-
-    model = Model(inputs=inputs, outputs=[output])
+    sgd = SGD(lr=1e-3, momentum=0.9, decay=1e-6, nesterov=True)
 
     model.compile(loss='categorical_crossentropy',
-                  optimizer='adam',
+                  optimizer=sgd,
                   metrics=["accuracy", sensitivity, specificity])
 
     return model
 
-def top_batch(indices, f):
+
+def batch(indices, f):
     images = f['MRI']
     labels = f['qc_label']    #already in one-hot
 
@@ -122,16 +91,11 @@ def top_batch(indices, f):
 
         for index in indices:
             try:
-                t1_image = f['MRI'][index, ...]
+                # print(images[index, ...][np.newaxis, ...].shape)
 
-                xy = t1_image[np.newaxis, ...]
-                xz = np.swapaxes(t1_image, 1, 2)[np.newaxis, ...]
-                yz = np.swapaxes(t1_image, 0, 2)[np.newaxis, ...]
-
-                yield ((xy, xz, yz), labels[index, ...][np.newaxis, ...])
+                yield (images[index, ...][np.newaxis, ...], labels[index, ...][np.newaxis, ...])
             except:
                 yield (images[index, ...][np.newaxis, ...])
-
 
 def plot_training_error(hist):
     epoch_num = range(len(hist.history['acc']))
@@ -195,23 +159,23 @@ if __name__ == "__main__":
 
 
     # define model
-    model = top_model()
+    model = qc_model()
 
     # print summary of model
     model.summary()
 
-    num_epochs = 100
+    num_epochs = 300
 
     model_checkpoint = ModelCheckpoint( workdir + 'best_qc_model.hdf5',
                                         monitor="val_acc",
                                         save_best_only=True)
 
     hist = model.fit_generator(
-        top_batch(train_indices, f),
+        batch(train_indices, f),
         len(train_indices),
         epochs=num_epochs,
         callbacks=[model_checkpoint],
-        validation_data=top_batch(validation_indices, f),
+        validation_data=batch(validation_indices, f),
         validation_steps=len(validation_indices),
         use_multiprocessing=True
     )
