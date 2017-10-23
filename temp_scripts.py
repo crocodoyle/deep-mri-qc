@@ -7,8 +7,10 @@ from dltk.core.io.preprocessing import normalise_zero_one, resize_image_with_cro
 import dltk
 import h5py
 
-import matplotlib.pyplot as plt
 
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
 
 import h5py
 import sklearn
