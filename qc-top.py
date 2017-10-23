@@ -53,7 +53,8 @@ def top_model():
     xy_drop4 = Dropout(0.2)(xy_norm4)
     xy_pool4 = MaxPooling2D(pool_size=pool_size)(xy_drop4)
 
-    xy_fully = Conv2D(256, (1, 1), activation='relu')(xy_pool4)
+    xy_fully = Conv2D(10, (1, 1), activation='relu')(xy_pool4)
+    xy_flat  = Flatten()(xy_fully)
 
     # XZ plane
     xz_conv1 = Conv2D(16, conv_size, activation='relu')(inputs[1])
@@ -76,7 +77,8 @@ def top_model():
     xz_drop4 = Dropout(0.2)(xz_norm4)
     xz_pool4 = MaxPooling2D(pool_size=pool_size)(xz_drop4)
 
-    xz_fully = Conv2D(256, (1, 1), activation='relu')(xz_pool4)
+    xz_fully = Conv2D(10, (1, 1), activation='relu')(xz_pool4)
+    xz_flat = Flatten()(xz_fully)
 
     # YZ plane
     yz_conv1 = Conv2D(16, conv_size, activation='relu')(inputs[2])
@@ -99,9 +101,10 @@ def top_model():
     yz_drop4 = Dropout(0.2)(yz_norm4)
     yz_pool4 = MaxPooling2D(pool_size=pool_size)(yz_drop4)
 
-    yz_fully = Conv2D(256, (1, 1), activation='relu')(yz_pool4)
+    yz_fully = Conv2D(10, (1, 1), activation='relu')(yz_pool4)
+    yz_flat = Flatten()(yz_fully)
 
-    allplanes = concatenate([xy_fully, xz_fully, yz_fully])
+    allplanes = concatenate([xy_flat, xz_flat, yz_flat])
 
     output = Dense(nb_classes, activation='softmax')(allplanes)
 
