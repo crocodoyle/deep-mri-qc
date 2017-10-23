@@ -153,12 +153,12 @@ def make_abide_subject(line, subject_index, input_path):
             label2 = int(line[3]) + 1
             one_hot[label2] += 1
             total_labels += 1
-        if len(line[4]) > 0:
-            label3 = int(line[4]) + 1
-            one_hot[label3] += 1
-            total_labels += 1
+        # if len(line[4]) > 0:
+        #     label3 = int(line[4]) + 1
+        #     one_hot[label3] += 1
+        #     total_labels += 1
 
-        one_hot = [one_hot[0], one_hot[1] + one_hot[2]]
+        one_hot = [one_hot[0], one_hot[1] + one_hot[2]] # map doubtful and accept to one label
 
         one_hot = np.multiply(one_hot, 1 / total_labels)
 
