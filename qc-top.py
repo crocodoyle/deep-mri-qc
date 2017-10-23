@@ -127,7 +127,7 @@ if __name__ == "__main__":
     good_subject_index = 0
     for index in train_indices:
         label = [f['qc_label'][index, 0], f['qc_label'][index, 1] + f['qc_label'][index, 2]]
-        # print(label)
+        print(label)
         train_labels[good_subject_index, ...] = label
         good_subject_index += 1
 
