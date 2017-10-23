@@ -168,7 +168,7 @@ if __name__ == "__main__":
     actual = []
 
     for index in test_indices:
-        scores = model.test_on_batch(f['MRI'][index, ...][np.newaxis, ...], pass_fail_label(f['qc_label'], index)[np.newaxis, ...])
+        scores = model.test_on_batch(f['MRI'][index, ...][np.newaxis, ...], [f['qc_label'][index, 0], f['qc_label'][index, 1] + f['qc_label'][index, 2]][np.newaxis, ...])
         print(scores)
 
     plot_training_error(hist)
