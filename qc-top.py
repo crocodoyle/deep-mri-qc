@@ -131,9 +131,9 @@ def top_batch(indices, f):
                 xz = np.swapaxes(t1_image, 1, 2)[np.newaxis, ...]
                 yz = np.swapaxes(t1_image, 0, 2)[np.newaxis, ...]
 
-                yield ((xy, xz, yz), labels[index, ...][np.newaxis, ...])
+                yield ([xy, xz, yz], labels[index, ...][np.newaxis, ...])
             except:
-                yield (images[index, ...][np.newaxis, ...])
+                yield ([xy, xz, yz])
 
 
 def plot_training_error(hist):
