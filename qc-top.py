@@ -121,12 +121,12 @@ if __name__ == "__main__":
     # print('training samples:', len(train_indices), len(ping_indices) + len(abide_indices) + len(ibis_indices))
 
 
-    train_labels = np.zeros((len(abide_indices), 3))
+    train_labels = np.zeros((len(abide_indices), 2))
     print('labels shape:', train_labels.shape)
 
     good_subject_index = 0
     for index in train_indices:
-        label = f['qc_label'][index, ...]
+        label = [f['qc_label'][index, 0], f['qc_label'][index, 1] + f['qc_label'][index, 2]]
         # print(label)
         train_labels[good_subject_index, ...] = label
         good_subject_index += 1
