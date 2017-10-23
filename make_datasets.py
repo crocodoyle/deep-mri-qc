@@ -142,7 +142,7 @@ def make_abide_subject(line, subject_index, input_path):
 
         # register_MINC(input_path + t1_filename, atlas, input_path + '/resampled/' + t1_filename)
 
-        one_hot = [0, 0]
+        one_hot = [0, 0, 0]
 
         total_labels = 0
         if len(line[2]) > 0:
