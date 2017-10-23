@@ -28,30 +28,40 @@ def qc_model():
 
     model = Sequential()
 
-    model.add(Conv2D(64, conv_size, activation='relu', input_shape=(192, 256, 192)))
+    model.add(Conv2D(16, conv_size, activation='relu', input_shape=(192, 256, 192)))
     model.add(BatchNormalization())
-    model.add(Conv2D(64, conv_size, activation='relu'))
-
     model.add(MaxPooling2D(pool_size=pool_size))
+    model.add(Dropout(0.3))
 
-    model.add(Conv2D(64, conv_size, activation='relu'))
-    model.add(Conv2D(64, conv_size, activation='relu'))
+    model.add(Conv2D(32, conv_size, activation='relu'))
     model.add(MaxPooling2D(pool_size=pool_size))
+    model.add(Dropout(0.3))
 
-    model.add(Conv2D(64, conv_size, activation='relu'))
-    model.add(Conv2D(64, conv_size, activation='relu'))
+    model.add(Conv2D(32, conv_size, activation='relu'))
     model.add(MaxPooling2D(pool_size=pool_size))
-
-    model.add(Conv2D(64, conv_size, activation='relu'))
-    model.add(Conv2D(64, conv_size, activation='relu'))
-    model.add(MaxPooling2D(pool_size=pool_size))
+    model.add(Dropout(0.3))
 
     model.add(Conv2D(64, conv_size, activation='relu'))
+    model.add(MaxPooling2D(pool_size=pool_size))
+    model.add(Dropout(0.3))
+
     model.add(Conv2D(64, conv_size, activation='relu'))
     model.add(MaxPooling2D(pool_size=pool_size))
+    model.add(Dropout(0.3))
+
+    model.add(Conv2D(128, conv_size, activation='relu'))
+    model.add(MaxPooling2D(pool_size=pool_size))
+    model.add(Dropout(0.4))
+
+    model.add(Conv2D(256, conv_size, activation='relu'))
+    model.add(MaxPooling2D(pool_size=pool_size))
+    model.add(Dropout(0.3))
 
     model.add(Flatten())
-    model.add(Dense(1024, activation='relu'))
+    model.add(Dense(256, activation='relu'))
+    model.add(Dropout(0.5))
+
+    model.add(Dense(256, activation='relu'))
     model.add(Dropout(0.5))
 
     model.add(Dense(nb_classes))
