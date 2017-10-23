@@ -64,7 +64,9 @@ def qc_model():
     return model
 
 def pass_fail_label(labels, index):
-    return [labels[index, 0], labels[index, 1] + labels[index, 2]]
+    label = [labels[index, 0], labels[index, 1] + labels[index, 2]]
+    print(label.shape)
+    return label
 
 def batch(indices, f):
     images = f['MRI']
@@ -76,7 +78,6 @@ def batch(indices, f):
         for index in indices:
             try:
                 # print(images[index, ...][np.newaxis, ...].shape)
-                print(pass_fail_label(labels, index)[np.newaxis, ...].shape)
                 yield (images[index, ...][np.newaxis, ...], pass_fail_label(labels, index)[np.newaxis, ...])
             except:
                 yield (images[index, ...][np.newaxis, ...])
