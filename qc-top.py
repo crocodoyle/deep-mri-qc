@@ -73,7 +73,11 @@ def batch(indices, f):
         for index in indices:
             try:
                 # print(images[index, ...][np.newaxis, ...].shape)
-                yield tuple(images[index, ...][np.newaxis, ...], [labels[index, 0], labels[index, 1] + labels[index, 2]][np.newaxis, ...])
+
+                label = [labels[index, 0], labels[index, 1] + labels[index, 2]][np.newaxis, ...]
+                print('label shape', label.shape)
+
+                yield tuple(images[index, ...][np.newaxis, ...], label)
             except:
                 yield tuple(images[index, ...][np.newaxis, ...])
 
