@@ -5,6 +5,9 @@ import os, sys, time, csv, subprocess
 
 from dltk.core.io.preprocessing import normalise_zero_one, resize_image_with_crop_or_pad
 import dltk
+import h5py
+
+import matplotlib.pyplot as plt
 
 
 import h5py
@@ -29,5 +32,14 @@ def flatten_IBIS():
                 os.rename(os.path.join(root, orig_filename), '/data1/data/IBIS/' + filename)
 
 
+def check_hdf5():
+    f = h5py.File('/data1/data/deepqc/deepqc.hdf5', 'r')
+    images = f['MRI']
+
+    for i, image in enumerate(images):
+        plt.imshow(image[:, :, 100])
+        plt.savefig('/data1/data/deepqc/test/' + str(i) + '.png')
+
+
 if __name__ == "__main__":
-    flatten_IBIS()
+    check_hdf5()
