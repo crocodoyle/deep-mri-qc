@@ -4,6 +4,7 @@ from keras.callbacks import ModelCheckpoint
 
 from keras.layers.merge import add, concatenate
 
+from dltk.core.io.augmentation import flip, elastic_transform
 
 from keras.optimizers import SGD
 
@@ -27,7 +28,7 @@ slice_size = (192, 256)
 
 def top_model():
     nb_classes = 2
-    conv_size = (3, 3)
+    conv_size = (5, 5)
     pool_size = (2, 2)
 
     inputs = [Input(shape=(192, 256, 192)), Input(shape=(192, 192, 256)), Input(shape=(192, 256, 192))]
@@ -126,6 +127,9 @@ def top_batch(indices, f):
         for index in indices:
             try:
                 t1_image = f['MRI'][index, ...]
+
+                t1_image = flip(t1_image, 2)
+                # t1_image = elastic_transform(t1_image, [3,3,3], [3,3,3])
 
                 xy = t1_image[np.newaxis, ...]
                 xz = np.swapaxes(t1_image, 1, 2)[np.newaxis, ...]
