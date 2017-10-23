@@ -1,6 +1,8 @@
-from keras.models import Sequential
+from keras.models import Sequential, Model
 from keras.layers import Dense, Dropout, Activation, Conv2D, MaxPooling2D, Flatten, BatchNormalization
 from keras.callbacks import ModelCheckpoint
+
+from keras.optimizers import SGD
 
 import numpy as np
 import h5py
@@ -67,8 +69,10 @@ def qc_model():
     model.add(Dense(nb_classes))
     model.add(Activation('softmax'))
 
+    sgd = SGD(lr=1e-3, momentum=0.9, decay=1e-6, nesterov=True)
+
     model.compile(loss='categorical_crossentropy',
-                  optimizer='adam',
+                  optimizer=sgd,
                   metrics=["accuracy", sensitivity, specificity])
 
     return model
