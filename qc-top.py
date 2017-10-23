@@ -64,8 +64,7 @@ def qc_model():
     return model
 
 def pass_fail_label(labels, index):
-
-    return [labels[index, 0], np.sum(labels[index, 1:2])]
+    return [labels[index, 0], labels[index, 1] + labels[index, 2]]
 
 def batch(indices, f):
     images = f['MRI']
