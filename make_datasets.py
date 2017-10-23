@@ -142,20 +142,20 @@ def make_abide_subject(line, subject_index, input_path):
 
         # register_MINC(input_path + t1_filename, atlas, input_path + '/resampled/' + t1_filename)
 
-        one_hot = [0, 0, 0]
+        one_hot = [0, 0]
 
         total_labels = 0
         if len(line[2]) > 0:
             label1 = int(line[2]) + 1  # -1, 0, or 1
-            one_hot[label1] += 1
+            one_hot[0] += 1
             total_labels += 1
         if len(line[3]) > 0:
             label2 = int(line[3]) + 1
-            one_hot[label2] += 1
+            one_hot[1] += 1
             total_labels += 1
         if len(line[4]) > 0:
             label3 = int(line[4]) + 1
-            one_hot[label3] += 1
+            one_hot[1] += 1
             total_labels += 1
 
         one_hot = np.multiply(one_hot, 1 / total_labels)
@@ -227,14 +227,14 @@ def make_ds030_subject(line, subject_index, input_path, atlas_image):
 
             f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
 
-            one_hot = [0, 0, 0]
+            one_hot = [0, 0]
 
             if 'ok' in label:
-                one_hot = [0, 0, 1]
+                one_hot = [0, 1]
             elif 'maybe' in label:
-                one_hot = [0, 1, 0]
+                one_hot = [0, 1]
             elif 'exclude' in label:
-                one_hot = [1, 0, 0]
+                one_hot = [1, 0]
             else:
                 raise Exception
 
@@ -477,7 +477,7 @@ if __name__ == "__main__":
     f = h5py.File(output_file, 'w')
     # f.create_dataset('MRI', (1154+468+113+282, 192, 256, 256), maxshape=(None, 192, 256, 256), dtype='float32')
     f.create_dataset('MRI', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float32')
-    f.create_dataset('qc_label', (total_subjects, 3), maxshape=(None, 3), dtype='float32')
+    f.create_dataset('qc_label', (total_subjects, 2), maxshape=(None, 2), dtype='float32')
     dt = h5py.special_dtype(vlen=bytes)
     f.create_dataset('qc_comment', (total_subjects,), dtype=dt)
 
