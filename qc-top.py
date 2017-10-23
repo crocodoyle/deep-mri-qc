@@ -74,9 +74,6 @@ def batch(indices, f):
             try:
                 # print(images[index, ...][np.newaxis, ...].shape)
 
-                label = [labels[index, 0], labels[index, 1] + labels[index, 2]][np.newaxis, ...]
-                print('label shape', label.shape)
-
                 yield tuple(images[index, ...][np.newaxis, ...], labels[index, ...][np.newaxis, ...])
             except:
                 yield tuple(images[index, ...][np.newaxis, ...])
@@ -171,7 +168,7 @@ if __name__ == "__main__":
     actual = []
 
     for index in test_indices:
-        scores = model.test_on_batch(f['MRI'][index, ...][np.newaxis, ...], [f['qc_label'][index, 0], f['qc_label'][index, 1] + f['qc_label'][index, 2]][np.newaxis, ...])
+        scores = model.test_on_batch(f['MRI'][index, ...][np.newaxis, ...], f['qc_label'][index, ...][np.newaxis, ...])
         print(scores)
 
     plot_training_error(hist)
