@@ -121,7 +121,7 @@ def top_model():
     allplanes = concatenate([xy_flat, xz_flat, yz_flat])
     all_drop = Dropout(0.5)(allplanes)
 
-    output = Dense(nb_classes, activation='softmax')(allplanes)
+    output = Dense(nb_classes, activation='softmax')(all_drop)
 
     model = Model(inputs=inputs, outputs=[output])
 
