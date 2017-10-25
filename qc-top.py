@@ -151,17 +151,20 @@ def top_batch(indices, f):
                 yield ([xy, xz, yz])
 
 
-def plot_training_error(hist):
+def plot_metrics(hist):
     epoch_num = range(len(hist.history['acc']))
-    train_error = np.subtract(1, np.array(hist.history['acc']))
-    test_error  = np.subtract(1, np.array(hist.history['val_acc']))
+    # train_error = np.subtract(1, np.array(hist.history['acc']))
+    # test_error  = np.subtract(1, np.array(hist.history['val_acc']))
 
     plt.clf()
-    plt.plot(epoch_num, train_error, label='Training Error')
-    plt.plot(epoch_num, test_error, label="Validation Error")
+    plt.plot(epoch_num, np.array(hist.history['acc']), label='Training Accuracy')
+    plt.plot(epoch_num, np.array(hist.history['val_acc']), label="Validation Accuracy")
+    # plt.plot(epoch_num, np.array(hist.history['sensitivity']), label="Training Sensitivity")
+    # plt.plot(epoch_num, np.array(hist.history['specificity']), label="Validation Accuracy")
+
     plt.legend(shadow=True)
     plt.xlabel("Training Epoch Number")
-    plt.ylabel("Error")
+    plt.ylabel("Accuracy")
     plt.savefig(workdir + 'results.png')
     plt.close()
 
@@ -218,7 +221,7 @@ if __name__ == "__main__":
     # print summary of model
     model.summary()
 
-    num_epochs = 100
+    num_epochs = 2
 
     model_checkpoint = ModelCheckpoint( workdir + 'best_qc_model.hdf5',
                                         monitor="val_acc",
@@ -237,11 +240,7 @@ if __name__ == "__main__":
     model.load_weights(workdir + 'best_qc_model.hdf5')
     model.save(workdir + 'qc_model.hdf5')
 
-    predicted = []
-    actual = []
+    scores = model.predict_generator(top_batch(test_indices), len(test_indices))
+    print(scores)
 
-    for index in test_indices:
-        scores = model.test_on_batch(f['MRI'][index, ...][np.newaxis, ...], f['qc_label'][index, ...][np.newaxis, ...])
-        print(scores)
-
-    plot_training_error(hist)
+    plot_metrics(hist)
