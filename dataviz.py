@@ -10,6 +10,10 @@ import nibabel as nib
 workdir = '/data1/data/deepqc/'
 
 
+from vis.utils import utils
+from keras import activations
+
+
 import imageio
 import os
 
@@ -50,6 +54,10 @@ def rename_abide(input_path, output_path):
 
         print(id)
         os.rename(input_path + file, output_path + id[2:] + '.mnc')
+
+def visualize_fail_regions():
+    pass
+
 
 if __name__ == '__main__':
 
