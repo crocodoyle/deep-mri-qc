@@ -24,11 +24,11 @@ import tensorflow as tf
 
 
 # These 4 lines suposedly enable distributed GPU training
-# server = tf.train.Server.create_local_server()
-# sess = tf.Session(server.target)
-#
-# from keras import backend as K
-# K.set_session(sess)
+server = tf.train.Server.create_local_server()
+sess = tf.Session(server.target)
+
+from keras import backend as K
+K.set_session(sess)
 
 
 workdir = '/data1/data/deepqc/'
