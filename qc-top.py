@@ -14,6 +14,8 @@ import pickle
 
 import keras.backend as K
 
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
@@ -24,11 +26,11 @@ import tensorflow as tf
 
 
 # These 4 lines suposedly enable distributed GPU training
-server = tf.train.Server.create_local_server()
-sess = tf.Session(server.target)
-
-from keras import backend as K
-K.set_session(sess)
+# server = tf.train.Server.create_local_server()
+# sess = tf.Session(server.target)
+#
+# from keras import backend as K
+# K.set_session(sess)
 
 
 workdir = '/data1/data/deepqc/'
@@ -166,7 +168,7 @@ def plot_metrics(hist):
     plt.legend(shadow=True)
     plt.xlabel("Training Epoch Number")
     plt.ylabel("Accuracy")
-    plt.savefig(workdir + 'results.png')
+    plt.savefig(workdir + 'training-results.png')
     plt.close()
 
 if __name__ == "__main__":
@@ -222,7 +224,7 @@ if __name__ == "__main__":
     # print summary of model
     model.summary()
 
-    num_epochs = 2
+    num_epochs = 100
 
     model_checkpoint = ModelCheckpoint( workdir + 'best_qc_model.hdf5',
                                         monitor="val_acc",
