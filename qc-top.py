@@ -33,7 +33,7 @@ import tensorflow as tf
 # K.set_session(sess)
 
 
-workdir = '/data1/data/deepqc/'
+workdir = '/home/users/adoyle/'
 
 image_size = (192, 256, 192)
 slice_size = (192, 256)
