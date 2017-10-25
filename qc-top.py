@@ -24,11 +24,11 @@ import tensorflow as tf
 
 
 # These 4 lines suposedly enable distributed GPU training
-server = tf.train.Server.create_local_server()
-sess = tf.Session(server.target)
-
-from keras import backend as K
-K.set_session(sess)
+# server = tf.train.Server.create_local_server()
+# sess = tf.Session(server.target)
+#
+# from keras import backend as K
+# K.set_session(sess)
 
 
 workdir = '/data1/data/deepqc/'
@@ -117,6 +117,7 @@ def top_model():
     yz_flat = Flatten()(yz_fully)
 
     allplanes = concatenate([xy_flat, xz_flat, yz_flat])
+    all_drop = Dropout(0.5)(allplanes)
 
     output = Dense(nb_classes, activation='softmax')(allplanes)
 
@@ -240,7 +241,7 @@ if __name__ == "__main__":
     model.load_weights(workdir + 'best_qc_model.hdf5')
     model.save(workdir + 'qc_model.hdf5')
 
-    scores = model.predict_generator(top_batch(test_indices), len(test_indices))
+    scores = model.predict_generator(top_batch(test_indices, f), len(test_indices))
     print(scores)
 
     plot_metrics(hist)
