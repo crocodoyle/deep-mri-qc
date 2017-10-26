@@ -49,22 +49,22 @@ def top_model():
     # XY plane
     xy_conv1 = Conv2D(16, conv_size, activation='relu')(inputs[0])
     xy_norm1 = BatchNormalization()(xy_conv1)
-    xy_drop1 = Dropout(0.2)(xy_norm1)
+    xy_drop1 = Dropout(0.1)(xy_norm1)
     xy_pool1 = MaxPooling2D(pool_size=pool_size)(xy_drop1)
 
     xy_conv2 = Conv2D(32, conv_size, activation='relu')(xy_pool1)
     xy_norm2 = BatchNormalization()(xy_conv2)
-    xy_drop2 = Dropout(0.2)(xy_norm2)
+    xy_drop2 = Dropout(0.1)(xy_norm2)
     xy_pool2 = MaxPooling2D(pool_size=pool_size)(xy_drop2)
 
     xy_conv3 = Conv2D(64, conv_size, activation='relu')(xy_pool2)
     xy_norm3 = BatchNormalization()(xy_conv3)
-    xy_drop3 = Dropout(0.2)(xy_norm3)
+    xy_drop3 = Dropout(0.1)(xy_norm3)
     xy_pool3 = MaxPooling2D(pool_size=pool_size)(xy_drop3)
 
     xy_conv4 = Conv2D(128, conv_size, activation='relu')(xy_pool3)
     xy_norm4 = BatchNormalization()(xy_conv4)
-    xy_drop4 = Dropout(0.2)(xy_norm4)
+    xy_drop4 = Dropout(0.1)(xy_norm4)
     xy_pool4 = MaxPooling2D(pool_size=pool_size)(xy_drop4)
 
     xy_fully = Conv2D(10, (1, 1), activation='relu')(xy_pool4)
@@ -73,22 +73,22 @@ def top_model():
     # XZ plane
     xz_conv1 = Conv2D(16, conv_size, activation='relu')(inputs[1])
     xz_norm1 = BatchNormalization()(xz_conv1)
-    xz_drop1 = Dropout(0.2)(xz_norm1)
+    xz_drop1 = Dropout(0.1)(xz_norm1)
     xz_pool1 = MaxPooling2D(pool_size=pool_size)(xz_drop1)
 
     xz_conv2 = Conv2D(32, conv_size, activation='relu')(xz_pool1)
     xz_norm2 = BatchNormalization()(xz_conv2)
-    xz_drop2 = Dropout(0.2)(xz_norm2)
+    xz_drop2 = Dropout(0.1)(xz_norm2)
     xz_pool2 = MaxPooling2D(pool_size=pool_size)(xz_drop2)
 
     xz_conv3 = Conv2D(64, conv_size, activation='relu')(xz_pool2)
     xz_norm3 = BatchNormalization()(xz_conv3)
-    xz_drop3 = Dropout(0.2)(xz_norm3)
+    xz_drop3 = Dropout(0.1)(xz_norm3)
     xz_pool3 = MaxPooling2D(pool_size=pool_size)(xz_drop3)
 
     xz_conv4 = Conv2D(128, conv_size, activation='relu')(xz_pool3)
     xz_norm4 = BatchNormalization()(xz_conv4)
-    xz_drop4 = Dropout(0.2)(xz_norm4)
+    xz_drop4 = Dropout(0.1)(xz_norm4)
     xz_pool4 = MaxPooling2D(pool_size=pool_size)(xz_drop4)
 
     xz_fully = Conv2D(10, (1, 1), activation='relu')(xz_pool4)
@@ -97,29 +97,29 @@ def top_model():
     # YZ plane
     yz_conv1 = Conv2D(16, conv_size, activation='relu')(inputs[2])
     yz_norm1 = BatchNormalization()(yz_conv1)
-    yz_drop1 = Dropout(0.2)(yz_norm1)
+    yz_drop1 = Dropout(0.1)(yz_norm1)
     yz_pool1 = MaxPooling2D(pool_size=pool_size)(yz_drop1)
 
     yz_conv2 = Conv2D(32, conv_size, activation='relu')(yz_pool1)
     yz_norm2 = BatchNormalization()(yz_conv2)
-    yz_drop2 = Dropout(0.2)(yz_norm2)
+    yz_drop2 = Dropout(0.1)(yz_norm2)
     yz_pool2 = MaxPooling2D(pool_size=pool_size)(yz_drop2)
 
     yz_conv3 = Conv2D(64, conv_size, activation='relu')(yz_pool2)
     yz_norm3 = BatchNormalization()(yz_conv3)
-    yz_drop3 = Dropout(0.2)(yz_norm3)
+    yz_drop3 = Dropout(0.1)(yz_norm3)
     yz_pool3 = MaxPooling2D(pool_size=pool_size)(yz_drop3)
 
     yz_conv4 = Conv2D(128, conv_size, activation='relu')(yz_pool3)
     yz_norm4 = BatchNormalization()(yz_conv4)
-    yz_drop4 = Dropout(0.2)(yz_norm4)
+    yz_drop4 = Dropout(0.1)(yz_norm4)
     yz_pool4 = MaxPooling2D(pool_size=pool_size)(yz_drop4)
 
     yz_fully = Conv2D(10, (1, 1), activation='relu')(yz_pool4)
     yz_flat = Flatten()(yz_fully)
 
     allplanes = concatenate([xy_flat, xz_flat, yz_flat])
-    all_drop = Dropout(0.2)(allplanes)
+    all_drop = Dropout(0.3)(allplanes)
 
     output = Dense(nb_classes, activation='softmax')(all_drop)
 
@@ -140,7 +140,7 @@ def top_batch(indices, f):
 
         for index in indices:
             try:
-                t1_image = f['MRI'][index, ...]
+                t1_image = images[index, ...]
 
                 t1_image = flip(t1_image, 2)
                 # t1_image = elastic_transform(t1_image, [3,3,3], [3,3,3])
