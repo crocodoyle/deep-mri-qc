@@ -14,6 +14,9 @@ import pickle
 
 import keras.backend as K
 
+import os
+
+
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
@@ -33,11 +36,12 @@ import tensorflow as tf
 # K.set_session(sess)
 
 
-workdir = '/home/users/adoyle/'
+workdir = '/home/users/adoyle/deepqc/'
 
 image_size = (192, 256, 192)
 slice_size = (192, 256)
 
+experiment_number = 0
 
 def top_model():
     nb_classes = 2
@@ -154,7 +158,7 @@ def top_batch(indices, f):
                 yield ([xy, xz, yz])
 
 
-def plot_metrics(hist):
+def plot_metrics(hist, results_dir):
     epoch_num = range(len(hist.history['acc']))
     # train_error = np.subtract(1, np.array(hist.history['acc']))
     # test_error  = np.subtract(1, np.array(hist.history['val_acc']))
@@ -168,10 +172,21 @@ def plot_metrics(hist):
     plt.legend(shadow=True)
     plt.xlabel("Training Epoch Number")
     plt.ylabel("Accuracy")
-    plt.savefig(workdir + 'training-results.png')
+    plt.savefig(results_dir + 'training-results.png')
     plt.close()
 
 if __name__ == "__main__":
+
+    try:
+        experiment_number = pickle.load(open(workdir + 'experiment_number.pkl'), 'rb')
+    except:
+        print('Couldnt find the file to load experiment number')
+        experiment_number = np.random.randint(0, 100000)
+
+    results_dir = workdir + '/experiment-' + str(experiment_number)
+    os.makedirs(results_dir)
+
+    pickle.dump(experiment_number, open(workdir + 'experiment_number.pkl'), 'rb')
 
     abide_indices = pickle.load(open(workdir + 'abide_indices.pkl', 'rb'))
     ds030_indices = pickle.load(open(workdir + 'ds030_indices.pkl', 'rb'))
@@ -224,9 +239,9 @@ if __name__ == "__main__":
     # print summary of model
     model.summary()
 
-    num_epochs = 100
+    num_epochs = 2
 
-    model_checkpoint = ModelCheckpoint( workdir + 'best_qc_model.hdf5',
+    model_checkpoint = ModelCheckpoint( results_dir + 'best_qc_model.hdf5',
                                         monitor="val_acc",
                                         save_best_only=True)
 
@@ -240,10 +255,31 @@ if __name__ == "__main__":
         use_multiprocessing=True
     )
 
-    model.load_weights(workdir + 'best_qc_model.hdf5')
-    model.save(workdir + 'qc_model.hdf5')
+    model.load_weights(results_dir + 'best_qc_model.hdf5')
+    model.save(results_dir + 'qc_model.hdf5')
 
     scores = model.predict_generator(top_batch(test_indices, f), len(test_indices))
-    print(scores)
 
-    plot_metrics(hist)
+    y_true = []
+    y_pred = []
+    for index in test_indices:
+        y_true.append(f['qc_label'][index, ...])
+
+        prediction_index = np.argmax(scores[index, ...])
+        prediction = np.zeros((2))
+        prediction[prediction_index] += 1
+        y_pred.append(prediction)
+
+    sens = sensitivity(y_true, y_pred)
+    spec = specificity(y_true, y_pred)
+
+    print('sensitivity:', sensitivity)
+    print('specificity:', specificity)
+
+    results = {}
+    results['sens'] = sens
+    results['spec'] = spec
+
+    pickle.dump(results, open(results_dir + 'test_results.pkl', 'wb'))
+
+    plot_metrics(hist, results_dir)
