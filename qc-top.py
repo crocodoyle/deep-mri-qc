@@ -211,7 +211,6 @@ if __name__ == "__main__":
     # print('IBIS samples:', len(ibis_indices))
     # print('training samples:', len(train_indices), len(ping_indices) + len(abide_indices) + len(ibis_indices))
 
-
     train_labels = np.zeros((len(abide_indices), 2))
     print('labels shape:', train_labels.shape)
 
@@ -258,28 +257,33 @@ if __name__ == "__main__":
     model.load_weights(results_dir + 'best_qc_model.hdf5')
     model.save(results_dir + 'qc_model.hdf5')
 
-    scores = model.predict_generator(top_batch(test_indices, f), len(test_indices))
+    metrics = model.evaluate_generator(top_batch(test_indices, f), len(test_indices))
 
-    y_true = []
-    y_pred = []
-    for index in test_indices:
-        y_true.append(f['qc_label'][index, ...])
+    print(model.metrics_names)
+    print(metrics)
 
-        prediction_index = np.argmax(scores[index, ...])
-        prediction = np.zeros((2))
-        prediction[prediction_index] += 1
-        y_pred.append(prediction)
+    pickle.dump(metrics, open(results_dir + 'test_metrics', 'wb'))
 
-    sens = sensitivity(y_true, y_pred)
-    spec = specificity(y_true, y_pred)
-
-    print('sensitivity:', sensitivity)
-    print('specificity:', specificity)
-
-    results = {}
-    results['sens'] = sens
-    results['spec'] = spec
-
-    pickle.dump(results, open(results_dir + 'test_results.pkl', 'wb'))
+    # y_true = []
+    # y_pred = []
+    # for index in test_indices:
+    #     y_true.append(f['qc_label'][index, ...])
+    #
+    #     prediction_index = np.argmax(scores[index, ...])
+    #     prediction = np.zeros((2))
+    #     prediction[prediction_index] += 1
+    #     y_pred.append(prediction)
+    #
+    # sens = sensitivity(y_true, y_pred)
+    # spec = specificity(y_true, y_pred)
+    #
+    # print('sensitivity:', sensitivity)
+    # print('specificity:', specificity)
+    #
+    # results = {}
+    # results['sens'] = sens
+    # results['spec'] = spec
+    #
+    # pickle.dump(results, open(results_dir + 'test_results.pkl', 'wb'))
 
     plot_metrics(hist, results_dir)
