@@ -183,7 +183,7 @@ if __name__ == "__main__":
         print('Couldnt find the file to load experiment number')
         experiment_number = np.random.randint(0, 100000)
 
-    results_dir = workdir + '/experiment-' + str(experiment_number)
+    results_dir = workdir + '/experiment-' + str(experiment_number) + '/'
     os.makedirs(results_dir)
 
     pickle.dump(experiment_number, open(workdir + 'experiment_number.pkl', 'wb'))
