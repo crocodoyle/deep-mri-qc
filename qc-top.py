@@ -186,7 +186,7 @@ if __name__ == "__main__":
     results_dir = workdir + '/experiment-' + str(experiment_number)
     os.makedirs(results_dir)
 
-    pickle.dump(experiment_number, open(workdir + 'experiment_number.pkl'), 'rb')
+    pickle.dump(experiment_number, open(workdir + 'experiment_number.pkl'), 'wb')
 
     abide_indices = pickle.load(open(workdir + 'abide_indices.pkl', 'rb'))
     ds030_indices = pickle.load(open(workdir + 'ds030_indices.pkl', 'rb'))
