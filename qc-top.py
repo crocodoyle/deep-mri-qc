@@ -179,9 +179,10 @@ if __name__ == "__main__":
 
     try:
         experiment_number = pickle.load(open(workdir + 'experiment_number.pkl'), 'rb')
+        experiment_number += 1
     except:
         print('Couldnt find the file to load experiment number')
-        experiment_number = np.random.randint(0, 100000)
+        experiment_number = 0
 
     results_dir = workdir + '/experiment-' + str(experiment_number) + '/'
     os.makedirs(results_dir)
@@ -238,7 +239,7 @@ if __name__ == "__main__":
     # print summary of model
     model.summary()
 
-    num_epochs = 2
+    num_epochs = 100
 
     model_checkpoint = ModelCheckpoint( results_dir + 'best_qc_model.hdf5',
                                         monitor="val_acc",
