@@ -55,6 +55,7 @@ def top_model():
     conv2 = Conv2D(16, conv_size, strides=[2, 2], activation='relu')
     conv3 = Conv2D(16, conv_size, strides=[2, 2], activation='relu')
     conv4 = Conv2D(16, conv_size, strides=[2, 2], activation='relu')
+    conv5 = Conv2D(64, conv_size, strides=[2, 2], activation='relu')
 
     fc = Conv2D(32, (1, 1), activation='relu')
 
@@ -79,7 +80,9 @@ def top_model():
     # xy_drop4 = Dropout(0.1)(xy_norm4)
     # xy_pool4 = MaxPooling2D(pool_size=pool_size)(xy_drop4)
 
-    xy_fully = fc(xy_conv4)
+    xy_conv5 = conv5(xy_conv4)
+
+    xy_fully = fc(xy_conv5)
     xy_flat  = Flatten()(xy_fully)
 
     # XZ plane
@@ -103,7 +106,9 @@ def top_model():
     # xz_drop4 = Dropout(0.1)(xz_norm4)
     # xz_pool4 = MaxPooling2D(pool_size=pool_size)(xz_drop4)
 
-    xz_fully = fc(xz_conv4)
+    xz_conv5 = conv5(xz_conv4)
+
+    xz_fully = fc(xz_conv5)
     xz_flat = Flatten()(xz_fully)
 
     # YZ plane
@@ -127,7 +132,9 @@ def top_model():
     # yz_drop4 = Dropout(0.1)(yz_norm4)
     # yz_pool4 = MaxPooling2D(pool_size=pool_size)(yz_drop4)
 
-    yz_fully = fc(yz_conv4)
+    yz_conv5 = conv5(yz_conv4)
+
+    yz_fully = fc(yz_conv5)
     yz_flat = Flatten()(yz_fully)
 
     allplanes = concatenate([xy_flat, xz_flat, yz_flat])
