@@ -21,7 +21,7 @@ from nipype.interfaces.ants import Registration
 
 
 output_dir = '/data1/data/deepqc/'
-output_file = '/data1/data/deepqc/deepqc.hdf5'
+output_file = '/data1/data/deepqc/deepqc-all-sets.hdf5'
 cores = 12
 
 import matplotlib as mpl
@@ -37,78 +37,117 @@ target_size = (192, 256, 192)
 def make_ping(input_path, f, label_file, subject_index):
     with open(os.path.join(input_path, label_file)) as label_file:
         qc_reader = csv.reader(label_file)
+        qc_reader.__next__()
 
-        for line in qc_reader:
-            try:
-                t1_filename = line[0][0:-4] + '.mnc'
-                label = int(line[1])                                                #0, 1, or 2
-                comment = line[2]
+        pool = Pool(cores)
+        lines = list(qc_reader)
+        indices = range(subject_index, len(lines))
+        input_paths = [input_path] * len(lines)
 
-                t1_data = nib.load(input_path + t1_filename).get_data()
+        print('lines', len(lines))
+        print('indices', len(indices))
+        print('input_paths', len(input_paths))
 
-                if not t1_data.shape == target_size:
-                    print('resizing from', t1_data.shape)
-                    t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
+        # index_list = pool.starmap(make_abide_subject, zip(lines, indices, input_paths))
 
-                f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
+        index_list = []
+        for line, index, input_path in zip(lines, indices, input_paths):
+            returned_index = make_abide_subject(line, index, input_path)
+            index_list.append(returned_index)
 
-                if label == 0:
-                    f['qc_label'][subject_index, :] = [1, 0, 0]
-                elif label == 1:
-                    f['qc_label'][subject_index, :] = [0, 1, 0]
-                elif label == 2:
-                    f['qc_label'][subject_index, :] = [0, 0, 1]
+        good_indices = [x for x in index_list if x > 0] # get rid of subjects who didn't have all info
 
-                f['qc_comment'][subject_index] = comment
+    return good_indices
 
-                print(subject_index, t1_filename, np.shape(t1_data))
+def make_ping_subject(line, subject_index, input_path):
+    try:
+        t1_filename = line[0] + '.mnc'
 
-                plt.imshow(t1_data[96, ...])
-                plt.axis('off')
-                plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
+        label = int(line[1])  # 0, 1, or 2
+        comment = line[2]
 
-                subject_index += 1
-            except FileNotFoundError as e:
-                print('File not found:', line)
+        register_MINC(input_path + t1_filename, atlas, input_path + '/resampled/' + t1_filename)
 
-    return subject_index
+        one_hot = [0, 0]
+
+        if label >= 1:
+            one_hot = [0, 1]
+        else:
+            one_hot = [1, 0]
+
+        f['qc_label'][subject_index, :] = one_hot
+        print(t1_filename, one_hot)
+        t1_data = nib.load(input_path + '/resampled/' + t1_filename).get_data()
+        f['comment'][subject_index] = comment
+
+        f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
+
+        # plt.imshow(t1_data[96, ...])
+        # plt.axis('off')
+        # plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
+
+        return subject_index
+    except Exception as e:
+        print('File not found:', line)
+        return -1
 
 
 def make_ibis(input_path, f, label_file, subject_index):
+
     with open(os.path.join(input_path, label_file)) as label_file:
         qc_reader = csv.reader(label_file)
 
-        for line in qc_reader:
-            try:
-                t1_filename = line[0][0:-4] + '.mnc'
-                label = int(line[1])                                                #0, 1, or 2
+        pool = Pool(cores)
+        lines = list(qc_reader)
+        indices = range(subject_index, len(lines))
+        input_paths = [input_path] * len(lines)
 
-                t1_data = nib.load(input_path + t1_filename).get_data()
+        print('lines', len(lines))
+        print('indices', len(indices))
+        print('input_paths', len(input_paths))
 
-                if not t1_data.shape == target_size:
-                    print('resizing from', t1_data.shape)
-                    t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
+        # index_list = pool.starmap(make_abide_subject, zip(lines, indices, input_paths))
 
-                f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
+        index_list = []
+        for line, index, input_path in zip(lines, indices, input_paths):
+            returned_index = make_abide_subject(line, index, input_path)
+            index_list.append(returned_index)
 
-                if label == 0:
-                    f['qc_label'][subject_index, :] = [1, 0, 0]
-                elif label == 1:
-                    f['qc_label'][subject_index, :] = [0, 1, 0]
-                elif label == 2:
-                    f['qc_label'][subject_index, :] = [0, 0, 1]
+        good_indices = [x for x in index_list if x > 0] # get rid of subjects who didn't have all info
 
-                print(subject_index, t1_filename)
+    return good_indices
 
-                plt.imshow(t1_data[96, ...])
-                plt.axis('off')
-                plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
 
-                subject_index += 1
-            except FileNotFoundError as e:
-                print('File not found:', line)
+def make_ibis_subject(line, subject_index, input_path):
+    try:
+        t1_filename = line[0][0:-4] + '.mnc'
 
-    return subject_index
+        label = int(line[1])  # 0, 1, or 2
+
+        register_MINC(input_path + t1_filename, atlas, input_path + '/resampled/' + t1_filename)
+
+        one_hot = [0, 0]
+
+        if label >= 1:
+            one_hot = [0, 1]
+        else:
+            one_hot = [1, 0]
+
+        f['qc_label'][subject_index, :] = one_hot
+        print(t1_filename, one_hot)
+        t1_data = nib.load(input_path + '/resampled/' + t1_filename).get_data()
+
+        f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
+
+        # plt.imshow(t1_data[96, ...])
+        # plt.axis('off')
+        # plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
+
+        return subject_index
+    except Exception as e:
+        print('File not found:', line)
+        return -1
+
 
 def make_abide(input_path, f, label_file, subject_index):
     with open(os.path.join(input_path, label_file)) as label_file:
@@ -132,7 +171,6 @@ def make_abide(input_path, f, label_file, subject_index):
             index_list.append(returned_index)
 
         good_indices = [x for x in index_list if x > 0] # get rid of subjects who didn't have all info
-
 
     return good_indices
 
@@ -473,29 +511,22 @@ if __name__ == "__main__":
     #ABIDE: 1113
     #ds030: 282
 
-    # total_subjects = 1154 + 468 + 1113 + 282
-    total_subjects = 1113 + 282
+    total_subjects = 1154 + 468 + 1113 + 282
+    # total_subjects = 1113 + 282
 
-    f = h5py.File(output_file, 'w')
-    # f.create_dataset('MRI', (1154+468+113+282, 192, 256, 256), maxshape=(None, 192, 256, 256), dtype='float32')
-    f.create_dataset('MRI', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float32')
-    f.create_dataset('qc_label', (total_subjects, 2), maxshape=(None, 2), dtype='float32')
-    dt = h5py.special_dtype(vlen=bytes)
-    f.create_dataset('qc_comment', (total_subjects,), dtype=dt)
+    with h5py.File(output_file, 'w') as f:
+        f.create_dataset('MRI', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float32')
+        # f.create_dataset('MRI', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float32')
+        f.create_dataset('qc_label', (total_subjects, 2), dtype='float32')
+        dt = h5py.special_dtype(vlen=bytes)
+        f.create_dataset('qc_comment', (total_subjects,), dtype=dt)
 
-    # ping_end_index, abide_end_index, ibis_end_index, ds030_end_index = 0, 0, 0, 0
-    # ping_end_index = make_ping('/data1/data/PING/', f, 't1_qc.csv', subject_index) - 1
-    abide_indices = make_abide('/data1/data/deep_abide/', f, 't1_qc.csv', 0)
-    # ibis_end_index = make_ibis('/data1/data/IBIS/', f, 'ibis_t1_qc.csv', abide_end_index) - 1
+        ping_indices = make_ping('/data1/data/PING/', f, 't1_qc.csv', 0)
+        abide_indices = make_abide('/data1/data/deep_abide/', f, 't1_qc.csv', sorted(ping_indices)[-1] + 1)
+        ibis_indices = make_ibis('/data1/data/IBIS/', f, 'ibis_t1_qc.csv', sorted(abide_indices)[-1] + 1)
+        ds030_indices = make_ds030('/data1/data/ds030/', f, 'ds030_DB.csv', sorted(ibis_indices)[-1] + 1)
 
-    print('finished ABIDE, starting ds030')
-    ds030_indices = make_ds030('/data1/data/ds030/', f, 'ds030_DB.csv', sorted(abide_indices)[-1] + 1)
-    print('finished ds030')
-
-    pickle.dump(abide_indices, open('/data1/data/deepqc/abide_indices.pkl', 'wb'))
-    pickle.dump(ds030_indices, open('/data1/data/deepqc/ds030_indices.pkl', 'wb'))
-
-    f.close()
-
-    # make_abide('/data1/data/ABIDE/', 'labels.csv')
-  # make_nihpd('/data1/data/NIHPD/assembly/', 'data1/data/dl-datasets/')
+        pickle.dump(ping_indices, open('/data1/data/deepqc/ping_indices.pkl', 'wb'))
+        pickle.dump(ibis_indices, open('/data1/data/deepqc/ibis_indices.pkl', 'wb'))
+        pickle.dump(abide_indices, open('/data1/data/deepqc/abide_indices.pkl', 'wb'))
+        pickle.dump(ds030_indices, open('/data1/data/deepqc/ds030_indices.pkl', 'wb'))

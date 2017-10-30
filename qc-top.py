@@ -38,6 +38,8 @@ import tensorflow as tf
 
 workdir = '/home/users/adoyle/deepqc/'
 
+
+
 image_size = (192, 256, 192)
 slice_size = (192, 256)
 
@@ -135,27 +137,30 @@ def top_model():
 
     return model
 
-def top_batch(indices, f):
-    images = f['MRI']
-    labels = f['qc_label']    #already in one-hot
+def top_batch(indices, augment=True):
 
-    while True:
-        np.random.shuffle(indices)
+    with h5py.File(workdir + 'deepqc.hdf5', 'r') as f:
+        images = f['MRI']
+        labels = f['qc_label']    #already in one-hot
 
-        for index in indices:
-            try:
-                t1_image = images[index, ...]
+        while True:
+            np.random.shuffle(indices)
 
-                t1_image = flip(t1_image, 2)
-                # t1_image = elastic_transform(t1_image, [3,3,3], [3,3,3])
+            for index in indices:
+                try:
+                    t1_image = images[index, ...]
 
-                xy = t1_image[np.newaxis, ...]
-                xz = np.swapaxes(t1_image, 1, 2)[np.newaxis, ...]
-                yz = np.swapaxes(t1_image, 0, 2)[np.newaxis, ...]
+                    if augment:
+                        t1_image = flip(t1_image, 2)
+                    # t1_image = elastic_transform(t1_image, [3,3,3], [3,3,3])
 
-                yield ([xy, xz, yz], labels[index, ...][np.newaxis, ...])
-            except:
-                yield ([xy, xz, yz])
+                    xy = t1_image[np.newaxis, ...]
+                    xz = np.swapaxes(t1_image, 1, 2)[np.newaxis, ...]
+                    yz = np.swapaxes(t1_image, 0, 2)[np.newaxis, ...]
+
+                    yield ([xy, xz, yz], labels[index, ...][np.newaxis, ...])
+                except:
+                    yield ([xy, xz, yz])
 
 
 def plot_metrics(hist, results_dir):
@@ -248,19 +253,20 @@ if __name__ == "__main__":
                                         save_best_only=True)
 
     hist = model.fit_generator(
-        top_batch(train_indices, f),
+        top_batch(train_indices, augment=True),
         len(train_indices),
         epochs=num_epochs,
         callbacks=[model_checkpoint],
-        validation_data=top_batch(validation_indices, f),
+        validation_data=top_batch(validation_indices, augment=False),
         validation_steps=len(validation_indices),
-        use_multiprocessing=True
+        use_multiprocessing=True,
+        workers = 12
     )
 
     model.load_weights(results_dir + 'best_qc_model.hdf5')
     model.save(results_dir + 'qc_model.hdf5')
 
-    metrics = model.evaluate_generator(top_batch(test_indices, f), len(test_indices))
+    metrics = model.evaluate_generator(top_batch(test_indices, augment=False), len(test_indices))
 
     print(model.metrics_names)
     print(metrics)
