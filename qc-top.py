@@ -49,7 +49,7 @@ def top_model():
     conv_size = (5, 5)
     pool_size = (2, 2)
 
-    inputs = [Input(shape=(192, 256, 192)), Input(shape=(192, 192, 256)), Input(shape=(192, 256, 192))]
+    inputs = [Input(shape=(192, 256, 192)), Input(shape=(192, 192, 192)), Input(shape=(192, 256, 192))]
 
     conv1 = Conv2D(16, conv_size, strides=[2, 2], activation='relu')
     conv2 = Conv2D(32, conv_size, strides=[2, 2], activation='relu')
