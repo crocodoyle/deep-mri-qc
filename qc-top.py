@@ -52,9 +52,9 @@ def top_model():
     inputs = [Input(shape=(192, 256, 192)), Input(shape=(192, 192, 192)), Input(shape=(192, 256, 192))]
 
     conv1 = Conv2D(16, conv_size, strides=[2, 2], activation='relu')
-    conv2 = Conv2D(32, conv_size, strides=[2, 2], activation='relu')
-    conv3 = Conv2D(64, conv_size, strides=[2, 2], activation='relu')
-    conv4 = Conv2D(128, conv_size, strides=[2, 2], activation='relu')
+    conv2 = Conv2D(16, conv_size, strides=[2, 2], activation='relu')
+    conv3 = Conv2D(16, conv_size, strides=[2, 2], activation='relu')
+    conv4 = Conv2D(16, conv_size, strides=[2, 2], activation='relu')
 
     fc = Conv2D(32, (1, 1), activation='relu')
 
