@@ -71,7 +71,7 @@ def top_model():
     xy_drop4 = Dropout(0.1)(xy_norm4)
     xy_pool4 = MaxPooling2D(pool_size=pool_size)(xy_drop4)
 
-    xy_fully = Conv2D(10, (1, 1), activation='relu')(xy_pool4)
+    xy_fully = Conv2D(100, (1, 1), activation='relu')(xy_pool4)
     xy_flat  = Flatten()(xy_fully)
 
     # XZ plane
@@ -95,7 +95,7 @@ def top_model():
     xz_drop4 = Dropout(0.1)(xz_norm4)
     xz_pool4 = MaxPooling2D(pool_size=pool_size)(xz_drop4)
 
-    xz_fully = Conv2D(10, (1, 1), activation='relu')(xz_pool4)
+    xz_fully = Conv2D(100, (1, 1), activation='relu')(xz_pool4)
     xz_flat = Flatten()(xz_fully)
 
     # YZ plane
@@ -119,11 +119,11 @@ def top_model():
     yz_drop4 = Dropout(0.1)(yz_norm4)
     yz_pool4 = MaxPooling2D(pool_size=pool_size)(yz_drop4)
 
-    yz_fully = Conv2D(10, (1, 1), activation='relu')(yz_pool4)
+    yz_fully = Conv2D(100, (1, 1), activation='relu')(yz_pool4)
     yz_flat = Flatten()(yz_fully)
 
     allplanes = concatenate([xy_flat, xz_flat, yz_flat])
-    all_drop = Dropout(0.3)(allplanes)
+    all_drop = Dropout(0.5)(allplanes)
 
     output = Dense(nb_classes, activation='softmax')(all_drop)
 
@@ -183,6 +183,8 @@ if __name__ == "__main__":
     except:
         print('Couldnt find the file to load experiment number')
         experiment_number = 0
+
+    print('This is experiment number:', experiment_number)
 
     results_dir = workdir + '/experiment-' + str(experiment_number) + '/'
     os.makedirs(results_dir)
