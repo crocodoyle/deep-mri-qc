@@ -178,7 +178,7 @@ def plot_metrics(hist, results_dir):
 if __name__ == "__main__":
 
     try:
-        experiment_number = pickle.load(open(workdir + 'experiment_number.pkl'), 'rb')
+        experiment_number = pickle.load(open(workdir + 'experiment_number.pkl', 'rb'))
         experiment_number += 1
     except:
         print('Couldnt find the file to load experiment number')
