@@ -159,7 +159,7 @@ def top_batch(indices, augment=True):
                     # t1_image = elastic_transform(t1_image, [3,3,3], [3,3,3])
 
                     xy = t1_image[np.newaxis, ...]
-                    xz = np.swapaxes(t1_image, 1, 2)[np.newaxis, ...]
+                    xz = np.swapaxes(t1_image[:, 32:-32, :], 1, 2)[np.newaxis, ...]
                     yz = np.swapaxes(t1_image, 0, 2)[np.newaxis, ...]
 
                     yield ([xy, xz, yz], labels[index, ...][np.newaxis, ...])
