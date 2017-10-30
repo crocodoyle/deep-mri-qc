@@ -112,17 +112,17 @@ def top_model():
     # yz_drop1 = Dropout(0.1)(yz_norm1)
     # yz_pool1 = MaxPooling2D(pool_size=pool_size)(yz_drop1)
 
-    yz_conv2 = Conv2D(32, conv_size, activation='relu')(yz_conv1)
+    yz_conv2 = conv2(32, conv_size, activation='relu')(yz_conv1)
     # yz_norm2 = BatchNormalization()(yz_conv2)
     # yz_drop2 = Dropout(0.1)(yz_norm2)
     # yz_pool2 = MaxPooling2D(pool_size=pool_size)(yz_drop2)
 
-    yz_conv3 = Conv2D(64, conv_size, activation='relu')(yz_conv2)
+    yz_conv3 = conv3(64, conv_size, activation='relu')(yz_conv2)
     # yz_norm3 = BatchNormalization()(yz_conv3)
     # yz_drop3 = Dropout(0.1)(yz_norm3)
     # yz_pool3 = MaxPooling2D(pool_size=pool_size)(yz_drop3)
 
-    yz_conv4 = Conv2D(128, conv_size, activation='relu')(yz_conv3)
+    yz_conv4 = conv4(128, conv_size, activation='relu')(yz_conv3)
     # yz_norm4 = BatchNormalization()(yz_conv4)
     # yz_drop4 = Dropout(0.1)(yz_norm4)
     # yz_pool4 = MaxPooling2D(pool_size=pool_size)(yz_drop4)
