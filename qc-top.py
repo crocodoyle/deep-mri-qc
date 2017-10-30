@@ -133,7 +133,7 @@ def top_model():
     allplanes = concatenate([xy_flat, xz_flat, yz_flat])
     all_drop = Dropout(0.5)(allplanes)
 
-    last_layer = Conv2D(192, (1, 1), activation='relu')(all_drop)
+    last_layer = Dense(192, activation='relu')(all_drop)
     last_drop = Dropout(0.5)(last_layer)
 
     output = Dense(nb_classes, activation='softmax')(last_drop)
