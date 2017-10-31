@@ -176,7 +176,7 @@ def top_batch(indices, augment=True):
 
                     if augment:
                         t1_image = flip(t1_image, 2)
-                    # t1_image = elastic_transform(t1_image, [3,3,3], [3,3,3])
+                        t1_image = elastic_transform(t1_image, [3,3,3], [3,3,3])
 
                     xy = t1_image[np.newaxis, ...]
                     xz = np.swapaxes(t1_image[:, 32:-32, :], 1, 2)[np.newaxis, ...]
