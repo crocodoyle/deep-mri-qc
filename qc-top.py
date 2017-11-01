@@ -44,20 +44,21 @@ slice_size = (192, 256)
 
 experiment_number = 0
 
+
 def top_model():
     nb_classes = 2
-    conv_size = (5, 5)
+    conv_size = (3, 3)
     pool_size = (2, 2)
 
     inputs = [Input(shape=(192, 256, 192)), Input(shape=(192, 192, 192)), Input(shape=(192, 256, 192))]
 
-    conv1 = Conv2D(16, conv_size, activation='relu')
-    conv2 = Conv2D(16, conv_size, activation='relu')
-    conv3 = Conv2D(16, conv_size, strides=[2, 2], activation='relu')
-    conv4 = Conv2D(16, conv_size, strides=[2, 2], activation='relu')
-    conv5 = Conv2D(16, conv_size, strides=[2, 2], activation='relu')
-    conv6 = Conv2D(16, conv_size, activation='relu')
-    conv7 = Conv2D(16, conv_size, activation='relu')
+    conv1 = Conv2D(32, conv_size, activation='relu')
+    conv2 = Conv2D(32, conv_size, activation='relu')
+    conv3 = Conv2D(32, conv_size, strides=[2, 2], activation='relu')
+    conv4 = Conv2D(32, conv_size, strides=[2, 2], activation='relu')
+    conv5 = Conv2D(32, conv_size, strides=[2, 2], activation='relu')
+    conv6 = Conv2D(32, conv_size, activation='relu')
+    conv7 = Conv2D(32, conv_size, activation='relu')
 
     fc = Conv2D(64, (1, 1), activation='relu')
 
@@ -176,7 +177,7 @@ def top_batch(indices, augment=True):
 
                     if augment:
                         t1_image = flip(t1_image, 2)
-                        t1_image = elastic_transform(t1_image, [3,3,3], [3,3,3])
+                        # t1_image = elastic_transform(t1_image, [3,3,3], [3,3,3])
 
                     xy = t1_image[np.newaxis, ...]
                     xz = np.swapaxes(t1_image[:, 32:-32, :], 1, 2)[np.newaxis, ...]
