@@ -61,7 +61,7 @@ def make_ping(input_path, f, label_file, subject_index):
 
 def make_ping_subject(line, subject_index, input_path):
     try:
-        t1_filename = line[0] + '.mnc'
+        t1_filename = line[0][:-4] + '.mnc'
 
         label = int(line[1])  # 0, 1, or 2
         comment = line[2]
