@@ -88,7 +88,7 @@ def make_ping_subject(line, subject_index, input_path):
 
         return subject_index
     except Exception as e:
-        print('File not found:', line)
+        print('Error:', e.message)
         return -1
 
 
@@ -145,7 +145,7 @@ def make_ibis_subject(line, subject_index, input_path):
 
         return subject_index
     except Exception as e:
-        print('File not found:', line)
+        print('Error:', e.message)
         return -1
 
 
