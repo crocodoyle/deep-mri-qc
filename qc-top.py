@@ -52,7 +52,7 @@ def top_model():
     inputs = [Input(shape=(192, 256, 192)), Input(shape=(192, 192, 192)), Input(shape=(192, 256, 192))]
 
     # XY plane
-    xy_conv1 = Conv2D(16, conv_size, activation='relu')(inputs[0])
+    xy_conv1 = Conv2D(8, conv_size, activation='relu')(inputs[0])
     xy_norm1 = BatchNormalization()(xy_conv1)
     xy_drop1 = Dropout(0.5)(xy_norm1)
     # xy_pool1 = MaxPooling2D(pool_size=pool_size)(xy_drop1)
@@ -62,12 +62,12 @@ def top_model():
     xy_drop2 = Dropout(0.5)(xy_norm2)
     # xy_pool2 = MaxPooling2D(pool_size=pool_size)(xy_drop2)
 
-    xy_conv3 = Conv2D(16, conv_size, strides=[2, 2], activation='relu')(xy_drop2)
+    xy_conv3 = Conv2D(32, conv_size, strides=[2, 2], activation='relu')(xy_drop2)
     xy_norm3 = BatchNormalization()(xy_conv3)
     xy_drop3 = Dropout(0.5)(xy_norm3)
     # xy_pool3 = MaxPooling2D(pool_size=pool_size)(xy_drop3)
 
-    xy_conv4 = Conv2D(16, conv_size, strides=[2, 2], activation='relu')(xy_drop3)
+    xy_conv4 = Conv2D(32, conv_size, strides=[2, 2], activation='relu')(xy_drop3)
     xy_norm4 = BatchNormalization()(xy_conv4)
     xy_drop4 = Dropout(0.5)(xy_norm4)
     # xy_pool4 = MaxPooling2D(pool_size=pool_size)(xy_drop4)
@@ -76,11 +76,11 @@ def top_model():
     # xy_conv6 = Conv2D(32, conv_size, activation='relu')(xy_conv5)
     # xy_conv7 = Conv2D(32, conv_size, activation='relu')(xy_conv6)
 
-    xy_fully = Conv2D(16, (1, 1), activation='relu')(xy_drop4)
+    xy_fully = Conv2D(32, (1, 1), activation='relu')(xy_drop4)
     xy_flat  = Flatten()(xy_fully)
 
     # XZ plane
-    xz_conv1 = Conv2D(16, conv_size, activation='relu')(inputs[1])
+    xz_conv1 = Conv2D(8, conv_size, activation='relu')(inputs[1])
     xz_norm1 = BatchNormalization()(xz_conv1)
     xz_drop1 = Dropout(0.5)(xz_norm1)
     # xz_pool1 = MaxPooling2D(pool_size=pool_size)(xz_drop1)
@@ -90,12 +90,12 @@ def top_model():
     xz_drop2 = Dropout(0.5)(xz_norm2)
     # xz_pool2 = MaxPooling2D(pool_size=pool_size)(xz_drop2)
 
-    xz_conv3 = Conv2D(16, conv_size, strides=[2, 2], activation='relu')(xz_drop2)
+    xz_conv3 = Conv2D(32, conv_size, strides=[2, 2], activation='relu')(xz_drop2)
     xz_norm3 = BatchNormalization()(xz_conv3)
     xz_drop3 = Dropout(0.5)(xz_norm3)
     # xz_pool3 = MaxPooling2D(pool_size=pool_size)(xz_drop3)
 
-    xz_conv4 = Conv2D(16, conv_size, strides=[2, 2], activation='relu')(xz_drop3)
+    xz_conv4 = Conv2D(64, conv_size, strides=[2, 2], activation='relu')(xz_drop3)
     xz_norm4 = BatchNormalization()(xz_conv4)
     xz_drop4 = Dropout(0.5)(xz_norm4)
     # xz_pool4 = MaxPooling2D(pool_size=pool_size)(xz_drop4)
@@ -104,11 +104,11 @@ def top_model():
     # xz_conv6 = Conv2D(32, conv_size, activation='relu')(xz_conv5)
     # xz_conv7 = Conv2D(32, conv_size, activation='relu')(xz_conv6)
 
-    xz_fully = Conv2D(16, (1, 1), activation='relu')(xz_drop4)
+    xz_fully = Conv2D(32, (1, 1), activation='relu')(xz_drop4)
     xz_flat = Flatten()(xz_fully)
 
     # YZ plane
-    yz_conv1 = Conv2D(16, conv_size, activation='relu')(inputs[2])
+    yz_conv1 = Conv2D(8, conv_size, activation='relu')(inputs[2])
     yz_norm1 = BatchNormalization()(yz_conv1)
     yz_drop1 = Dropout(0.5)(yz_norm1)
     # yz_pool1 = MaxPooling2D(pool_size=pool_size)(yz_drop1)
@@ -118,12 +118,12 @@ def top_model():
     yz_drop2 = Dropout(0.5)(yz_norm2)
     # yz_pool2 = MaxPooling2D(pool_size=pool_size)(yz_drop2)
 
-    yz_conv3 = Conv2D(16, conv_size, strides=[2, 2], activation='relu')(yz_drop2)
+    yz_conv3 = Conv2D(32, conv_size, strides=[2, 2], activation='relu')(yz_drop2)
     yz_norm3 = BatchNormalization()(yz_conv3)
     yz_drop3 = Dropout(0.5)(yz_norm3)
     # yz_pool3 = MaxPooling2D(pool_size=pool_size)(yz_drop3)
 
-    yz_conv4 = Conv2D(16, conv_size, strides=[2, 2], activation='relu')(yz_drop3)
+    yz_conv4 = Conv2D(64, conv_size, strides=[2, 2], activation='relu')(yz_drop3)
     yz_norm4 = BatchNormalization()(yz_conv4)
     yz_drop4 = Dropout(0.5)(yz_norm4)
     # yz_pool4 = MaxPooling2D(pool_size=pool_size)(yz_drop4)
@@ -132,21 +132,23 @@ def top_model():
     # yz_conv6 = Conv2D(32, conv_size, activation='relu')(yz_conv5)
     # yz_conv7 = Conv2D(32, conv_size, activation='relu')(yz_conv6)
 
-    yz_fully = Conv2D(16, (1, 1), activation='relu')(yz_drop4)
+    yz_fully = Conv2D(32, (1, 1), activation='relu')(yz_drop4)
     yz_flat = Flatten()(yz_fully)
 
     allplanes = concatenate([xy_flat, xz_flat, yz_flat])
     all_drop = Dropout(0.5)(allplanes)
 
-    last_layer = Dense(16, activation='relu')(all_drop)
+    last_layer = Dense(128, activation='relu')(all_drop)
     last_drop = Dropout(0.5)(last_layer)
 
     output = Dense(nb_classes, activation='softmax')(last_drop)
 
     model = Model(inputs=inputs, outputs=[output])
 
+    sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+
     model.compile(loss='categorical_crossentropy',
-                  optimizer='sgd',
+                  optimizer=sgd,
                   metrics=["accuracy", sensitivity, specificity])
 
     return model
