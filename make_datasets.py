@@ -48,12 +48,12 @@ def make_ping(input_path, f, label_file, subject_index):
         print('indices', len(indices))
         print('input_paths', len(input_paths))
 
-        # index_list = pool.starmap(make_abide_subject, zip(lines, indices, input_paths))
+        index_list = pool.starmap(make_abide_subject, zip(lines, indices, input_paths))
 
-        index_list = []
-        for line, index, input_path in zip(lines, indices, input_paths):
-            returned_index = make_abide_subject(line, index, input_path)
-            index_list.append(returned_index)
+        # index_list = []
+        # for line, index, input_path in zip(lines, indices, input_paths):
+        #     returned_index = make_abide_subject(line, index, input_path)
+        #     index_list.append(returned_index)
 
         good_indices = [x for x in index_list if x > 0] # get rid of subjects who didn't have all info
 
@@ -106,12 +106,12 @@ def make_ibis(input_path, f, label_file, subject_index):
         print('indices', len(indices))
         print('input_paths', len(input_paths))
 
-        # index_list = pool.starmap(make_abide_subject, zip(lines, indices, input_paths))
+        index_list = pool.starmap(make_abide_subject, zip(lines, indices, input_paths))
 
-        index_list = []
-        for line, index, input_path in zip(lines, indices, input_paths):
-            returned_index = make_abide_subject(line, index, input_path)
-            index_list.append(returned_index)
+        # index_list = []
+        # for line, index, input_path in zip(lines, indices, input_paths):
+        #     returned_index = make_abide_subject(line, index, input_path)
+        #     index_list.append(returned_index)
 
         good_indices = [x for x in index_list if x > 0] # get rid of subjects who didn't have all info
 
