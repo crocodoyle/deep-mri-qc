@@ -78,7 +78,7 @@ def make_ping_subject(line, subject_index, input_path):
         f['qc_label'][subject_index, :] = one_hot
         print(t1_filename, one_hot)
         t1_data = nib.load(input_path + '/resampled/' + t1_filename).get_data()
-        f['comment'][subject_index] = comment
+        # f['comment'][subject_index] = comment
 
         f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
 
@@ -88,7 +88,7 @@ def make_ping_subject(line, subject_index, input_path):
 
         return subject_index
     except Exception as e:
-        print('Error:', e.message)
+        print('Error:', e)
         return -1
 
 
@@ -145,7 +145,7 @@ def make_ibis_subject(line, subject_index, input_path):
 
         return subject_index
     except Exception as e:
-        print('Error:', e.message)
+        print('Error:', e)
         return -1
 
 
@@ -221,7 +221,7 @@ def make_abide_subject(line, subject_index, input_path):
 
         return subject_index
     except Exception as e:
-        print('File not found:', line)
+        print('Error:', e)
 
         return -1
 
@@ -285,7 +285,7 @@ def make_ds030_subject(line, subject_index, input_path, atlas_image):
             # plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
 
     except Exception as e:
-        print('Error:', line)
+        print('Error:', e)
 
         return -1
 
