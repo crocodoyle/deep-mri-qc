@@ -45,33 +45,31 @@ slice_size = (192, 256)
 
 experiment_number = 0
 
-def dilated_module(input_layer):
+def dilated_module():
     conv_size = (3, 3)
     n_filters = 32
 
-    conv1 = Conv2D(n_filters, conv_size, activation='relu', dilation_rate=(1, 1), kernel_initializer=Identity, bias_initializer=Zeros)(input_layer)
+    conv1 = Conv2D(n_filters, conv_size, activation='relu', dilation_rate=(1, 1), kernel_initializer=Identity(), bias_initializer=Zeros())
     norm1 = BatchNormalization()(conv1)
-    conv2 = Conv2D(n_filters, conv_size, activation='relu', dilation_rate=(1, 1), kernel_initializer=Identity, bias_initializer=Zeros)(norm1)
+    conv2 = Conv2D(n_filters, conv_size, activation='relu', dilation_rate=(1, 1), kernel_initializer=Identity(), bias_initializer=Zeros())(norm1)
     norm2 = BatchNormalization()(conv2)
-    conv3 = Conv2D(n_filters, conv_size, activation='relu', dilation_rate=(2, 2), kernel_initializer=Identity, bias_initializer=Zeros)(norm2)
+    conv3 = Conv2D(n_filters, conv_size, activation='relu', dilation_rate=(2, 2), kernel_initializer=Identity(), bias_initializer=Zeros())(norm2)
     norm3 = BatchNormalization()(conv3)
-    conv4 = Conv2D(n_filters, conv_size, activation='relu', dilation_rate=(4, 4), kernel_initializer=Identity, bias_initializer=Zeros)(norm3)
+    conv4 = Conv2D(n_filters, conv_size, activation='relu', dilation_rate=(4, 4), kernel_initializer=Identity(), bias_initializer=Zeros())(norm3)
     norm4 = BatchNormalization()(conv4)
-    conv5 = Conv2D(n_filters, conv_size, activation='relu', dilation_rate=(8, 8), kernel_initializer=Identity, bias_initializer=Zeros)(norm4)
+    conv5 = Conv2D(n_filters, conv_size, activation='relu', dilation_rate=(8, 8), kernel_initializer=Identity(), bias_initializer=Zeros())(norm4)
     norm5 = BatchNormalization()(conv5)
-    conv6 = Conv2D(n_filters, conv_size, activation='relu', dilation_rate=(16, 16), kernel_initializer=Identity, bias_initializer=Zeros)(norm5)
+    conv6 = Conv2D(n_filters, conv_size, activation='relu', dilation_rate=(16, 16), kernel_initializer=Identity(), bias_initializer=Zeros())(norm5)
     norm6 = BatchNormalization()(conv6)
-    conv7 = Conv2D(n_filters, conv_size, activation='relu', dilation_rate=(32, 32), kernel_initializer=Identity, bias_initializer=Zeros)(norm6)
+    conv7 = Conv2D(n_filters, conv_size, activation='relu', dilation_rate=(32, 32), kernel_initializer=Identity(), bias_initializer=Zeros())(norm6)
     norm7 = BatchNormalization()(conv7)
-    conv8 = Conv2D(n_filters, conv_size, activation='relu', dilation_rate=(1, 1), kernel_initializer=Identity, bias_initializer=Zeros)(norm7)
+    conv8 = Conv2D(n_filters, conv_size, activation='relu', dilation_rate=(1, 1), kernel_initializer=Identity(), bias_initializer=Zeros())(norm7)
     norm8 = BatchNormalization()(conv8)
-    conv9 = Conv2D(n_filters, (1, 1), activation='relu', dilation_rate=(1, 1), kernel_initializer=Identity, bias_initializer=Zeros)(norm8)
+    conv9 = Conv2D(n_filters, (1, 1), activation='relu', dilation_rate=(1, 1), kernel_initializer=Identity(), bias_initializer=Zeros())(norm8)
     norm9 = BatchNormalization()(conv9)
     drop = Dropout(0.5)(norm9)
 
-    model = Model(inputs=[input_layer], outputs=[drop])
-
-    return model
+    return drop
 
 def dilated_top():
 
@@ -79,9 +77,9 @@ def dilated_top():
 
     inputs = [Input(shape=(192, 256, 192)), Input(shape=(192, 192, 192)), Input(shape=(192, 256, 192))]
 
-    xy = dilated_module(inputs[0])
-    xz = dilated_module(inputs[1])
-    yz = dilated_module(inputs[2])
+    xy = dilated_module()(inputs[0])
+    xz = dilated_module()(inputs[1])
+    yz = dilated_module()(inputs[2])
 
     xy_flat = Flatten()(xy)
     xz_flat = Flatten()(xz)
