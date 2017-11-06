@@ -45,11 +45,11 @@ slice_size = (192, 256)
 
 experiment_number = 0
 
-def dilated_module():
+def dilated_module(input_layer):
     conv_size = (3, 3)
     n_filters = 32
 
-    conv1 = Conv2D(n_filters, conv_size, activation='relu', dilation_rate=(1, 1), kernel_initializer=Identity(), bias_initializer=Zeros())
+    conv1 = Conv2D(n_filters, conv_size, activation='relu', dilation_rate=(1, 1), kernel_initializer=Identity(), bias_initializer=Zeros())(input_layer)
     norm1 = BatchNormalization()(conv1)
     conv2 = Conv2D(n_filters, conv_size, activation='relu', dilation_rate=(1, 1), kernel_initializer=Identity(), bias_initializer=Zeros())(norm1)
     norm2 = BatchNormalization()(conv2)
@@ -77,9 +77,9 @@ def dilated_top():
 
     inputs = [Input(shape=(192, 256, 192)), Input(shape=(192, 192, 192)), Input(shape=(192, 256, 192))]
 
-    xy = dilated_module()(inputs[0])
-    xz = dilated_module()(inputs[1])
-    yz = dilated_module()(inputs[2])
+    xy = dilated_module(inputs[0])
+    xz = dilated_module(inputs[1])
+    yz = dilated_module(inputs[2])
 
     xy_flat = Flatten()(xy)
     xz_flat = Flatten()(xz)
