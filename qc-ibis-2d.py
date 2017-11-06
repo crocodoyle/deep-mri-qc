@@ -246,16 +246,13 @@ if __name__ == "__main__":
 
     sss = StratifiedShuffleSplit(n_splits=1, test_size=0.3)
     result_indices = sss.split(np.asarray(indices), np.asarray(labels))
-
-    print(result_indices.shape)
-    train_indices, test_indices = result_indices[0], result_indices[1]
+    train_indices, test_indices = next(result_indices)
 
     sss2 = StratifiedShuffleSplit(n_splits=1, test_size=0.5)
     result_indices = sss2.split(np.asarray(test_indices), np.asarray(labels)[test_indices])
 
-    print(result_indices.shape)
-    test_indices, validation_indices = result_indices[0], result_indices[1]
-
+    test_indices, validation_indices = next(result_indices)
+    
     model = qc_model()
     model.summary()
 
