@@ -33,7 +33,7 @@ total_subjects = 468
 target_size = (168, 256, 244)
 
 def make_ibis_qc():
-    f = h5py.File(workdir + 'ibis.hdf5', 'wb')
+    f = h5py.File(workdir + 'ibis.hdf5', 'w')
     f.create_dataset('ibis_t1', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float32')
     f.create_dataset('qc_label', (total_subjects, 2), dtype='float32')
 
