@@ -103,7 +103,7 @@ def make_ibis(input_path, f, label_file, subject_index):
         qc_reader = csv.reader(label_file)
 
         lines = list(qc_reader)
-        indices = range(subject_index, len(lines))
+        indices = range(subject_index, subject_index + len(lines))
         input_paths = [input_path] * len(lines)
 
         print('lines', len(lines))
@@ -164,7 +164,7 @@ def make_abide(input_path, f, label_file, subject_index):
         qc_reader.__next__()
 
         lines = list(qc_reader)
-        indices = range(subject_index, len(lines))
+        indices = range(subject_index, subject_index + len(lines))
         input_paths = [input_path] * len(lines)
 
         print('lines', len(lines))
