@@ -153,7 +153,7 @@ def batch(indices, n, random_slice=False):
                 rn=np.random.randint(-4, 4)
             else:
                 rn=0
-            x_train[i%n, :, :, 0] = images[index, target_size[0]+rn, :, :]
+            x_train[i%n, :, :, 0] = images[index, target_size[0]//2+rn, :, :]
             y_train[i%n, :]   = labels[index, ...]
             samples_this_batch += 1
             if (i+1) % n == 0:
@@ -180,7 +180,7 @@ def test_images(model, test_indices, save_imgs=True):
     print("filenames:", len(filename_test))
 
     for i, index in enumerate(test_indices):
-        predict_batch[0,:,:,0] = images[index,target_size[0], :,:]
+        predict_batch[0,:,:,0] = images[index,target_size[0]//2, :,:]
 
         prediction = model.predict_on_batch(predict_batch)[0][0]
         if prediction >= 0.5:
@@ -190,7 +190,7 @@ def test_images(model, test_indices, save_imgs=True):
         actual[i] = labels[index,0]
 
         if save_imgs:
-            plt.imshow(images[index,target_size[0]+10,:,:], cmap='gray')
+            plt.imshow(images[index,target_size[0]//2+10,:,:], cmap='gray')
             if predictions[i] == 1 and actual[i] == 1:
                 plt.savefig(results_dir + 'fail_right_' + os.path.basename(filename_test[i]) + ".png")
             elif predictions[i] == 0 and actual[i] == 0:
