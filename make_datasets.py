@@ -53,14 +53,15 @@ def make_ping(input_path, f, label_file, subject_index):
 
         index_list = []
         for line, index, input_path in zip(lines, indices, input_paths):
-            returned_index = make_ping_subject(line, index, input_path)
+            returned_index = make_ping_subject(line, index, input_path, f)
             index_list.append(returned_index)
 
         good_indices = [x for x in index_list if x > 0] # get rid of subjects who didn't have all info
 
     return good_indices
 
-def make_ping_subject(line, subject_index, input_path):
+
+def make_ping_subject(line, subject_index, input_path, f):
     try:
         t1_filename = line[0][:-4] + '.mnc'
 
@@ -123,13 +124,13 @@ def make_ibis(input_path, f, label_file, subject_index):
     return good_indices
 
 
-def make_ibis_subject(line, subject_index, input_path):
+def make_ibis_subject(line, subject_index, input_path, f):
     try:
         t1_filename = line[0][0:-4] + '.mnc'
 
         label = int(line[1])  # 0, 1, or 2
 
-        register_MINC(input_path + t1_filename, atlas, input_path + '/resampled/' + t1_filename)
+        # register_MINC(input_path + t1_filename, atlas, input_path + '/resampled/' + t1_filename)
 
         one_hot = [0, 0]
 
@@ -183,7 +184,7 @@ def make_abide(input_path, f, label_file, subject_index):
 
     return good_indices
 
-def make_abide_subject(line, subject_index, input_path):
+def make_abide_subject(line, subject_index, input_path, f):
     try:
         t1_filename = line[0] + '.mnc'
 
@@ -234,8 +235,6 @@ def make_ds030(input_path, f, label_file, subject_index):
     with open(os.path.join(input_path, label_file), 'r') as label_file:
         qc_reader = csv.reader(label_file)
 
-        atlas_image = nib.load(atlas)
-
         # pool = Pool(cores)
         lines = list(qc_reader)[1:]
         indices = range(subject_index, subject_index + len(lines))
@@ -246,7 +245,7 @@ def make_ds030(input_path, f, label_file, subject_index):
         index_list = []
         for line, index, input_path in zip(lines, indices, input_paths):
             print('starting subject:', line)
-            returned_index = make_ds030_subject(line, index, input_path, atlas_image)
+            returned_index = make_ds030_subject(line, index, input_path, f)
             index_list.append(returned_index)
 
         good_indices = [x for x in index_list if x > 0]
@@ -254,13 +253,14 @@ def make_ds030(input_path, f, label_file, subject_index):
     return good_indices
 
 
-def make_ds030_subject(line, subject_index, input_path, atlas_image):
+def make_ds030_subject(line, subject_index, input_path, f):
     try:
         t1_filename = line[0] + '.nii.gz'
         label = line[8]
 
         if len(label) > 0:
             t1 = nib.load(input_path + t1_filename)
+            atlas_image = nib.load(atlas)
 
             t1_resampled = resample_from_to(t1, atlas_image)
             t1_data = t1_resampled.get_data()
