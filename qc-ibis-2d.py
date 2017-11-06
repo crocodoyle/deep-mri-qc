@@ -36,6 +36,8 @@ def make_ibis_qc():
     f = h5py.File(workdir + 'ibis.hdf5', 'w')
     f.create_dataset('ibis_t1', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float32')
     f.create_dataset('qc_label', (total_subjects, 2), dtype='float32')
+    dt = h5py.special_dtype(vlen=bytes)
+    f.create_dataset('filename', (total_subjects, ), dtype=dt)
 
     index = 0
 
@@ -63,6 +65,7 @@ def make_ibis_qc():
                     t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
                 f['ibis_t1'][index, ...] = normalise_zero_one(t1_data)
+                f['filename'][index] = t1_filename
 
                 # plt.imshow(t1_data[96, ...])
                 # plt.axis('off')
@@ -160,14 +163,16 @@ def batch(indices, n, random_slice=False):
                 yield (x_train[0:samples_this_batch, ...], y_train[0:samples_this_batch, :])
 
 
-def test_images(model, test_indices, labels, filename_test, slice_modifier, save_imgs=False):
+def test_images(model, test_indices, save_imgs=True):
     f = h5py.File(workdir + 'ibis.hdf5', 'r')
-    images = f.get('ibis_t1')
+    images = f['ibis_t1']
+    labels = f['qc_label']
+    filename_test = f['filenames']
 
     predictions = np.zeros((len(test_indices)))
     actual = np.zeros((len(test_indices)))
 
-    predict_batch = np.zeros((1, 256, 224, 1))
+    predict_batch = np.zeros((1, target_size[1], target_size[2], 1))
 
     print("test indices:", len(test_indices))
     print("test index max:", max(test_indices))
@@ -175,19 +180,19 @@ def test_images(model, test_indices, labels, filename_test, slice_modifier, save
     print("filenames:", len(filename_test))
 
     for i, index in enumerate(test_indices):
-        predict_batch[0,:,:,0] = images[index,80+slice_modifier, :,:]
+        predict_batch[0,:,:,0] = images[index,target_size[0], :,:]
 
         prediction = model.predict_on_batch(predict_batch)[0][0]
         if prediction >= 0.5:
             predictions[i] = 1
         else:
             predictions[i] = 0
-        actual[i] = labels[index][0]
+        actual[i] = labels[index,0]
 
         if save_imgs:
-            plt.imshow(images[index,80,:,:])
+            plt.imshow(images[index,target_size[0]+10,:,:], cmap='gray')
             if predictions[i] == 1 and actual[i] == 1:
-                plt.savefig('/home/adoyle/images/fail_right_' + os.path.basename(filename_test[i]) + ".png")
+                plt.savefig(results_dir + 'fail_right_' + os.path.basename(filename_test[i]) + ".png")
             elif predictions[i] == 0 and actual[i] == 0:
                 plt.savefig('/home/adoyle/images/pass_right_' + os.path.basename(filename_test[i]) + '.png')
             elif predictions[i] == 1 and actual[i] == 0:
@@ -240,10 +245,16 @@ if __name__ == "__main__":
     indices, labels = make_ibis_qc()
 
     sss = StratifiedShuffleSplit(n_splits=1, test_size=0.3)
-    train_indices, test_indices = sss.split(indices, labels)
+    result_indices = sss.split(np.asarray(indices), np.asarray(labels))
+
+    print(result_indices.shape)
+    train_indices, test_indices = result_indices[0], result_indices[1]
 
     sss2 = StratifiedShuffleSplit(n_splits=1, test_size=0.5)
-    test_indices, validation_indices = sss2.split(test_indices, labels[test_indices])
+    result_indices = sss2.split(np.asarray(test_indices), np.asarray(labels)[test_indices])
+
+    print(result_indices.shape)
+    test_indices, validation_indices = result_indices[0], result_indices[1]
 
     model = qc_model()
     model.summary()
