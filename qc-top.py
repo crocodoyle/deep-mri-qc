@@ -436,7 +436,7 @@ if __name__ == "__main__":
 
 
     # define model
-    model = top_model()
+    model = dilated_top()
 
     # print summary of model
     model.summary()
