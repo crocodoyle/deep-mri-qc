@@ -42,7 +42,7 @@ def make_ibis_qc():
     indices = []
     labels = []
 
-    with open(label_file, 'rb') as labels_csv:
+    with open(label_file, 'r') as labels_csv:
         qc_reader = csv.reader(labels_csv)
 
         for line in qc_reader:
