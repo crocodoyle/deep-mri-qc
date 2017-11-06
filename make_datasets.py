@@ -67,7 +67,7 @@ def make_ping_subject(line, subject_index, input_path):
         label = int(line[1])  # 0, 1, or 2
         comment = line[2]
 
-        register_MINC(input_path + t1_filename, atlas, input_path + '/resampled/' + t1_filename)
+        # register_MINC(input_path + t1_filename, atlas, input_path + '/resampled/' + t1_filename)
 
         one_hot = [0, 0]
 
