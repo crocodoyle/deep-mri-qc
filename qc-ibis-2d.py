@@ -93,7 +93,7 @@ def qc_model():
 
     model.add(Conv2D(16, conv_size, activation='relu', input_shape=(target_size[1], target_size[2], 1)))
     model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=pool_size))
+    # model.add(MaxPooling2D(pool_size=pool_size))
     model.add(Dropout(0.2))
 
     model.add(Conv2D(32, conv_size, activation='relu'))
@@ -154,7 +154,7 @@ def batch(indices, n, random_slice=False):
             else:
                 rn=0
             x_train[i%n, :, :, 0] = images[index, target_size[0]+rn, :, :]
-            y_train[i%n, :]   = labels[index]
+            y_train[i%n, :]   = labels[index, ...]
             samples_this_batch += 1
             if (i+1) % n == 0:
                 yield (x_train, y_train)
@@ -252,7 +252,7 @@ if __name__ == "__main__":
     result_indices = sss2.split(np.asarray(test_indices), np.asarray(labels)[test_indices])
 
     test_indices, validation_indices = next(result_indices)
-    
+
     model = qc_model()
     model.summary()
 
