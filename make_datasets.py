@@ -76,8 +76,12 @@ def make_ping_subject(line, subject_index, input_path):
             one_hot = [1, 0]
 
         f['qc_label'][subject_index, :] = one_hot
-        print(t1_filename, one_hot)
+        # print(t1_filename, one_hot)
         t1_data = nib.load(input_path + '/resampled/' + t1_filename).get_data()
+
+        if not t1_data.shape == target_size:
+            print('resizing from', t1_data.shape)
+            t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
         # f['comment'][subject_index] = comment
 
         f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
@@ -136,6 +140,10 @@ def make_ibis_subject(line, subject_index, input_path):
         f['qc_label'][subject_index, :] = one_hot
         print(t1_filename, one_hot)
         t1_data = nib.load(input_path + '/resampled/' + t1_filename).get_data()
+
+        if not t1_data.shape == target_size:
+            print('resizing from', t1_data.shape)
+            t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
         f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
 
@@ -446,7 +454,7 @@ def register_MINC(moving_image, atlas, output_image):
                              '-target_mask',
                              '/data1/data/mni_icbm152_t1_tal_nlin_asym_09a_mask.mnc']
 
-    subprocess.run(register_command_line)
+    subprocess.run(register_command_line, stdout=open(os.devnull, 'wb'))
 
 
     return
