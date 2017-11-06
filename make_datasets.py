@@ -81,7 +81,7 @@ def make_ping_subject(line, subject_index, input_path):
         t1_data = nib.load(input_path + '/resampled/' + t1_filename).get_data()
 
         if not t1_data.shape == target_size:
-            print('resizing from', t1_data.shape)
+            # print('resizing from', t1_data.shape)
             t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
         # f['comment'][subject_index] = comment
 
@@ -102,7 +102,6 @@ def make_ibis(input_path, f, label_file, subject_index):
     with open(os.path.join(input_path, label_file)) as label_file:
         qc_reader = csv.reader(label_file)
 
-        pool = Pool(cores)
         lines = list(qc_reader)
         indices = range(subject_index, len(lines))
         input_paths = [input_path] * len(lines)
@@ -111,6 +110,7 @@ def make_ibis(input_path, f, label_file, subject_index):
         print('indices', len(indices))
         print('input_paths', len(input_paths))
 
+        pool = Pool(cores)
         index_list = pool.starmap(make_ibis_subject, zip(lines, indices, input_paths))
 
         # index_list = []
@@ -139,11 +139,11 @@ def make_ibis_subject(line, subject_index, input_path):
             one_hot = [1, 0]
 
         f['qc_label'][subject_index, :] = one_hot
-        print(t1_filename, one_hot)
+        # print(t1_filename, one_hot)
         t1_data = nib.load(input_path + '/resampled/' + t1_filename).get_data()
 
         if not t1_data.shape == target_size:
-            print('resizing from', t1_data.shape)
+            # print('resizing from', t1_data.shape)
             t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
         f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
@@ -163,7 +163,6 @@ def make_abide(input_path, f, label_file, subject_index):
         qc_reader = csv.reader(label_file)
         qc_reader.__next__()
 
-        pool = Pool(cores)
         lines = list(qc_reader)
         indices = range(subject_index, len(lines))
         input_paths = [input_path] * len(lines)
@@ -172,6 +171,7 @@ def make_abide(input_path, f, label_file, subject_index):
         print('indices', len(indices))
         print('input_paths', len(input_paths))
 
+        # pool = Pool(cores)
         # index_list = pool.starmap(make_abide_subject, zip(lines, indices, input_paths))
 
         index_list = []
@@ -214,11 +214,6 @@ def make_abide_subject(line, subject_index, input_path):
         t1_data = nib.load(input_path + '/resampled/' + t1_filename).get_data()
 
         if not t1_data.shape == target_size:
-            # print('resizing from', t1_data.shape)
-            # if t1_data.shape[1] > 400:
-            #     print('resampling from', t1_data.shape)
-            #     t1_data = resize(t1_data, (t1_data.shape[0]/2, t1_data.shape[1]/2, t1_data.shape[2]/2), order=1)
-
             t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
         f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
@@ -530,10 +525,18 @@ if __name__ == "__main__":
         dt = h5py.special_dtype(vlen=bytes)
         f.create_dataset('qc_comment', (total_subjects,), dtype=dt)
 
+        print('Starting PING...')
         ping_indices = make_ping('/data1/data/PING/', f, 't1_qc.csv', 0)
+        print('Last PING index:', sorted(ping_indices)[-1])
+        print('Starting ABIDE...')
         abide_indices = make_abide('/data1/data/deep_abide/', f, 't1_qc.csv', sorted(ping_indices)[-1] + 1)
+        print('Last ABIDE index:', sorted(abide_indices)[-1])
+        print('Starting IBIS...')
         ibis_indices = make_ibis('/data1/data/IBIS/', f, 'ibis_t1_qc.csv', sorted(abide_indices)[-1] + 1)
+        print('Last IBIS index:', sorted(ibis_indices)[-1])
+        print('Starting ds030...')
         ds030_indices = make_ds030('/data1/data/ds030/', f, 'ds030_DB.csv', sorted(ibis_indices)[-1] + 1)
+        print('Last ds030 index:', sorted(ds030_indices)[-1])
 
         pickle.dump(ping_indices, open('/data1/data/deepqc/ping_indices.pkl', 'wb'))
         pickle.dump(ibis_indices, open('/data1/data/deepqc/ibis_indices.pkl', 'wb'))
