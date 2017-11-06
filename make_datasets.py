@@ -39,7 +39,7 @@ def make_ping(input_path, f, label_file, subject_index):
         qc_reader = csv.reader(label_file)
         qc_reader.__next__()
 
-        pool = Pool(cores)
+
         lines = list(qc_reader)
         indices = range(subject_index, len(lines))
         input_paths = [input_path] * len(lines)
@@ -48,12 +48,13 @@ def make_ping(input_path, f, label_file, subject_index):
         print('indices', len(indices))
         print('input_paths', len(input_paths))
 
-        index_list = pool.starmap(make_ping_subject, zip(lines, indices, input_paths))
+        # pool = Pool(cores)
+        # index_list = pool.starmap(make_ping_subject, zip(lines, indices, input_paths))
 
-        # index_list = []
-        # for line, index, input_path in zip(lines, indices, input_paths):
-        #     returned_index = make_ping_subject(line, index, input_path)
-        #     index_list.append(returned_index)
+        index_list = []
+        for line, index, input_path in zip(lines, indices, input_paths):
+            returned_index = make_ping_subject(line, index, input_path)
+            index_list.append(returned_index)
 
         good_indices = [x for x in index_list if x > 0] # get rid of subjects who didn't have all info
 
