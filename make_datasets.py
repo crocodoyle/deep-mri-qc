@@ -5,8 +5,6 @@ import os, sys, time, csv, subprocess, pickle
 
 from dltk.core.io.preprocessing import normalise_zero_one, resize_image_with_crop_or_pad
 
-from mpi4py import MPI
-
 import h5py
 from skimage.transform import resize
 from sklearn.neighbors import KDTree
@@ -39,14 +37,13 @@ def make_ping(input_path, f, label_file, subject_index):
         qc_reader = csv.reader(label_file)
         qc_reader.__next__()
 
-
         lines = list(qc_reader)
         indices = range(subject_index, len(lines))
         input_paths = [input_path] * len(lines)
 
-        print('lines', len(lines))
-        print('indices', len(indices))
-        print('input_paths', len(input_paths))
+        # print('lines', len(lines))
+        # print('indices', len(indices))
+        # print('input_paths', len(input_paths))
 
         # pool = Pool(cores)
         # index_list = pool.starmap(make_ping_subject, zip(lines, indices, input_paths))
@@ -87,6 +84,7 @@ def make_ping_subject(line, subject_index, input_path, f):
         # f['comment'][subject_index] = comment
 
         f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
+        f['dataset'][subject_index] = 'PING'
 
         # plt.imshow(t1_data[96, ...])
         # plt.axis('off')
@@ -107,17 +105,17 @@ def make_ibis(input_path, f, label_file, subject_index):
         indices = range(subject_index, subject_index + len(lines))
         input_paths = [input_path] * len(lines)
 
-        print('lines', len(lines))
-        print('indices', len(indices))
-        print('input_paths', len(input_paths))
+        # print('lines', len(lines))
+        # print('indices', len(indices))
+        # print('input_paths', len(input_paths))
 
-        pool = Pool(cores)
-        index_list = pool.starmap(make_ibis_subject, zip(lines, indices, input_paths))
+        # pool = Pool(cores)
+        # index_list = pool.starmap(make_ibis_subject, zip(lines, indices, input_paths))
 
-        # index_list = []
-        # for line, index, input_path in zip(lines, indices, input_paths):
-        #     returned_index = make_ibis_subject(line, index, input_path)
-        #     index_list.append(returned_index)
+        index_list = []
+        for line, index, input_path in zip(lines, indices, input_paths):
+            returned_index = make_ibis_subject(line, index, input_path)
+            index_list.append(returned_index)
 
         good_indices = [x for x in index_list if x > 0] # get rid of subjects who didn't have all info
 
@@ -148,6 +146,8 @@ def make_ibis_subject(line, subject_index, input_path, f):
             t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
         f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
+        f['dataset'][subject_index] = 'IBIS'
+
 
         # plt.imshow(t1_data[96, ...])
         # plt.axis('off')
@@ -211,13 +211,15 @@ def make_abide_subject(line, subject_index, input_path, f):
         one_hot = np.multiply(one_hot, 1 / total_labels)
 
         f['qc_label'][subject_index, :] = one_hot
-        print(t1_filename, one_hot)
+        # print(t1_filename, one_hot)
         t1_data = nib.load(input_path + '/resampled/' + t1_filename).get_data()
 
         if not t1_data.shape == target_size:
             t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
         f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
+        f['dataset'][subject_index] = 'ABIDE'
+
 
 
         # plt.imshow(t1_data[96, ...])
@@ -235,16 +237,16 @@ def make_ds030(input_path, f, label_file, subject_index):
     with open(os.path.join(input_path, label_file), 'r') as label_file:
         qc_reader = csv.reader(label_file)
 
-        # pool = Pool(cores)
         lines = list(qc_reader)[1:]
         indices = range(subject_index, subject_index + len(lines))
         input_paths = [input_path] * len(lines)
 
+        # pool = Pool(cores)
         # index_list = pool.starmap(make_ds030_subject, zip(lines, indices, input_paths))
 
         index_list = []
         for line, index, input_path in zip(lines, indices, input_paths):
-            print('starting subject:', line)
+            # print('starting subject:', line)
             returned_index = make_ds030_subject(line, index, input_path, f)
             index_list.append(returned_index)
 
@@ -283,6 +285,7 @@ def make_ds030_subject(line, subject_index, input_path, f):
                 raise Exception
 
             f['qc_label'][subject_index, :] = one_hot
+            f['dataset'][subject_index] = 'ds030'
 
             # plt.imshow(t1_data[96, ...])
             # plt.axis('off')
@@ -524,6 +527,7 @@ if __name__ == "__main__":
         f.create_dataset('qc_label', (total_subjects, 2), dtype='float32')
         dt = h5py.special_dtype(vlen=bytes)
         f.create_dataset('qc_comment', (total_subjects,), dtype=dt)
+        f.create_dataset('dataset', (total_subjects,), dtype=dt)
 
         print('Starting PING...')
         ping_indices = make_ping('/data1/data/PING/', f, 't1_qc.csv', 0)

@@ -296,6 +296,7 @@ if __name__ == "__main__":
         for metric_name, score in zip(model.metrics_names, metrics):
             score[metric_name].append(score)
 
-
     for metric in model.metrics_names:
         print(metric, np.mean(scores[metric]))
+
+    print('This experiment is brought to you by the number:', experiment_number)
