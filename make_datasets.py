@@ -168,16 +168,16 @@ def make_abide(input_path, f, label_file, subject_index):
         indices = range(subject_index, subject_index + len(lines))
         input_paths = [input_path] * len(lines)
 
-        print('lines', len(lines))
-        print('indices', len(indices))
-        print('input_paths', len(input_paths))
+        # print('lines', len(lines))
+        # print('indices', len(indices))
+        # print('input_paths', len(input_paths))
 
         # pool = Pool(cores)
         # index_list = pool.starmap(make_abide_subject, zip(lines, indices, input_paths))
 
         index_list = []
         for line, index, input_path in zip(lines, indices, input_paths):
-            returned_index = make_abide_subject(line, index, input_path)
+            returned_index = make_abide_subject(line, index, input_path, f)
             index_list.append(returned_index)
 
         good_indices = [x for x in index_list if x > 0] # get rid of subjects who didn't have all info
@@ -219,8 +219,6 @@ def make_abide_subject(line, subject_index, input_path, f):
 
         f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
         f['dataset'][subject_index] = 'ABIDE'
-
-
 
         # plt.imshow(t1_data[96, ...])
         # plt.axis('off')
