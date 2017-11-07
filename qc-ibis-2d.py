@@ -67,7 +67,7 @@ def make_ibis_qc():
                     t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
                 f['ibis_t1'][index, ...] = normalise_zero_one(t1_data)
-                f['filename'][index] = t1_filename
+                f['filename'][index] = t1_filename.split('/')[-1]
 
                 # plt.imshow(t1_data[96, ...])
                 # plt.axis('off')
