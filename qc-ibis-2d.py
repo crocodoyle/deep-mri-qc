@@ -25,13 +25,12 @@ from sklearn.metrics import confusion_matrix
 
 # from vis.utils import find_layer_idx
 
-
 workdir = '/home/users/adoyle/deepqc/IBIS'
 datadir = '/data1/data/IBIS/'
 
-label_file = datadir + 'ibis_t1_qc.csv'
+label_file = datadir + 't1_ibis_QC_labels.csv'
 
-total_subjects = 468
+total_subjects = 2020
 target_size = (168, 256, 244)
 
 def make_ibis_qc():
@@ -48,13 +47,14 @@ def make_ibis_qc():
 
     with open(label_file, 'r') as labels_csv:
         qc_reader = csv.reader(labels_csv)
+        next(qc_reader)
 
         for line in qc_reader:
             try:
-                t1_filename = line[0][0:-4] + '.mnc'
-                label = int(line[1])  # 0, 1, or 2
+                t1_filename = line[3][9:]
+                label = line[4]
 
-                if label >= 1:
+                if 'Pass' in label:
                     one_hot = [0.0, 1.0]
                 else:
                     one_hot = [1.0, 0.0]
@@ -80,6 +80,7 @@ def make_ibis_qc():
             except Exception as e:
                 print('Error:', e)
 
+    print('Total subjects we actually have:', index+1)
     f.close()
 
     return indices, labels
@@ -89,34 +90,33 @@ def qc_model():
     nb_classes = 2
 
     conv_size = (3, 3)
-    pool_size = (2, 2)
 
     model = Sequential()
 
     model.add(Conv2D(16, conv_size, activation='relu', input_shape=(target_size[1], target_size[2], 1)))
     model.add(BatchNormalization())
     # model.add(MaxPooling2D(pool_size=pool_size))
-    model.add(Dropout(0.2))
+    # model.add(Dropout(0.2))
 
     model.add(Conv2D(32, conv_size, activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.3))
+    # model.add(Dropout(0.3))
 
     model.add(Conv2D(32, conv_size, activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.3))
+    # model.add(Dropout(0.3))
 
     model.add(Conv2D(64, conv_size, activation='relu'))
     model.add(MaxPooling2D(pool_size=(2,2)))
-    model.add(Dropout(0.3))
+    # model.add(Dropout(0.3))
 
     model.add(Conv2D(64, conv_size, activation='relu'))
     model.add(MaxPooling2D(pool_size=(2,2)))
-    model.add(Dropout(0.3))
+    # model.add(Dropout(0.3))
 
     model.add(Conv2D(128, conv_size, activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.4))
+    # model.add(Dropout(0.4))
 
     model.add(Conv2D(256, conv_size, activation='relu'))
     model.add(Dropout(0.5))
@@ -282,6 +282,9 @@ if __name__ == "__main__":
         result_indices = sss.split(np.asarray(test_indices), np.asarray(labels)[test_indices])
 
         test_indices, validation_indices = next(result_indices)
+        print('train indices:', train_indices)
+        print('validation indices:', validation_indices)
+        print('test indices:', test_indices)
 
         model_checkpoint = ModelCheckpoint(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5", monitor="val_sensitivity", verbose=0, save_best_only=True, save_weights_only=False, mode='auto')
 
