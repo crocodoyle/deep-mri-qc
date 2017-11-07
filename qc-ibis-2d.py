@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import StratifiedShuffleSplit, StratifiedKFold
 from sklearn.metrics import confusion_matrix
 
-from vis.utils import find_layer_idx
+# from vis.utils import find_layer_idx
 
 
 workdir = '/home/users/adoyle/deepqc/IBIS'
@@ -245,10 +245,8 @@ def plot_graphs(hist, results_dir, fold_num):
     plt.savefig(results_dir + 'training_metrics_fold' + str(fold_num) + '.png', bbox_inches='tight')
     plt.close()
 
-def visualize():
-    layer_idx = utils.find_layer_idx(model, 'predictions')
-
-
+# def visualize():
+#     layer_idx = utils.find_layer_idx(model, 'predictions')
 
 if __name__ == "__main__":
 
