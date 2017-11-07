@@ -23,7 +23,8 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import StratifiedShuffleSplit, StratifiedKFold
 from sklearn.metrics import confusion_matrix
 
-import argparse
+from vis.utils import find_layer_idx
+
 
 workdir = '/home/users/adoyle/deepqc/IBIS'
 datadir = '/data1/data/IBIS/'
@@ -244,6 +245,10 @@ def plot_graphs(hist, results_dir, fold_num):
     plt.savefig(results_dir + 'training_metrics_fold' + str(fold_num) + '.png', bbox_inches='tight')
     plt.close()
 
+def visualize():
+    layer_idx = utils.find_layer_idx(model, 'predictions')
+
+
 
 if __name__ == "__main__":
 
@@ -280,11 +285,12 @@ if __name__ == "__main__":
 
         test_indices, validation_indices = next(result_indices)
 
-        model_checkpoint = ModelCheckpoint(results_dir + "best_model" + "_fold_" + str(k) + ".hdf5", monitor="val_sensitivity", verbose=0, save_best_only=True, save_weights_only=False, mode='auto')
+        model_checkpoint = ModelCheckpoint(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5", monitor="val_sensitivity", verbose=0, save_best_only=True, save_weights_only=False, mode='auto')
 
         hist = model.fit_generator(batch(train_indices, batch_size, True), len(train_indices)//batch_size, epochs=400, validation_data=batch(validation_indices, batch_size), validation_steps=len(validation_indices)//batch_size, callbacks=[model_checkpoint], class_weight = {0:.7, 1:.3})
 
-        model.load_weights(results_dir + "best_model" + "_fold_" + str(k) + ".hdf5")
+        model.load_weights(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5")
+        model.save(results_dir + 'ibis_qc_model' + str(k) + '.hdf5')
 
         metrics = model.evaluate_generator(batch(test_indices, batch_size, True), len(test_indices)//32+1)
 
@@ -294,7 +300,8 @@ if __name__ == "__main__":
         plot_graphs(hist, results_dir, k)
 
         for metric_name, score in zip(model.metrics_names, metrics):
-            score[metric_name].append(score)
+            scores[metric_name].append(score)
+
 
     for metric in model.metrics_names:
         print(metric, np.mean(scores[metric]))
