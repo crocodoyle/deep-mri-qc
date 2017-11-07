@@ -1,7 +1,7 @@
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Activation, Conv2D, MaxPooling2D, Flatten, BatchNormalization, Dropout
+from keras.layers import Dense, Conv2D, MaxPooling2D, Flatten, BatchNormalization, Dropout
 from keras.optimizers import SGD
-from keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
+from keras.callbacks import ModelCheckpoint
 
 import numpy as np
 import h5py
@@ -12,6 +12,7 @@ import nibabel as nib
 from dltk.core.io.preprocessing import normalise_zero_one, resize_image_with_crop_or_pad
 from custom_loss import sensitivity, specificity
 
+from collections import defaultdict
 
 import pickle as pkl
 
@@ -19,7 +20,7 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 
-from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.model_selection import StratifiedShuffleSplit, StratifiedKFold
 from sklearn.metrics import confusion_matrix
 
 import argparse
@@ -226,7 +227,27 @@ def test_images(model, test_indices, save_imgs=True):
 
     return sensitivity, specificity
 
+def plot_graphs(hist, results_dir, fold_num):
+    epoch_num = range(len(hist.history['acc']))
+
+    plt.clf()
+    plt.plot(epoch_num, hist.history['acc'], label='Training Accuracy')
+    plt.plot(epoch_num, hist.history['val_acc'], label="Validation Accuracy")
+    plt.plot(epoch_num, hist.history['sensitivity'], label='Training Sensitivity')
+    plt.plot(epoch_num, hist.history['val_sensitivity'], label='Validation Sensitivity')
+    plt.plot(epoch_num, hist.history['specificity'], label='Training Specificity')
+    plt.plot(epoch_num, hist.history['val_specificity'], label='Validation Specificity')
+
+    plt.legend(shadow=True)
+    plt.xlabel("Training Epoch Number")
+    plt.ylabel("Metric Value")
+    plt.savefig(results_dir + 'training_metrics_fold' + str(fold_num) + '.png', bbox_inches='tight')
+    plt.close()
+
+
 if __name__ == "__main__":
+
+    batch_size = 32
 
     try:
         experiment_number = pkl.load(open(workdir + 'experiment_number.pkl', 'rb'))
@@ -244,62 +265,37 @@ if __name__ == "__main__":
 
     indices, labels = make_ibis_qc()
 
-    sss = StratifiedShuffleSplit(n_splits=1, test_size=0.3)
-    result_indices = sss.split(np.asarray(indices), np.asarray(labels))
-    train_indices, test_indices = next(result_indices)
-
-    sss2 = StratifiedShuffleSplit(n_splits=1, test_size=0.5)
-    result_indices = sss2.split(np.asarray(test_indices), np.asarray(labels)[test_indices])
-
-    test_indices, validation_indices = next(result_indices)
+    skf = StratifiedKFold(n_splits=4)
 
     model = qc_model()
     model.summary()
 
-    model_checkpoint = ModelCheckpoint(results_dir + "best_model.hdf5", monitor="val_acc", verbose=0, save_best_only=True, save_weights_only=False, mode='auto')
+    scores = defaultdict()
+    for metric in model.metrics_names:
+        scores[metric] = []
 
-    hist = model.fit_generator(batch(train_indices, 32, True), len(train_indices), epochs=400, validation_data=batch(validation_indices, 32), validation_steps=len(validation_indices), callbacks=[model_checkpoint], class_weight = {0:.7, 1:.3})
+    for k, (train_indices, test_indices) in enumerate(skf.split(np.asarray(indices), np.asarray(labels))):
+        sss = StratifiedShuffleSplit(n_splits=1, test_size=0.5, random_state=42)
+        result_indices = sss.split(np.asarray(test_indices), np.asarray(labels)[test_indices])
 
-    model.load_weights(results_dir + 'best_model.hdf5')
+        test_indices, validation_indices = next(result_indices)
 
-    # test_scores = []
-    # sensitivities = []
-    # specificities = []
-    #
-    # for test_run in range(-5, 5):
-    #     score = model.evaluate_generator(batch(test_indices, 2, True), len(test_indices))
-    #     test_scores.append(score[1])
-    #
-    #
-    #     if test_run == 0:
-    #         sens, spec = test_images(model, test_indices, labels, filenames, test_run, save_imgs=True)
-    #     else:
-    #         sens, spec = test_images(model, test_indices, labels, filenames, test_run, save_imgs=False)
-    #     print("sensitivity:", sens)
-    #     print("specificity:", spec)
-    #
-    #     sensitivities.append(sens)
-    #     specificities.append(spec)
-    #
-    # print('scores:', test_scores)
-    # print('average score', np.mean(test_scores))
-    # print('average sensitivity', np.mean(sensitivities))
-    # print('average specificity', np.mean(specificities))
-    #
-    #
-    # print(model.metrics_names)
-    #
-    # print(hist.history.keys())
-    #
-    # epoch_num = range(len(hist.history['acc']))
-    # train_error = np.subtract(1,np.array(hist.history['acc']))
-    # test_error  = np.subtract(1,np.array(hist.history['val_acc']))
-    #
-    # plt.clf()
-    # plt.plot(epoch_num, train_error, label='Training Error')
-    # plt.plot(epoch_num, test_error, label="Validation Error")
-    # plt.legend(shadow=True)
-    # plt.xlabel("Training Epoch Number")
-    # plt.ylabel("Error")
-    # plt.savefig('results.png')
-    # plt.close()
+        model_checkpoint = ModelCheckpoint(results_dir + "best_model" + "_fold_" + str(k) + ".hdf5", monitor="val_sensitivity", verbose=0, save_best_only=True, save_weights_only=False, mode='auto')
+
+        hist = model.fit_generator(batch(train_indices, batch_size, True), len(train_indices)//batch_size, epochs=400, validation_data=batch(validation_indices, batch_size), validation_steps=len(validation_indices)//batch_size, callbacks=[model_checkpoint], class_weight = {0:.7, 1:.3})
+
+        model.load_weights(results_dir + "best_model" + "_fold_" + str(k) + ".hdf5")
+
+        metrics = model.evaluate_generator(batch(test_indices, batch_size, True), len(test_indices)//32+1)
+
+        print(model.metrics_names)
+        print(metrics)
+
+        plot_graphs(hist, results_dir, k)
+
+        for metric_name, score in zip(model.metrics_names, metrics):
+            score[metric_name].append(score)
+
+
+    for metric in model.metrics_names:
+        print(metric, np.mean(scores[metric]))
