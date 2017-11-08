@@ -273,7 +273,7 @@ if __name__ == "__main__":
     model = qc_model()
     model.summary()
 
-    scores = defaultdict()
+    scores = {}
     for metric in model.metrics_names:
         scores[metric] = []
 
@@ -286,7 +286,7 @@ if __name__ == "__main__":
         print('validation indices:', validation_indices)
         print('test indices:', test_indices)
 
-        model_checkpoint = ModelCheckpoint(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5", monitor="val_sensitivity", verbose=0, save_best_only=True, save_weights_only=False, mode='auto')
+        model_checkpoint = ModelCheckpoint(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5", monitor="val_sensitivity", verbose=0, save_best_only=True, save_weights_only=False, mode='max')
 
         hist = model.fit_generator(batch(train_indices, batch_size, True), len(train_indices)//batch_size, epochs=400, validation_data=batch(validation_indices, batch_size), validation_steps=len(validation_indices)//batch_size, callbacks=[model_checkpoint], class_weight = {0:.7, 1:.3})
 
