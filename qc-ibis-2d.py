@@ -304,6 +304,7 @@ if __name__ == "__main__":
             scores[metric_name].append(score)
 
 
+    print(metric, scores[metric])
     for metric in model.metrics_names:
         print(metric, np.mean(scores[metric]))
 
