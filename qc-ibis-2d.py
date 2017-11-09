@@ -262,7 +262,7 @@ def predict_and_visualize(model, indices, results_dir):
         output_writer.writerow(['Filename', 'Probability'])
 
         for index in indices:
-            img = images[index, ...][np.newaxis, ..., np.newaxis]
+            img = images[index, target_size[0]//2, ..., ...][np.newaxis, ..., np.newaxis]
             label = labels[index, ...]
 
             prediction = model.predict(img, batch_size=1)
