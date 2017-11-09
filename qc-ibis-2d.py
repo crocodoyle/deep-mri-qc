@@ -285,7 +285,7 @@ def predict_and_visualize(model, indices, results_dir):
 
         heatmap = np.uint8(cm.jet(grads)[...,:3]*255)
         gray = np.uint8(cm.gray(img[0, ...,:1]*255))
-        print('image shape, heatmap shape', img.shape, heatmap.shape)
+        print('image shape, heatmap shape', gray.shape, heatmap.shape)
 
         plt.imshow(overlay(heatmap, gray))
 
