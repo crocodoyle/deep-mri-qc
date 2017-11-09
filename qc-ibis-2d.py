@@ -23,6 +23,10 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import StratifiedShuffleSplit, StratifiedKFold
 from sklearn.metrics import confusion_matrix
 
+from vis.visualization import visualize_cam, overlay
+from vis.utils import utils
+from keras import activations
+
 # from vis.utils import find_layer_idx
 
 workdir = '/home/users/adoyle/deepqc/IBIS'
@@ -128,7 +132,7 @@ def qc_model():
     model.add(Dense(256, activation='relu'))
     model.add(Dropout(0.5))
     
-    model.add(Dense(nb_classes, activation='softmax'))
+    model.add(Dense(nb_classes, activation='softmax', name='predictions'))
 
     sgd = SGD(lr=1e-3, momentum=0.9, decay=1e-6, nesterov=True)
 
@@ -245,8 +249,59 @@ def plot_graphs(hist, results_dir, fold_num):
     plt.savefig(results_dir + 'training_metrics_fold' + str(fold_num) + '.png', bbox_inches='tight')
     plt.close()
 
-# def visualize():
-#     layer_idx = utils.find_layer_idx(model, 'predictions')
+def predict_and_visualize(model, indices, results_dir):
+    f = h5py.File(workdir + 'ibis.hdf5', 'r')
+    images = f['ibis_t1']
+    labels = f['qc_label']
+    filenames = f['filename']
+
+    predictions = []
+
+    with open(results_dir + 'test_images.csv', 'w') as output_file:
+        output_writer = csv.writer(output_file)
+        output_writer.writerow('Filename', 'Probability ')
+
+        for index in indices:
+            img = images[index, ...][np.newaxis, ..., np.newaxis]
+            label = labels[index, ...][np.newaxis, ..., np.newaxis]
+
+            prediction = model.predict(img, batch_size=1)
+            print('probs:', prediction[0])
+
+            output_writer.writerow(filenames[index, ...], prediction[0][0], np.argmax(labels[index, ...]))
+
+            predictions.append(np.argmax(prediction[0]))
+
+
+    for index, prediction in zip(indices, predictions):
+
+        layer_idx = utils.find_layer_idx(model, 'predictions')
+        model.layers[layer_idx].activation = activations.linear
+        model = utils.apply_modifications(model)
+
+        grads = visualize_cam(model, layer_idx, filter_indices=prediction, seed_input=img, backprop_modifier='guided')
+
+        heatmap = np.uint8(plt.colormaps.jet(grads)[...,:3]*255)
+        plt.imshow(overlay(heatmap, img))
+
+        actual = np.argmax(labels[index, ...])
+        if prediction == actual:
+            decision = '_right_'
+        else:
+            decision = '_wrong_'
+
+        if actual == 1:
+            qc_status = 'PASS'
+        else:
+            qc_status = 'FAIL'
+
+        filename = qc_status + decision + filenames[index, ...][:-4] + '.png'
+
+        plt.axis('off')
+        plt.savefig(results_dir + filename, bbox_inches='tight')
+
+
+        f.close()
 
 if __name__ == "__main__":
 
@@ -266,7 +321,16 @@ if __name__ == "__main__":
 
     pkl.dump(experiment_number, open(workdir + 'experiment_number.pkl', 'wb'))
 
-    indices, labels = make_ibis_qc()
+    remake = True
+    if remake:
+        indices, labels = make_ibis_qc()
+        pkl.dump(indices, open(workdir + 'valid_indices.pkl', 'wb'))
+        pkl.dump(indices, open(workdir + 'qc_labels.pkl', 'wb'))
+    else:
+        indices = pkl.load(open(workdir + 'valid_indices.pkl', 'rb'))
+        labels = pkl.load(open(workdir + 'qc_labels.pkl', 'rb'))
+
+
 
     skf = StratifiedKFold(n_splits=4)
 
@@ -303,9 +367,12 @@ if __name__ == "__main__":
         for metric_name, score in zip(model.metrics_names, metrics):
             scores[metric_name].append(score)
 
+        predict_and_visualize(model, test_indices, results_dir)
 
     print(metric, scores[metric])
     for metric in model.metrics_names:
         print(metric, np.mean(scores[metric]))
+
+    print(scores)
 
     print('This experiment is brought to you by the number:', experiment_number)
