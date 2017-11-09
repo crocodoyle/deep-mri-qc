@@ -285,11 +285,11 @@ def predict_and_visualize(model, indices, results_dir):
 
         heatmap = np.uint8(cm.jet(grads)[:,:,0,:3]*255)
         gray = np.uint8(img[0, :, :, :]*255)
-        gray3 = [[[gray, gray, gray]]]
-
+        gray3 = np.dstack((gray,)*3)
+        
         print('image shape, heatmap shape', gray3.shape, heatmap.shape)
 
-        plt.imshow(overlay(heatmap, gray3))
+        plt.imshow(overlay(heatmap, gray3, alpha=0.25))
 
         actual = np.argmax(labels[index, ...])
         if prediction == actual:
