@@ -284,7 +284,8 @@ def predict_and_visualize(model, indices, results_dir):
         grads = visualize_cam(model, layer_idx, filter_indices=prediction, seed_input=img[0, ...], backprop_modifier='guided')
 
         heatmap = np.uint8(cm.jet(grads)[:,:,0,:3]*255)
-        gray = np.uint8(cm.gray(img[0, :, :, :3]*255))[:, :, 0, :3]
+        gray = np.uint8(cm.gray(np.stack((img[0, :, :, :],)*3)*255))
+
         print('image shape, heatmap shape', gray.shape, heatmap.shape)
 
         plt.imshow(overlay(heatmap, gray))
@@ -305,9 +306,9 @@ def predict_and_visualize(model, indices, results_dir):
 
         plt.axis('off')
         plt.savefig(results_dir + filename, bbox_inches='tight')
+        plt.clf()
 
-
-        f.close()
+    f.close()
 
 if __name__ == "__main__":
     start_time = time.time()
