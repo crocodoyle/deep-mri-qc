@@ -6,7 +6,7 @@ from keras.callbacks import ModelCheckpoint
 import numpy as np
 import h5py
 
-import os, csv
+import os, csv, time
 import nibabel as nib
 
 from dltk.core.io.preprocessing import normalise_zero_one, resize_image_with_crop_or_pad
@@ -304,6 +304,7 @@ def predict_and_visualize(model, indices, results_dir):
         f.close()
 
 if __name__ == "__main__":
+    start_time = time.time()
 
     batch_size = 32
 
@@ -376,4 +377,5 @@ if __name__ == "__main__":
 
     print(scores)
 
+    print('time taken:', (time.time() - start_time) / 60, 'minutes')
     print('This experiment is brought to you by the number:', experiment_number)
