@@ -281,12 +281,12 @@ def predict_and_visualize(model, indices, results_dir):
         model.layers[layer_idx].activation = activations.linear
         model = utils.apply_modifications(model)
 
-        grads = visualize_cam(model, layer_idx, filter_indices=prediction, seed_input=img[0, ...], backprop_modifier='guided')
+        grads = visualize_cam(model, layer_idx, filter_indices=prediction, seed_input=img[0, ..., 0], backprop_modifier='guided')
 
         heatmap = np.uint8(cm.jet(grads)[...,:3]*255)
         print('image shape, heatmap shape', img.shape, heatmap.shape)
 
-        plt.imshow(overlay(heatmap, img[0, ...]))
+        plt.imshow(overlay(heatmap, img[0, ..., 0]))
 
         actual = np.argmax(labels[index, ...])
         if prediction == actual:
