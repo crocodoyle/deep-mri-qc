@@ -330,7 +330,8 @@ if __name__ == "__main__":
         indices = pkl.load(open(workdir + 'valid_indices.pkl', 'rb'))
         labels = pkl.load(open(workdir + 'qc_labels.pkl', 'rb'))
 
-
+    print('indices', indices)
+    print('labels', labels)
 
     skf = StratifiedKFold(n_splits=4)
 
