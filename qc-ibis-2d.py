@@ -275,7 +275,7 @@ def predict_and_visualize(model, indices, results_dir):
             predictions.append(np.argmax(prediction[0]))
 
 
-    for index, prediction in zip(indices, predictions):
+    for i, (index, prediction) in enumerate(zip(indices, predictions)):
 
         layer_idx = utils.find_layer_idx(model, 'predictions')
         model.layers[layer_idx].activation = activations.linear
@@ -300,7 +300,8 @@ def predict_and_visualize(model, indices, results_dir):
         else:
             qc_status = 'FAIL'
 
-        filename = qc_status + decision + filenames[index, ...][:-4] + '.png'
+        # filename = qc_status + decision + filenames[index, ...][:-4] + '.png'
+        filename = str(i) + decision + qc_status + '.png'
 
         plt.axis('off')
         plt.savefig(results_dir + filename, bbox_inches='tight')
