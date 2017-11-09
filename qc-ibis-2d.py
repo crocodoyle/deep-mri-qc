@@ -289,7 +289,7 @@ def predict_and_visualize(model, indices, results_dir):
         print('image shape, heatmap shape', gray.shape, heatmap.shape)
 
         # plt.imshow(overlay(heatmap, gray))
-        plt.imshow(gray)
+        plt.imshow(img[0, :, :, 0])
 
         actual = np.argmax(labels[index, ...])
         if prediction == actual:
