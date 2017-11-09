@@ -138,7 +138,8 @@ def qc_model():
 
     model.compile(loss='categorical_crossentropy',
                   optimizer=sgd,
-                  metrics=["accuracy", sensitivity, specificity])
+                  #metrics=["accuracy", sensitivity, specificity])
+                  metrics = ["accuracy"])
 
     return model
 
@@ -238,10 +239,10 @@ def plot_graphs(hist, results_dir, fold_num):
     plt.clf()
     plt.plot(epoch_num, hist.history['acc'], label='Training Accuracy')
     plt.plot(epoch_num, hist.history['val_acc'], label="Validation Accuracy")
-    plt.plot(epoch_num, hist.history['sensitivity'], label='Training Sensitivity')
-    plt.plot(epoch_num, hist.history['val_sensitivity'], label='Validation Sensitivity')
-    plt.plot(epoch_num, hist.history['specificity'], label='Training Specificity')
-    plt.plot(epoch_num, hist.history['val_specificity'], label='Validation Specificity')
+    # plt.plot(epoch_num, hist.history['sensitivity'], label='Training Sensitivity')
+    # plt.plot(epoch_num, hist.history['val_sensitivity'], label='Validation Sensitivity')
+    # plt.plot(epoch_num, hist.history['specificity'], label='Training Specificity')
+    # plt.plot(epoch_num, hist.history['val_specificity'], label='Validation Specificity')
 
     plt.legend(shadow=True)
     plt.xlabel("Training Epoch Number")
@@ -352,7 +353,7 @@ if __name__ == "__main__":
         print('validation indices:', validation_indices)
         print('test indices:', test_indices)
 
-        model_checkpoint = ModelCheckpoint(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5", monitor="val_sensitivity", verbose=0, save_best_only=True, save_weights_only=False, mode='max')
+        model_checkpoint = ModelCheckpoint(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5", monitor="val_acc", verbose=0, save_best_only=True, save_weights_only=False, mode='max')
 
         hist = model.fit_generator(batch(train_indices, batch_size, True), len(train_indices)//batch_size, epochs=50, validation_data=batch(validation_indices, batch_size), validation_steps=len(validation_indices)//batch_size, callbacks=[model_checkpoint], class_weight = {0:.7, 1:.3})
 
