@@ -281,10 +281,12 @@ def predict_and_visualize(model, indices, results_dir):
         model.layers[layer_idx].activation = activations.linear
         model = utils.apply_modifications(model)
 
-        grads = visualize_cam(model, layer_idx, filter_indices=prediction, seed_input=img, backprop_modifier='guided')
+        grads = visualize_cam(model, layer_idx, filter_indices=prediction, seed_input=img[0, ...], backprop_modifier='guided')
+
+        print('image shape, heatmap shape', img.shape, heatmap.shape)
 
         heatmap = np.uint8(cm.jet(grads)[...,:3]*255)
-        plt.imshow(overlay(heatmap, img))
+        plt.imshow(overlay(heatmap, img[0, ...]))
 
         actual = np.argmax(labels[index, ...])
         if prediction == actual:
@@ -356,7 +358,7 @@ if __name__ == "__main__":
 
         model_checkpoint = ModelCheckpoint(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5", monitor="val_acc", verbose=0, save_best_only=True, save_weights_only=False, mode='max')
 
-        hist = model.fit_generator(batch(train_indices, batch_size, True), len(train_indices)//batch_size, epochs=50, validation_data=batch(validation_indices, batch_size), validation_steps=len(validation_indices)//batch_size, callbacks=[model_checkpoint], class_weight = {0:.7, 1:.3})
+        hist = model.fit_generator(batch(train_indices, batch_size, True), len(train_indices)//batch_size, epochs=50, validation_data=batch(validation_indices, batch_size), validation_steps=len(validation_indices)//batch_size+1, callbacks=[model_checkpoint], class_weight = {0:.7, 1:.3})
 
         model.load_weights(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5")
         model.save(results_dir + 'ibis_qc_model' + str(k) + '.hdf5')
