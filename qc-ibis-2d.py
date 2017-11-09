@@ -283,9 +283,9 @@ def predict_and_visualize(model, indices, results_dir):
 
         grads = visualize_cam(model, layer_idx, filter_indices=prediction, seed_input=img[0, ...], backprop_modifier='guided')
 
+        heatmap = np.uint8(cm.jet(grads)[...,:3]*255)
         print('image shape, heatmap shape', img.shape, heatmap.shape)
 
-        heatmap = np.uint8(cm.jet(grads)[...,:3]*255)
         plt.imshow(overlay(heatmap, img[0, ...]))
 
         actual = np.argmax(labels[index, ...])
