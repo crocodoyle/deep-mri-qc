@@ -259,16 +259,16 @@ def predict_and_visualize(model, indices, results_dir):
 
     with open(results_dir + 'test_images.csv', 'w') as output_file:
         output_writer = csv.writer(output_file)
-        output_writer.writerow('Filename', 'Probability ')
+        output_writer.writerow(['Filename', 'Probability'])
 
         for index in indices:
             img = images[index, ...][np.newaxis, ..., np.newaxis]
-            label = labels[index, ...][np.newaxis, ..., np.newaxis]
+            label = labels[index, ...]
 
             prediction = model.predict(img, batch_size=1)
             print('probs:', prediction[0])
 
-            output_writer.writerow(filenames[index, ...], prediction[0][0], np.argmax(labels[index, ...]))
+            output_writer.writerow(filenames[index, ...], prediction[0][0], np.argmax(label))
 
             predictions.append(np.argmax(prediction[0]))
 
