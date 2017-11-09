@@ -19,6 +19,7 @@ import pickle as pkl
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 
 from sklearn.model_selection import StratifiedShuffleSplit, StratifiedKFold
 from sklearn.metrics import confusion_matrix
@@ -282,7 +283,7 @@ def predict_and_visualize(model, indices, results_dir):
 
         grads = visualize_cam(model, layer_idx, filter_indices=prediction, seed_input=img, backprop_modifier='guided')
 
-        heatmap = np.uint8(plt.colormaps.jet(grads)[...,:3]*255)
+        heatmap = np.uint8(cm.jet(grads)[...,:3]*255)
         plt.imshow(overlay(heatmap, img))
 
         actual = np.argmax(labels[index, ...])
