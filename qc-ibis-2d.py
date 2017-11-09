@@ -322,7 +322,7 @@ if __name__ == "__main__":
 
     pkl.dump(experiment_number, open(workdir + 'experiment_number.pkl', 'wb'))
 
-    remake = True
+    remake = False
     if remake:
         indices, labels = make_ibis_qc()
         pkl.dump(indices, open(workdir + 'valid_indices.pkl', 'wb'))
