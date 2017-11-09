@@ -29,8 +29,8 @@ from keras import activations
 
 # from vis.utils import find_layer_idx
 
-workdir = '/home/users/adoyle/deepqc/IBIS'
-datadir = '/data1/data/IBIS/'
+workdir = '/home/users/adoyle/deepqc/IBIS/'
+datadir = '/data1/users/adoyle/IBIS/'
 
 label_file = datadir + 't1_ibis_QC_labels.csv'
 
