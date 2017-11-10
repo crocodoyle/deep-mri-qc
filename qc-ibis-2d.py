@@ -320,7 +320,7 @@ def verify_hdf5(indices, results_dir):
     for index in indices:
         img = images[index, target_size[0]//2, :, :]
         label = labels[index, ...]
-        filename = filename[index, ...]
+        filename = filenames[index, ...]
 
 
         plt.imshow(img, cmap='gray')
