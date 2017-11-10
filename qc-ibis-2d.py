@@ -94,11 +94,11 @@ def make_ibis_qc():
 def qc_model():
     nb_classes = 2
 
-    conv_size = (3, 3)
+    conv_size = (5, 5)
 
     model = Sequential()
 
-    model.add(Conv2D(16, conv_size, activation='relu', input_shape=(target_size[1], target_size[2], 1)))
+    model.add(Conv2D(32, conv_size, activation='relu', input_shape=(target_size[1], target_size[2], 1)))
     model.add(BatchNormalization())
     # model.add(MaxPooling2D(pool_size=pool_size))
     model.add(Dropout(0.1))
@@ -389,9 +389,9 @@ if __name__ == "__main__":
 
         # verify_hdf5(reversed(train_indices), results_dir)
 
-        model_checkpoint = ModelCheckpoint(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5", monitor="val_acc", verbose=0, save_best_only=True, save_weights_only=False, mode='max')
+        model_checkpoint = ModelCheckpoint(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5", monitor="val_sensitivity", verbose=0, save_best_only=True, save_weights_only=False, mode='max')
 
-        hist = model.fit_generator(batch(train_indices, batch_size, True), len(train_indices)//batch_size, epochs=100, validation_data=batch(validation_indices, batch_size), validation_steps=len(validation_indices)//batch_size+1, callbacks=[model_checkpoint], class_weight = {0:.9, 1:.1})
+        hist = model.fit_generator(batch(train_indices, batch_size, True), np.ceil(len(train_indices)/batch_size), epochs=100, validation_data=batch(validation_indices, batch_size), validation_steps=np.ceil(len(validation_indices)//batch_size), callbacks=[model_checkpoint], class_weight = {0:.9, 1:.1})
 
         model.load_weights(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5")
         model.save(results_dir + 'ibis_qc_model' + str(k) + '.hdf5')
