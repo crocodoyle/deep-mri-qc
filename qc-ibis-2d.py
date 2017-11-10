@@ -260,16 +260,16 @@ def predict_and_visualize(model, indices, results_dir):
 
     with open(results_dir + 'test_images.csv', 'w') as output_file:
         output_writer = csv.writer(output_file)
-        output_writer.writerow(['Filename', 'Probability'])
+        output_writer.writerow(['Filename', 'Pass Probability', 'Actual'])
 
         for index in indices:
             img = images[index, target_size[0]//2, ...][np.newaxis, ..., np.newaxis]
             label = labels[index, ...]
 
             prediction = model.predict(img, batch_size=1)
-            print('index:', index, 'probs:', prediction)
+            print('index:', index, 'probs:', prediction[0])
 
-            output_writer.writerow([filenames[index, ...][2:-1], prediction[0][0], np.argmax(label)])
+            output_writer.writerow([filenames[index, ...][2:-1], prediction[0][1], np.argmax(label)])
 
             predictions.append(np.argmax(prediction[0]))
 
@@ -282,6 +282,7 @@ def predict_and_visualize(model, indices, results_dir):
 
 
     for i, (index, prediction) in enumerate(zip(indices, predictions)):
+        img = images[index, target_size[0] // 2, ...][np.newaxis, ..., np.newaxis]
         grads = visualize_cam(model, layer_idx, filter_indices=prediction, seed_input=img[0, ...], backprop_modifier='guided')
 
         heatmap = np.uint8(cm.jet(grads)[:,:,0,:3]*255)
@@ -374,6 +375,7 @@ if __name__ == "__main__":
         scores[metric] = []
 
     for k, (train_indices, test_indices) in enumerate(skf.split(np.asarray(indices), labels)):
+        model = qc_model()
 
         validation_indices = test_indices[::2]
         test_indices = test_indices[1::2]
@@ -390,7 +392,7 @@ if __name__ == "__main__":
 
         model_checkpoint = ModelCheckpoint(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5", monitor="val_sensitivity", verbose=0, save_best_only=True, save_weights_only=False, mode='max')
 
-        hist = model.fit_generator(batch(train_indices, batch_size, True), np.ceil(len(train_indices)/batch_size), epochs=20, validation_data=batch(validation_indices, batch_size), validation_steps=np.ceil(len(validation_indices)//batch_size), callbacks=[model_checkpoint], class_weight = {0:.9, 1:.1})
+        hist = model.fit_generator(batch(train_indices, batch_size, True), np.ceil(len(train_indices)/batch_size), epochs=400, validation_data=batch(validation_indices, batch_size), validation_steps=np.ceil(len(validation_indices)//batch_size), callbacks=[model_checkpoint], class_weight = {0:10, 1:1})
 
         model.load_weights(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5")
         model.save(results_dir + 'ibis_qc_model' + str(k) + '.hdf5')
