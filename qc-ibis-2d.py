@@ -375,14 +375,13 @@ if __name__ == "__main__":
         scores[metric] = []
 
     for k, (train_indices, test_indices) in enumerate(skf.split(np.asarray(indices), labels)):
-        sss = StratifiedShuffleSplit(n_splits=1, test_size=0.5, random_state=42)
+
+        validation_indices = test_indices[::2]
+        test_indices = test_indices[1::2]
 
         print(labels[test_indices])
         print(np.sum(labels[test_indices]))
         print(len(labels[test_indices]))
-
-        result_indices = sss.split(test_indices, labels[test_indices])
-        test_indices, validation_indices = next(result_indices)
 
         print('train indices:', len(train_indices), np.sum(labels[np.asarray(train_indices, dtype='uint8')]))
         print('validation indices:', len(validation_indices), np.sum(labels[np.asarray(validation_indices, dtype='uint8')]))
