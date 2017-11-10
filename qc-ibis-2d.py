@@ -315,7 +315,7 @@ def verify_hdf5(indices, results_dir):
     f = h5py.File(workdir + 'ibis.hdf5', 'r')
     images = f['ibis_t1']
     labels = f['qc_label']
-    filenames = f['filenames']
+    filenames = f['filename']
 
     for index in indices:
         img = images[index, target_size[0]//2, :, :]
