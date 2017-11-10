@@ -98,7 +98,7 @@ def qc_model():
 
     model = Sequential()
 
-    model.add(Conv2D(32, conv_size, activation='relu', input_shape=(target_size[1], target_size[2], 1)))
+    model.add(Conv2D(16, conv_size, activation='relu', input_shape=(target_size[1], target_size[2], 1)))
     model.add(BatchNormalization())
     # model.add(MaxPooling2D(pool_size=pool_size))
     model.add(Dropout(0.1))
@@ -267,9 +267,9 @@ def predict_and_visualize(model, indices, results_dir):
             label = labels[index, ...]
 
             prediction = model.predict(img, batch_size=1)
-            print('probs:', prediction[0])
+            print('probs:', prediction)
 
-            output_writer.writerow([filenames[index, ...], prediction[0][0], np.argmax(label)])
+            output_writer.writerow([filenames[index, ...][2:-1], prediction[0][0], np.argmax(label)])
 
             predictions.append(np.argmax(prediction[0]))
 
@@ -390,12 +390,12 @@ if __name__ == "__main__":
 
         model_checkpoint = ModelCheckpoint(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5", monitor="val_sensitivity", verbose=0, save_best_only=True, save_weights_only=False, mode='max')
 
-        hist = model.fit_generator(batch(train_indices, batch_size, True), np.ceil(len(train_indices)/batch_size), epochs=100, validation_data=batch(validation_indices, batch_size), validation_steps=np.ceil(len(validation_indices)//batch_size), callbacks=[model_checkpoint], class_weight = {0:.9, 1:.1})
+        hist = model.fit_generator(batch(train_indices, batch_size, True), np.ceil(len(train_indices)/batch_size), epochs=20, validation_data=batch(validation_indices, batch_size), validation_steps=np.ceil(len(validation_indices)//batch_size), callbacks=[model_checkpoint], class_weight = {0:.9, 1:.1})
 
         model.load_weights(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5")
         model.save(results_dir + 'ibis_qc_model' + str(k) + '.hdf5')
 
-        metrics = model.evaluate_generator(batch(test_indices, batch_size, True), len(test_indices)//32+1)
+        metrics = model.evaluate_generator(batch(test_indices, batch_size, True), np.ceil(len(test_indices)/batch_size))
 
         print(model.metrics_names)
         print(metrics)
