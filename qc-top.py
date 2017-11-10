@@ -391,21 +391,19 @@ if __name__ == "__main__":
 
     abide_indices = pickle.load(open(workdir + 'abide_indices.pkl', 'rb'))
     ds030_indices = pickle.load(open(workdir + 'ds030_indices.pkl', 'rb'))
+    ibis_indices = pickle.load(open(workdir + 'ibis_indices.pkl', 'rb'))
+    ping_indices = pickle.load(open(workdir + 'ping_indices.pkl', 'rb'))
 
     f = h5py.File(workdir + 'deepqc.hdf5', 'r')
 
-    # ping_indices = list(range(0, ping_end_index))
-    # abide_indices = list(range(ping_end_index, abide_end_index))
-    # ibis_indices = list(range(abide_end_index, ibis_end_index))
-    # ds030_indices = list(range(ibis_end_index, ds030_end_index))
 
     # print('ping:', ping_indices)
     # print('abide:', abide_indices)
     # print('ibis:', ibis_indices)
     # print('ds030', ds030_indices)
 
-    # train_indices = ping_indices + abide_indices + ibis_indices
-    train_indices = abide_indices
+    train_indices = ping_indices + abide_indices + ibis_indices
+    # train_indices = abide_indices
 
     # print('PING samples:', len(ping_indices))
     # print('ABIDE samples:', len(abide_indices))
