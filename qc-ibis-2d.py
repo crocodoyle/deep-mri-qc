@@ -311,6 +311,26 @@ def predict_and_visualize(model, indices, results_dir):
 
     f.close()
 
+def verify_hdf5(indices, results_dir):
+    f = h5py.File(workdir + 'ibis.hdf5', 'r')
+    images = f['ibis_t1']
+    labels = f['qc_label']
+    filenames = f['filenames']
+
+    for index in indices:
+        img = images[index, target_size[0]//2, :, :]
+        label = labels[index, ...]
+        filename = filename[index, ...]
+
+
+        plt.imshow(img, cmap='gray')
+        plt.xlabel(str(label))
+        plt.ylabel(str(filename))
+        plt.savefig(results_dir + 'img-' + str(index), bbox_inches='tight')
+
+    plt.close()
+
+
 if __name__ == "__main__":
     start_time = time.time()
 
@@ -359,6 +379,8 @@ if __name__ == "__main__":
         print('train indices:', train_indices)
         print('validation indices:', validation_indices)
         print('test indices:', test_indices)
+
+        verify_hdf5(train_indices, results_dir)
 
         model_checkpoint = ModelCheckpoint(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5", monitor="val_acc", verbose=0, save_best_only=True, save_weights_only=False, mode='max')
 
