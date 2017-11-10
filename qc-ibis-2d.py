@@ -139,8 +139,8 @@ def qc_model():
 
     model.compile(loss='categorical_crossentropy',
                   optimizer=sgd,
-                  #metrics=["accuracy", sensitivity, specificity])
-                  metrics = ["accuracy"])
+                  metrics=["accuracy", sensitivity, specificity])
+                  # metrics = ["accuracy"])
 
     return model
 
@@ -240,10 +240,10 @@ def plot_graphs(hist, results_dir, fold_num):
     plt.clf()
     plt.plot(epoch_num, hist.history['acc'], label='Training Accuracy')
     plt.plot(epoch_num, hist.history['val_acc'], label="Validation Accuracy")
-    # plt.plot(epoch_num, hist.history['sensitivity'], label='Training Sensitivity')
-    # plt.plot(epoch_num, hist.history['val_sensitivity'], label='Validation Sensitivity')
-    # plt.plot(epoch_num, hist.history['specificity'], label='Training Specificity')
-    # plt.plot(epoch_num, hist.history['val_specificity'], label='Validation Specificity')
+    plt.plot(epoch_num, hist.history['sensitivity'], label='Training Sensitivity')
+    plt.plot(epoch_num, hist.history['val_sensitivity'], label='Validation Sensitivity')
+    plt.plot(epoch_num, hist.history['specificity'], label='Training Specificity')
+    plt.plot(epoch_num, hist.history['val_specificity'], label='Validation Specificity')
 
     plt.legend(shadow=True)
     plt.xlabel("Training Epoch Number")
@@ -274,24 +274,25 @@ def predict_and_visualize(model, indices, results_dir):
 
             predictions.append(np.argmax(prediction[0]))
 
-
-    for i, (index, prediction) in enumerate(zip(indices, predictions)):
-
+        model.compile(loss='categorical_crossentropy',
+                      optimizer='sgd',
+                      metrics = ["accuracy"])
         layer_idx = utils.find_layer_idx(model, 'predictions')
         model.layers[layer_idx].activation = activations.linear
         model = utils.apply_modifications(model)
 
+
+    for i, (index, prediction) in enumerate(zip(indices, predictions)):
         grads = visualize_cam(model, layer_idx, filter_indices=prediction, seed_input=img[0, ...], backprop_modifier='guided')
 
         heatmap = np.uint8(cm.jet(grads)[:,:,0,:3]*255)
         gray = np.uint8(img[0, :, :, :]*255)
         gray3 = np.dstack((gray,)*3)
 
-        print('image shape, heatmap shape', gray3.shape, heatmap.shape)
-
         plt.imshow(overlay(heatmap, gray3, alpha=0.25))
 
         actual = np.argmax(labels[index, ...])
+        print('actual PASS/FAIL:', actual)
         if prediction == actual:
             decision = '_right_'
         else:
@@ -302,12 +303,12 @@ def predict_and_visualize(model, indices, results_dir):
         else:
             qc_status = 'FAIL'
 
-        # filename = qc_status + decision + filenames[index, ...][:-4] + '.png'
-        filename = str(i) + decision + qc_status + '.png'
+        filename = qc_status + decision + filenames[index, ...][2:-1][:-4] + '.png'
+        # filename = str(i) + decision + qc_status + '.png'
 
         plt.axis('off')
         plt.savefig(results_dir + filename, bbox_inches='tight')
-        plt.clf()
+        plt.close()
 
     f.close()
 
