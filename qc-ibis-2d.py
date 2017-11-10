@@ -104,7 +104,7 @@ def qc_model():
     model.add(Dropout(0.1))
 
     model.add(Conv2D(32, conv_size, activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
+    # model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.1))
 
     model.add(Conv2D(32, conv_size, activation='relu'))
