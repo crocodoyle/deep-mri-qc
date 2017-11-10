@@ -372,7 +372,8 @@ if __name__ == "__main__":
 
     for k, (train_indices, test_indices) in enumerate(skf.split(np.asarray(indices), labels)):
         sss = StratifiedShuffleSplit(n_splits=1, test_size=0.5, random_state=42)
-        result_indices = sss.split(np.asarray(test_indices), labels[np.asarray(test_indices, dtype='uint8')])
+
+        result_indices = sss.split(test_indices, np.asarray(labels, dtype='uint8')[np.asarray(test_indices, dtype='uint8')])
 
         test_indices, validation_indices = next(result_indices)
         print('train indices:', len(train_indices), np.sum(labels[np.asarray(train_indices)], dtype='float32')/len(train_indices))
