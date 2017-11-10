@@ -325,10 +325,9 @@ def verify_hdf5(indices, results_dir):
 
         plt.imshow(img, cmap='gray')
         plt.xlabel(str(label))
-        plt.ylabel(str(filename))
+        plt.ylabel(str(filename[2:-1]))
         plt.savefig(results_dir + 'img-' + str(index), bbox_inches='tight')
-
-    plt.close()
+        plt.close()
 
 
 if __name__ == "__main__":
@@ -376,15 +375,15 @@ if __name__ == "__main__":
         result_indices = sss.split(np.asarray(test_indices), np.asarray(labels)[test_indices])
 
         test_indices, validation_indices = next(result_indices)
-        print('train indices:', train_indices)
-        print('validation indices:', validation_indices)
-        print('test indices:', test_indices)
+        print('train indices:', len(train_indices))
+        print('validation indices:', len(validation_indices))
+        print('test indices:', len(test_indices))
 
-        verify_hdf5(train_indices, results_dir)
+        verify_hdf5(reversed(train_indices), results_dir)
 
         model_checkpoint = ModelCheckpoint(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5", monitor="val_acc", verbose=0, save_best_only=True, save_weights_only=False, mode='max')
 
-        hist = model.fit_generator(batch(train_indices, batch_size, True), len(train_indices)//batch_size, epochs=100, validation_data=batch(validation_indices, batch_size), validation_steps=len(validation_indices)//batch_size+1, callbacks=[model_checkpoint], class_weight = {0:.7, 1:.3})
+        hist = model.fit_generator(batch(train_indices, batch_size, True), len(train_indices)//batch_size, epochs=100, validation_data=batch(validation_indices, batch_size), validation_steps=len(validation_indices)//batch_size+1, callbacks=[model_checkpoint], class_weight = {0:.9, 1:.1})
 
         model.load_weights(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5")
         model.save(results_dir + 'ibis_qc_model' + str(k) + '.hdf5')
