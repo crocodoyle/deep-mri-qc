@@ -358,8 +358,8 @@ if __name__ == "__main__":
         indices = pkl.load(open(workdir + 'valid_indices.pkl', 'rb'))
         labels = pkl.load(open(workdir + 'qc_labels.pkl', 'rb'))
 
-    print('indices', indices)
-    print('labels', labels)
+    print('indices', np.asarray(indices))
+    print('labels', np.asarray(labels))
 
     skf = StratifiedKFold(n_splits=4)
 
@@ -370,16 +370,16 @@ if __name__ == "__main__":
     for metric in model.metrics_names:
         scores[metric] = []
 
-    for k, (train_indices, test_indices) in enumerate(skf.split(np.asarray(indices), np.asarray(labels))):
+    for k, (train_indices, test_indices) in enumerate(skf.split(np.asarray(indices), np.argmax(labels, axis=-1))):
         sss = StratifiedShuffleSplit(n_splits=1, test_size=0.5, random_state=42)
-        result_indices = sss.split(np.asarray(test_indices), np.asarray(labels)[test_indices])
+        result_indices = sss.split(np.asarray(test_indices), np.argmax(labels[test_indices], axis=-1))
 
         test_indices, validation_indices = next(result_indices)
-        print('train indices:', len(train_indices))
-        print('validation indices:', len(validation_indices))
-        print('test indices:', len(test_indices))
+        print('train indices:', len(train_indices), np.sum(labels[train_indices], dtype='float32')/len(train_indices))
+        print('validation indices:', len(validation_indices), np.sum(labels[validation_indices], dtype='float32')/len(validation_indices))
+        print('test indices:', len(test_indices), np.sum(labels[test_indices], dtype='float32')/len(test_indices))
 
-        verify_hdf5(reversed(train_indices), results_dir)
+        # verify_hdf5(reversed(train_indices), results_dir)
 
         model_checkpoint = ModelCheckpoint(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5", monitor="val_acc", verbose=0, save_best_only=True, save_weights_only=False, mode='max')
 
