@@ -376,9 +376,9 @@ if __name__ == "__main__":
         result_indices = sss.split(test_indices, np.asarray(labels, dtype='uint8')[np.asarray(test_indices, dtype='uint8')])
 
         test_indices, validation_indices = next(result_indices)
-        print('train indices:', len(train_indices), np.sum(labels[np.asarray(train_indices)], dtype='float32')/len(train_indices))
-        print('validation indices:', len(validation_indices), np.sum(labels[np.asarray(validation_indices)], dtype='float32')/len(validation_indices))
-        print('test indices:', len(test_indices), np.sum(labels[np.asarray(test_indices)], dtype='float32')/len(test_indices))
+        print('train indices:', len(train_indices), np.sum(labels[np.asarray(train_indices)], dtype='uint8')/len(train_indices))
+        print('validation indices:', len(validation_indices), np.sum(labels[np.asarray(validation_indices)])/len(validation_indices))
+        print('test indices:', len(test_indices), np.sum(labels[np.asarray(test_indices)])/len(test_indices))
 
         # verify_hdf5(reversed(train_indices), results_dir)
 
