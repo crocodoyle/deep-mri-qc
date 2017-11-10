@@ -267,7 +267,7 @@ def predict_and_visualize(model, indices, results_dir):
             label = labels[index, ...]
 
             prediction = model.predict(img, batch_size=1)
-            print('probs:', prediction)
+            print('index:', index, 'probs:', prediction)
 
             output_writer.writerow([filenames[index, ...][2:-1], prediction[0][0], np.argmax(label)])
 
