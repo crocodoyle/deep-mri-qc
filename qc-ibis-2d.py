@@ -138,9 +138,8 @@ def qc_model():
     sgd = SGD(lr=1e-3, momentum=0.9, decay=1e-6, nesterov=True)
 
     model.compile(loss='categorical_crossentropy',
-                  optimizer=sgd,
+                  optimizer='adam',
                   metrics=["accuracy", sensitivity, specificity])
-                  # metrics = ["accuracy"])
 
     return model
 
@@ -303,7 +302,7 @@ def predict_and_visualize(model, indices, results_dir):
         else:
             qc_status = 'FAIL'
 
-        filename = qc_status + decision + filenames[index, ...][2:-1][:-4] + '.png'
+        filename = qc_status + decision + str(filenames[index, ...])[2:-1][:-4] + '.png'
         # filename = str(i) + decision + qc_status + '.png'
 
         plt.axis('off')
