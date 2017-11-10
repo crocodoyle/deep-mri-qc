@@ -372,12 +372,12 @@ if __name__ == "__main__":
 
     for k, (train_indices, test_indices) in enumerate(skf.split(np.asarray(indices), labels)):
         sss = StratifiedShuffleSplit(n_splits=1, test_size=0.5, random_state=42)
-        result_indices = sss.split(np.asarray(test_indices), np.asarray(list(labels)[test_indices]))
+        result_indices = sss.split(np.asarray(test_indices), labels[np.asarray(test_indices)])
 
         test_indices, validation_indices = next(result_indices)
-        print('train indices:', len(train_indices), np.sum(labels[train_indices], dtype='float32')/len(train_indices))
-        print('validation indices:', len(validation_indices), np.sum(labels[validation_indices], dtype='float32')/len(validation_indices))
-        print('test indices:', len(test_indices), np.sum(labels[test_indices], dtype='float32')/len(test_indices))
+        print('train indices:', len(train_indices), np.sum(labels[np.asarray(train_indices)], dtype='float32')/len(train_indices))
+        print('validation indices:', len(validation_indices), np.sum(labels[np.asarray(validation_indices)], dtype='float32')/len(validation_indices))
+        print('test indices:', len(test_indices), np.sum(labels[np.asarray(test_indices)], dtype='float32')/len(test_indices))
 
         # verify_hdf5(reversed(train_indices), results_dir)
 
