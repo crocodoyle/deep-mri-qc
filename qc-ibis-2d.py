@@ -289,10 +289,10 @@ def predict_and_visualize(model, indices, results_dir):
         gray = np.uint8(img[0, :, :, :]*255)
         gray3 = np.dstack((gray,)*3)
 
-        plt.imshow(overlay(heatmap, gray3, alpha=0.25))
+        plt.imshow(overlay(heatmap, gray3, alpha=0.4))
 
         actual = np.argmax(labels[index, ...])
-        print('actual PASS/FAIL:', actual)
+        print('actual, predicted PASS/FAIL:', actual, prediction)
         if prediction == actual:
             decision = '_right_'
         else:
