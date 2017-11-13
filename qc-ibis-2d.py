@@ -1,6 +1,6 @@
 from keras.models import Sequential
 from keras.layers import Dense, Conv2D, MaxPooling2D, Flatten, BatchNormalization, Dropout
-from keras.optimizers import SGD
+from keras.optimizers import SGD, Adam
 from keras.callbacks import ModelCheckpoint
 
 import numpy as np
@@ -134,12 +134,6 @@ def qc_model():
     model.add(Dropout(0.5))
     
     model.add(Dense(nb_classes, activation='softmax', name='predictions'))
-
-    sgd = SGD(lr=1e-3, momentum=0.9, decay=1e-6, nesterov=True)
-
-    model.compile(loss='categorical_crossentropy',
-                  optimizer='adam',
-                  metrics=["accuracy", sensitivity, specificity])
 
     return model
 
@@ -377,6 +371,13 @@ if __name__ == "__main__":
     for k, (train_indices, test_indices) in enumerate(skf.split(np.asarray(indices), labels)):
         model = qc_model()
 
+        sgd = SGD(lr=1e-3, momentum=0.9, decay=1e-6, nesterov=True)
+        adam = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=1e-6)
+
+        model.compile(loss='categorical_crossentropy',
+                      optimizer=adam,
+                      metrics=["accuracy", sensitivity, specificity])
+
         validation_indices = test_indices[::2]
         test_indices = test_indices[1::2]
 
@@ -390,7 +391,7 @@ if __name__ == "__main__":
 
         # verify_hdf5(reversed(train_indices), results_dir)
 
-        model_checkpoint = ModelCheckpoint(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5", monitor="val_sensitivity", verbose=0, save_best_only=True, save_weights_only=False, mode='max')
+        model_checkpoint = ModelCheckpoint(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5", monitor="val_acc", verbose=0, save_best_only=True, save_weights_only=False, mode='max')
 
         hist = model.fit_generator(batch(train_indices, batch_size, True), np.ceil(len(train_indices)/batch_size), epochs=400, validation_data=batch(validation_indices, batch_size), validation_steps=np.ceil(len(validation_indices)//batch_size), callbacks=[model_checkpoint], class_weight = {0:10, 1:1})
 
