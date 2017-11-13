@@ -361,18 +361,21 @@ if __name__ == "__main__":
 
     skf = StratifiedKFold(n_splits=4)
 
+    sgd = SGD(lr=1e-3, momentum=0.9, decay=1e-6, nesterov=True)
+    adam = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=1e-6)
+
     model = qc_model()
     model.summary()
+    model.compile(loss='categorical_crossentropy',
+                  optimizer=adam,
+                  metrics=["accuracy", sensitivity, specificity])
 
     scores = {}
     for metric in model.metrics_names:
         scores[metric] = []
 
     for k, (train_indices, test_indices) in enumerate(skf.split(np.asarray(indices), labels)):
-        model = qc_model()
-
-        sgd = SGD(lr=1e-3, momentum=0.9, decay=1e-6, nesterov=True)
-        adam = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=1e-6)
+        model = qc_model(
 
         model.compile(loss='categorical_crossentropy',
                       optimizer=adam,
