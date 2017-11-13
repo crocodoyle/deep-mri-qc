@@ -375,7 +375,7 @@ if __name__ == "__main__":
         scores[metric] = []
 
     for k, (train_indices, test_indices) in enumerate(skf.split(np.asarray(indices), labels)):
-        model = qc_model(
+        model = qc_model()
 
         model.compile(loss='categorical_crossentropy',
                       optimizer=adam,
