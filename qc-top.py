@@ -394,7 +394,7 @@ if __name__ == "__main__":
     ibis_indices = pickle.load(open(workdir + 'ibis_indices.pkl', 'rb'))
     ping_indices = pickle.load(open(workdir + 'ping_indices.pkl', 'rb'))
 
-    f = h5py.File(workdir + 'deepqc.hdf5', 'r')
+    f = h5py.File(workdir + 'deepqc-all-sets.hdf5', 'r')
 
 
     # print('ping:', ping_indices)
@@ -432,7 +432,7 @@ if __name__ == "__main__":
 
 
     # define model
-    model = dilated_top()
+    model = top_model()
 
     # print summary of model
     model.summary()
