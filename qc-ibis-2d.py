@@ -231,12 +231,12 @@ def plot_graphs(hist, results_dir, fold_num):
     epoch_num = range(len(hist.history['acc']))
 
     plt.clf()
-    plt.plot(epoch_num, hist.history['acc'], label='Training Accuracy')
-    plt.plot(epoch_num, hist.history['val_acc'], label="Validation Accuracy")
-    plt.plot(epoch_num, hist.history['sensitivity'], label='Training Sensitivity')
-    plt.plot(epoch_num, hist.history['val_sensitivity'], label='Validation Sensitivity')
-    plt.plot(epoch_num, hist.history['specificity'], label='Training Specificity')
-    plt.plot(epoch_num, hist.history['val_specificity'], label='Validation Specificity')
+    # plt.plot(epoch_num, hist.history['acc'], label='Training Accuracy')
+    # plt.plot(epoch_num, hist.history['val_acc'], label="Validation Accuracy")
+    plt.plot(epoch_num, hist.history['sensitivity'], label='Trai Sens')
+    plt.plot(epoch_num, hist.history['val_sensitivity'], label='Val Sens')
+    plt.plot(epoch_num, hist.history['specificity'], label='Train Spec')
+    plt.plot(epoch_num, hist.history['val_specificity'], label='Val Spec')
 
     plt.legend(shadow=True)
     plt.xlabel("Training Epoch Number")
@@ -274,16 +274,8 @@ def predict_and_visualize(model, indices, results_dir):
         model.layers[layer_idx].activation = activations.linear
         model = utils.apply_modifications(model)
 
-
     for i, (index, prediction) in enumerate(zip(indices, predictions)):
-        img = images[index, target_size[0] // 2, ...][np.newaxis, ..., np.newaxis]
-        grads = visualize_cam(model, layer_idx, filter_indices=prediction, seed_input=img[0, ...], backprop_modifier='guided')
-
-        heatmap = np.uint8(cm.jet(grads)[:,:,0,:3]*255)
-        gray = np.uint8(img[0, :, :, :]*255)
-        gray3 = np.dstack((gray,)*3)
-
-        plt.imshow(overlay(heatmap, gray3, alpha=0.4))
+        f, ax = plt.subplots(1, 4)
 
         actual = np.argmax(labels[index, ...])
         print('actual, predicted PASS/FAIL:', actual, prediction)
@@ -300,7 +292,23 @@ def predict_and_visualize(model, indices, results_dir):
         filename = qc_status + decision + str(filenames[index, ...])[2:-1][:-4] + '.png'
         # filename = str(i) + decision + qc_status + '.png'
 
-        plt.axis('off')
+        plt.suptitle(filename)
+
+        img = images[index, target_size[0] // 2, ...][np.newaxis, ..., np.newaxis]
+
+        ax[0].imshow(img[0, ...])
+        ax[0].axis('off')
+        ax[0].xlabel('input')
+
+        for j, type in enumerate([None, 'guided', 'relu']):
+            grads = visualize_cam(model, layer_idx, filter_indices=prediction, seed_input=img[0, ...], backprop_modifier=type)
+
+            heatmap = np.uint8(cm.jet(grads)[:,:,0,:3]*255)
+            gray = np.uint8(img[0, :, :, :]*255)
+            gray3 = np.dstack((gray,)*3)
+
+            ax[j+1] = plt.imshow(overlay(heatmap, gray3, alpha=0.3))
+
         plt.savefig(results_dir + filename, bbox_inches='tight')
         plt.close()
 
@@ -316,7 +324,6 @@ def verify_hdf5(indices, results_dir):
         img = images[index, target_size[0]//2, :, :]
         label = labels[index, ...]
         filename = filenames[index, ...]
-
 
         plt.imshow(img, cmap='gray')
         plt.xlabel(str(label))
