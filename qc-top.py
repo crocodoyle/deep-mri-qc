@@ -395,7 +395,9 @@ if __name__ == "__main__":
     ping_indices = pickle.load(open(workdir + 'ping_indices.pkl', 'rb'))
 
     f = h5py.File(workdir + 'deepqc-all-sets.hdf5', 'r')
+    images = f['MRI']
 
+    print('number of samples in dataset:', images.shape[0])
 
     # print('ping:', ping_indices)
     # print('abide:', abide_indices)
