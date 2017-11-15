@@ -410,7 +410,7 @@ if __name__ == "__main__":
     # print('IBIS samples:', len(ibis_indices))
     # print('training samples:', len(train_indices), len(ping_indices) + len(abide_indices) + len(ibis_indices))
 
-    train_labels = np.zeros((len(abide_indices), 2))
+    train_labels = np.zeros((len(train_indices), 2))
     print('labels shape:', train_labels.shape)
 
     good_subject_index = 0
