@@ -38,6 +38,7 @@ import tensorflow as tf
 
 
 workdir = '/home/users/adoyle/deepqc/'
+data_file = 'deepqc-all-sets.hdf5'
 
 
 image_size = (192, 256, 192)
@@ -332,7 +333,7 @@ def top_model_shared_weights():
 
 def top_batch(indices, augment=True):
 
-    with h5py.File(workdir + 'deepqc.hdf5', 'r') as f:
+    with h5py.File(workdir + data_file, 'r') as f:
         images = f['MRI']
         labels = f['qc_label']    #already in one-hot
 
@@ -394,7 +395,7 @@ if __name__ == "__main__":
     ibis_indices = pickle.load(open(workdir + 'ibis_indices.pkl', 'rb'))
     ping_indices = pickle.load(open(workdir + 'ping_indices.pkl', 'rb'))
 
-    f = h5py.File(workdir + 'deepqc-all-sets.hdf5', 'r')
+    f = h5py.File(workdir + data_file, 'r')
     images = f['MRI']
 
     print('number of samples in dataset:', images.shape[0])
@@ -445,6 +446,8 @@ if __name__ == "__main__":
                                         monitor="val_acc",
                                         save_best_only=True)
 
+    f.close()
+    
     hist = model.fit_generator(
         top_batch(train_indices, augment=True),
         len(train_indices),
