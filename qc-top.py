@@ -205,12 +205,6 @@ def top_model():
 
     model = Model(inputs=inputs, outputs=[output])
 
-    sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-
-    model.compile(loss='categorical_crossentropy',
-                  optimizer=sgd,
-                  metrics=["accuracy", sensitivity, specificity])
-
     return model
 
 
@@ -374,8 +368,7 @@ def plot_metrics(hist, results_dir):
     plt.savefig(results_dir + 'training-results.png')
     plt.close()
 
-if __name__ == "__main__":
-
+def setup_experiment(workdir):
     try:
         experiment_number = pickle.load(open(workdir + 'experiment_number.pkl', 'rb'))
         experiment_number += 1
@@ -389,6 +382,11 @@ if __name__ == "__main__":
     os.makedirs(results_dir)
 
     pickle.dump(experiment_number, open(workdir + 'experiment_number.pkl', 'wb'))
+
+    return results_dir, experiment_number
+
+if __name__ == "__main__":
+    results_dir, experiment_number = setup_experiment(workdir)
 
     abide_indices = pickle.load(open(workdir + 'abide_indices.pkl', 'rb'))
     ds030_indices = pickle.load(open(workdir + 'ds030_indices.pkl', 'rb'))
@@ -433,9 +431,14 @@ if __name__ == "__main__":
     print('train:', train_indices)
     print('test:', test_indices)
 
-
     # define model
     model = top_model()
+
+    sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+
+    model.compile(loss='categorical_crossentropy',
+                  optimizer=sgd,
+                  metrics=["accuracy", sensitivity, specificity])
 
     # print summary of model
     model.summary()
@@ -447,7 +450,7 @@ if __name__ == "__main__":
                                         save_best_only=True)
 
     f.close()
-    
+
     hist = model.fit_generator(
         top_batch(train_indices, augment=True),
         len(train_indices),
