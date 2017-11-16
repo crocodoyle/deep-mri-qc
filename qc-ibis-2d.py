@@ -233,7 +233,7 @@ def plot_graphs(hist, results_dir, fold_num):
     plt.clf()
     # plt.plot(epoch_num, hist.history['acc'], label='Training Accuracy')
     # plt.plot(epoch_num, hist.history['val_acc'], label="Validation Accuracy")
-    plt.plot(epoch_num, hist.history['sensitivity'], label='Trai Sens')
+    plt.plot(epoch_num, hist.history['sensitivity'], label='Train Sens')
     plt.plot(epoch_num, hist.history['val_sensitivity'], label='Val Sens')
     plt.plot(epoch_num, hist.history['specificity'], label='Train Spec')
     plt.plot(epoch_num, hist.history['val_specificity'], label='Val Spec')
@@ -298,7 +298,7 @@ def predict_and_visualize(model, indices, results_dir):
 
         ax[0].imshow(img[0, ..., 0])
         ax[0].axis('off')
-        ax[0].xlabel('input')
+        ax[0].set_xlabel('input')
 
         for j, type in enumerate([None, 'guided', 'relu']):
             grads = visualize_cam(model, layer_idx, filter_indices=prediction, seed_input=img[0, ...], backprop_modifier=type)
