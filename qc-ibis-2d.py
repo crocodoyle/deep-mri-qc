@@ -275,7 +275,7 @@ def predict_and_visualize(model, indices, results_dir):
         model = utils.apply_modifications(model)
 
     for i, (index, prediction) in enumerate(zip(indices, predictions)):
-        f, ax = plt.subplots(1, 4)
+        fig, ax = plt.subplots(1, 4)
 
         actual = np.argmax(labels[index, ...])
         print('actual, predicted PASS/FAIL:', actual, prediction)
@@ -307,7 +307,9 @@ def predict_and_visualize(model, indices, results_dir):
             gray = np.uint8(img[0, :, :, :]*255)
             gray3 = np.dstack((gray,)*3)
 
-            ax[j+1] = plt.imshow(overlay(heatmap, gray3, alpha=0.3))
+            ax[j+1].imshow(overlay(heatmap, gray3, alpha=0.3))
+            ax[j+1].axis('off')
+            ax[j+1].set_xlabel(str(type))
 
         plt.savefig(results_dir + filename, bbox_inches='tight')
         plt.close()
