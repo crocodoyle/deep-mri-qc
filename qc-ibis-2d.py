@@ -296,7 +296,7 @@ def predict_and_visualize(model, indices, results_dir):
 
         img = images[index, target_size[0] // 2, ...][np.newaxis, ..., np.newaxis]
 
-        ax[0].imshow(img[0, ...])
+        ax[0].imshow(img[0, ..., 0])
         ax[0].axis('off')
         ax[0].xlabel('input')
 
