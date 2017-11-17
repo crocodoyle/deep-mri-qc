@@ -104,26 +104,32 @@ def qc_model():
     model.add(Dropout(0.1))
 
     model.add(Conv2D(64, conv_size, activation='relu'))
+    model.add(BatchNormalization())
     # model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.1))
 
     model.add(Conv2D(128, conv_size, activation='relu'))
+    model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.2))
+
+    model.add(Conv2D(128, conv_size, activation='relu'))
+    model.add(BatchNormalization())
+    model.add(MaxPooling2D(pool_size=(2,2)))
     model.add(Dropout(0.2))
 
     model.add(Conv2D(256, conv_size, activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2,2)))
-    model.add(Dropout(0.2))
-
-    model.add(Conv2D(512, conv_size, activation='relu'))
+    model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2,2)))
     model.add(Dropout(0.3))
 
-    model.add(Conv2D(1024, conv_size, activation='relu'))
+    model.add(Conv2D(256, conv_size, activation='relu'))
+    model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.4))
 
-    model.add(Conv2D(1024, conv_size, activation='relu'))
+    model.add(Conv2D(512, conv_size, activation='relu'))
+    model.add(BatchNormalization())
     model.add(Dropout(0.5))
 
     model.add(Flatten())
