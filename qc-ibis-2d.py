@@ -345,7 +345,7 @@ def verify_hdf5(indices, results_dir):
 if __name__ == "__main__":
     start_time = time.time()
 
-    batch_size = 32
+    batch_size = 16
 
     try:
         experiment_number = pkl.load(open(workdir + 'experiment_number.pkl', 'rb'))
