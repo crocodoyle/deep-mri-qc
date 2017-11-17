@@ -98,32 +98,32 @@ def qc_model():
 
     model = Sequential()
 
-    model.add(Conv2D(16, conv_size, activation='relu', input_shape=(target_size[1], target_size[2], 1)))
+    model.add(Conv2D(64, conv_size, activation='relu', input_shape=(target_size[1], target_size[2], 1)))
     model.add(BatchNormalization())
     # model.add(MaxPooling2D(pool_size=pool_size))
     model.add(Dropout(0.1))
 
-    model.add(Conv2D(32, conv_size, activation='relu'))
+    model.add(Conv2D(64, conv_size, activation='relu'))
     # model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.1))
 
-    model.add(Conv2D(32, conv_size, activation='relu'))
+    model.add(Conv2D(128, conv_size, activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.2))
 
-    model.add(Conv2D(64, conv_size, activation='relu'))
+    model.add(Conv2D(256, conv_size, activation='relu'))
     model.add(MaxPooling2D(pool_size=(2,2)))
     model.add(Dropout(0.2))
 
-    model.add(Conv2D(64, conv_size, activation='relu'))
+    model.add(Conv2D(512, conv_size, activation='relu'))
     model.add(MaxPooling2D(pool_size=(2,2)))
     model.add(Dropout(0.3))
 
-    model.add(Conv2D(128, conv_size, activation='relu'))
+    model.add(Conv2D(1024, conv_size, activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.4))
 
-    model.add(Conv2D(256, conv_size, activation='relu'))
+    model.add(Conv2D(1024, conv_size, activation='relu'))
     model.add(Dropout(0.5))
 
     model.add(Flatten())
@@ -275,7 +275,7 @@ def predict_and_visualize(model, indices, results_dir):
         model = utils.apply_modifications(model)
 
     for i, (index, prediction) in enumerate(zip(indices, predictions)):
-        fig, ax = plt.subplots(1, 4)
+        fig, ax = plt.subplots(1, 4, figsize=(8, 3))
 
         actual = np.argmax(labels[index, ...])
         print('actual, predicted PASS/FAIL:', actual, prediction)
@@ -296,8 +296,9 @@ def predict_and_visualize(model, indices, results_dir):
 
         img = images[index, target_size[0] // 2, ...][np.newaxis, ..., np.newaxis]
 
-        ax[0].imshow(img[0, ..., 0])
-        ax[0].axis('off')
+        ax[0].imshow(img[0, ..., 0], cmap='gray')
+        ax[0].set_xticks([])
+        ax[0].set_yticks([])
         ax[0].set_xlabel('input')
 
         for j, type in enumerate([None, 'guided', 'relu']):
@@ -308,7 +309,8 @@ def predict_and_visualize(model, indices, results_dir):
             gray3 = np.dstack((gray,)*3)
 
             ax[j+1].imshow(overlay(heatmap, gray3, alpha=0.3))
-            ax[j+1].axis('off')
+            ax[j+1].set_xticks([])
+            ax[j+1].set_yticks([])
             ax[j+1].set_xlabel(str(type))
 
         plt.savefig(results_dir + filename, bbox_inches='tight')
@@ -368,7 +370,7 @@ if __name__ == "__main__":
     print('indices', np.asarray(indices))
     print('labels', np.asarray(labels))
 
-    skf = StratifiedKFold(n_splits=4)
+    skf = StratifiedKFold(n_splits=10)
 
     sgd = SGD(lr=1e-3, momentum=0.9, decay=1e-6, nesterov=True)
     adam = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=1e-6)
@@ -405,7 +407,7 @@ if __name__ == "__main__":
 
         model_checkpoint = ModelCheckpoint(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5", monitor="val_acc", verbose=0, save_best_only=True, save_weights_only=False, mode='max')
 
-        hist = model.fit_generator(batch(train_indices, batch_size, True), np.ceil(len(train_indices)/batch_size), epochs=400, validation_data=batch(validation_indices, batch_size), validation_steps=np.ceil(len(validation_indices)//batch_size), callbacks=[model_checkpoint], class_weight = {0:10, 1:1})
+        hist = model.fit_generator(batch(train_indices, batch_size, True), np.ceil(len(train_indices)/batch_size), epochs=600, validation_data=batch(validation_indices, batch_size), validation_steps=np.ceil(len(validation_indices)//batch_size), callbacks=[model_checkpoint], class_weight = {0:5, 1:1})
 
         model.load_weights(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5")
         model.save(results_dir + 'ibis_qc_model' + str(k) + '.hdf5')
