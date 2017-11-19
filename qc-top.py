@@ -82,24 +82,27 @@ def dilated_top():
     xz = dilated_module(inputs[1])
     yz = dilated_module(inputs[2])
 
-    xy_flat = Flatten()(xy)
-    xz_flat = Flatten()(xz)
-    yz_flat = Flatten()(yz)
+    all_planes = concatenate([xy, xz, yz], axis=1)
 
-    all_planes = concatenate([xy_flat, xz_flat, yz_flat])
+    all_conv1 = Conv2D(128, (5, 5), activation='relu', strides=[2, 2])(all_planes)
+    all_drop1 = Dropout(0.5)(all_conv1)
+    all_conv2 = Conv2D(256, (5, 5), activation='relu', strides=[2, 2])(all_drop1)
+    all_drop2 = Dropout(0.5)(all_conv2)
+    all_conv3 = Conv2D(512, (5, 5), activation='relu', strides=[2, 2])(all_drop2)
+    all_drop3 = Dropout(0.5)(all_conv3)
 
-    penultimate = Dense(192, activation='relu')(all_planes)
+    all_conv4 = Conv2D(32, (1, 1), activation='relu')(all_drop3)
+    all_drop4 = Dropout(0.5)(all_conv4)
+
+    flat = Flatten()(all_drop4)
+
+    penultimate = Dense(192, activation='relu')(flat)
     drop = Dropout(0.5)(penultimate)
     ultimate = Dense(64, activation='relu')(drop)
     drop = Dropout(0.5)(ultimate)
     output = Dense(nb_classes, activation='softmax')(drop)
 
-    sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-
     model = Model(inputs=inputs, outputs=[output])
-    model.compile(loss='categorical_crossentropy',
-                  optimizer=sgd,
-                  metrics=["accuracy", sensitivity, specificity])
 
     return model
 
