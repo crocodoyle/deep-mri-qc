@@ -82,21 +82,34 @@ def dilated_top():
     xz = dilated_module(inputs[1])
     yz = dilated_module(inputs[2])
 
-    all_planes = concatenate([xy, xz, yz], axis=1)
+    two_planes = concatenate([xy, yz])
 
-    all_conv1 = Conv2D(128, (5, 5), activation='relu', strides=[2, 2])(all_planes)
-    all_drop1 = Dropout(0.5)(all_conv1)
-    all_conv2 = Conv2D(256, (5, 5), activation='relu', strides=[2, 2])(all_drop1)
-    all_drop2 = Dropout(0.5)(all_conv2)
-    all_conv3 = Conv2D(512, (5, 5), activation='relu', strides=[2, 2])(all_drop2)
-    all_drop3 = Dropout(0.5)(all_conv3)
 
-    all_conv4 = Conv2D(32, (1, 1), activation='relu')(all_drop3)
-    all_drop4 = Dropout(0.5)(all_conv4)
+    one_conv1 = Conv2D(128, (5, 5), activation='relu', strides=[2, 2])(xz)
+    one_drop1 = Dropout(0.5)(one_conv1)
+    one_conv2 = Conv2D(256, (5, 5), activation='relu', strides=[2, 2])(one_drop1)
+    one_drop2 = Dropout(0.5)(one_conv2)
+    one_conv3 = Conv2D(512, (5, 5), activation='relu', strides=[2, 2])(one_drop2)
+    one_drop3 = Dropout(0.5)(one_conv3)
 
-    flat = Flatten()(all_drop4)
+    one_conv4 = Conv2D(32, (1, 1), activation='relu')(one_drop3)
+    one_drop4 = Dropout(0.5)(one_conv4)
 
-    penultimate = Dense(192, activation='relu')(flat)
+    two_conv1 = Conv2D(128, (5, 5), activation='relu', strides=[2, 2])(two_planes)
+    two_drop1 = Dropout(0.5)(two_conv1)
+    two_conv2 = Conv2D(256, (5, 5), activation='relu', strides=[2, 2])(two_drop1)
+    two_drop2 = Dropout(0.5)(two_conv2)
+    two_conv3 = Conv2D(512, (5, 5), activation='relu', strides=[2, 2])(two_drop2)
+    two_drop3 = Dropout(0.5)(two_conv3)
+
+    two_conv4 = Conv2D(64, (1, 1), activation='relu')(two_drop3)
+    two_drop4 = Dropout(0.5)(two_conv4)
+
+    flat1 = Flatten()(two_drop4)
+    flat2 = Flatten()(one_drop4)
+    all_flat = concatenate([flat1, flat2])
+
+    penultimate = Dense(192, activation='relu')(all_flat)
     drop = Dropout(0.5)(penultimate)
     ultimate = Dense(64, activation='relu')(drop)
     drop = Dropout(0.5)(ultimate)
