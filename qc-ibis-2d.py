@@ -257,6 +257,7 @@ def predict_and_visualize(model, indices, results_dir):
     filenames = f['filename']
 
     predictions = []
+    avg_grad = np.zeros((target_size[1], target_size[2]), dtype='float32')
 
     with open(results_dir + 'test_images.csv', 'w') as output_file:
         output_writer = csv.writer(output_file)
@@ -309,6 +310,7 @@ def predict_and_visualize(model, indices, results_dir):
 
         for j, type in enumerate([None, 'guided', 'relu']):
             grads = visualize_cam(model, layer_idx, filter_indices=prediction, seed_input=img[0, ...], backprop_modifier=type)
+            print('gradient shape:', grads.shape)
 
             heatmap = np.uint8(cm.jet(grads)[:,:,0,:3]*255)
             gray = np.uint8(img[0, :, :, :]*255)
@@ -319,8 +321,16 @@ def predict_and_visualize(model, indices, results_dir):
             ax[j+1].set_yticks([])
             ax[j+1].set_xlabel(str(type))
 
+            if 'guided' in type and prediction == 0:
+                avg_grad = np.add(avg_grad, np.divide(grads, float(len(predictions))))
+
         plt.savefig(results_dir + filename, bbox_inches='tight')
         plt.close()
+
+    plt.close()
+    plt.imshow(avg_grad)
+    plt.axis('off')
+    plt.savefig(results_dir + 'average_gradient.png', bbox_inches='tight')
 
     f.close()
 
@@ -392,6 +402,8 @@ if __name__ == "__main__":
         scores[metric] = []
 
     for k, (train_indices, test_indices) in enumerate(skf.split(np.asarray(indices), labels)):
+
+        results_dir = workdir + '/experiment-' + str(experiment_number) + '/fold-' + str(k) + '/'
         model = qc_model()
 
         model.compile(loss='categorical_crossentropy',
