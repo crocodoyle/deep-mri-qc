@@ -141,7 +141,7 @@ if __name__ == "__main__":
     ibis_indices = pickle.load(open(workdir + 'ibis_indices.pkl', 'rb'))
     ping_indices = pickle.load(open(workdir + 'ping_indices.pkl', 'rb'))
 
-    f = h5py.File(workdir + data_file, 'rb')
+    f = h5py.File(workdir + data_file, 'r')
     images = f['MRI']
 
     print('number of samples in dataset:', images.shape[0])
