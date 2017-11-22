@@ -117,7 +117,7 @@ def plot_metrics(hist, results_dir):
 
 def setup_experiment(workdir):
     try:
-        experiment_number = pickle.load(open(workdir + 'experiment_number.pkl', 'rb'))
+        experiment_number = pickle.load(open(workdir + 'experiment_number.pkl', 'r'))
         experiment_number += 1
     except:
         print('Couldnt find the file to load experiment number')
@@ -128,7 +128,7 @@ def setup_experiment(workdir):
     results_dir = workdir + '/experiment-' + str(experiment_number) + '/'
     os.makedirs(results_dir)
 
-    pickle.dump(experiment_number, open(workdir + 'experiment_number.pkl', 'wb'))
+    pickle.dump(experiment_number, open(workdir + 'experiment_number.pkl', 'w'))
 
     return results_dir, experiment_number
 
