@@ -282,7 +282,7 @@ def predict_and_visualize(model, indices, results_dir):
         model = utils.apply_modifications(model)
 
     for i, (index, prediction) in enumerate(zip(indices, predictions)):
-        fig, ax = plt.subplots(1, 4, figsize=(8, 3))
+        fig, ax = plt.subplots(1, 2, figsize=(12, 6))
 
         actual = np.argmax(labels[index, ...])
         print('actual, predicted PASS/FAIL:', actual, prediction)
@@ -308,9 +308,9 @@ def predict_and_visualize(model, indices, results_dir):
         ax[0].set_yticks([])
         ax[0].set_xlabel('input')
 
-        for j, type in enumerate([None, 'guided', 'relu']):
+        for j, type in enumerate(['guided']):
             grads = visualize_cam(model, layer_idx, filter_indices=prediction, seed_input=img[0, ...], backprop_modifier=type)
-            print('gradient shape:', grads.shape)
+            # print('gradient shape:', grads.shape)
 
             heatmap = np.uint8(cm.jet(grads)[:,:,0,:3]*255)
             gray = np.uint8(img[0, :, :, :]*255)
@@ -321,13 +321,12 @@ def predict_and_visualize(model, indices, results_dir):
             ax[j+1].set_yticks([])
             ax[j+1].set_xlabel(str(type))
 
-            if 'guided' in type and prediction == 0:
-                avg_grad = np.add(avg_grad, np.divide(grads, float(len(predictions))))
+            avg_grad = np.add(avg_grad, np.divide(grads, float(len(predictions))))
 
         plt.savefig(results_dir + filename, bbox_inches='tight')
         plt.close()
 
-    plt.close()
+    plt.figure()
     plt.imshow(avg_grad)
     plt.axis('off')
     plt.savefig(results_dir + 'average_gradient.png', bbox_inches='tight')
