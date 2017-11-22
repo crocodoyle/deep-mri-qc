@@ -404,6 +404,7 @@ if __name__ == "__main__":
     for k, (train_indices, test_indices) in enumerate(skf.split(np.asarray(indices), labels)):
 
         results_dir = workdir + '/experiment-' + str(experiment_number) + '/fold-' + str(k) + '/'
+        os.makedirs(results_dir)
         model = qc_model()
 
         model.compile(loss='categorical_crossentropy',
