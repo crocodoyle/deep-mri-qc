@@ -1,20 +1,25 @@
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Conv3D, MaxPooling3D, Flatten, BatchNormalization
 from keras.callbacks import ModelCheckpoint
+from keras.optimizers import SGD, Adam
 
 import numpy as np
 import h5py
 import pickle
 
 import keras.backend as K
+import os
 
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
 
 from custom_loss import sensitivity, specificity
 
-workdir = '/data1/data/deepqc/'
+workdir = '/home/users/adoyle/deepqc/'
+data_file = 'deepqc-all-sets.hdf5'
 
 image_size = (192, 256, 192)
 
@@ -96,53 +101,69 @@ def batch(indices, f):
             except:
                 yield (np.reshape(images[index, ...], image_size + (1,))[np.newaxis, ...])
 
-def plot_training_error(hist):
+def plot_metrics(hist, results_dir):
     epoch_num = range(len(hist.history['acc']))
     train_error = np.subtract(1, np.array(hist.history['acc']))
     test_error  = np.subtract(1, np.array(hist.history['val_acc']))
 
     plt.clf()
-    plt.plot(epoch_num, train_error, label='Training Error')
-    plt.plot(epoch_num, test_error, label="Validation Error")
+    plt.plot(epoch_num, np.array(hist.history['acc']), label='Training Accuracy')
+    plt.plot(epoch_num, np.array(hist.history['val_acc']), label="Validation Error")
     plt.legend(shadow=True)
     plt.xlabel("Training Epoch Number")
     plt.ylabel("Error")
-    plt.savefig(workdir + 'results.png')
+    plt.savefig(results_dir + 'results.png')
     plt.close()
 
+def setup_experiment(workdir):
+    try:
+        experiment_number = pickle.load(open(workdir + 'experiment_number.pkl', 'rb'))
+        experiment_number += 1
+    except:
+        print('Couldnt find the file to load experiment number')
+        experiment_number = 0
+
+    print('This is experiment number:', experiment_number)
+
+    results_dir = workdir + '/experiment-' + str(experiment_number) + '/'
+    os.makedirs(results_dir)
+
+    pickle.dump(experiment_number, open(workdir + 'experiment_number.pkl', 'wb'))
+
+    return results_dir, experiment_number
+
 if __name__ == "__main__":
+    results_dir, experiment_number = setup_experiment(workdir)
 
     abide_indices = pickle.load(open(workdir + 'abide_indices.pkl', 'rb'))
     ds030_indices = pickle.load(open(workdir + 'ds030_indices.pkl', 'rb'))
+    ibis_indices = pickle.load(open(workdir + 'ibis_indices.pkl', 'rb'))
+    ping_indices = pickle.load(open(workdir + 'ping_indices.pkl', 'rb'))
 
-    f = h5py.File(workdir + 'deepqc.hdf5', 'r')
+    f = h5py.File(workdir + data_file, 'r')
+    images = f['MRI']
 
-    # ping_indices = list(range(0, ping_end_index))
-    # abide_indices = list(range(ping_end_index, abide_end_index))
-    # ibis_indices = list(range(abide_end_index, ibis_end_index))
-    # ds030_indices = list(range(ibis_end_index, ds030_end_index))
+    print('number of samples in dataset:', images.shape[0])
 
     # print('ping:', ping_indices)
     # print('abide:', abide_indices)
     # print('ibis:', ibis_indices)
     # print('ds030', ds030_indices)
 
-    # train_indices = ping_indices + abide_indices + ibis_indices
-    train_indices = abide_indices
+    train_indices = ping_indices + abide_indices + ibis_indices
+    # train_indices = abide_indices
 
     # print('PING samples:', len(ping_indices))
     # print('ABIDE samples:', len(abide_indices))
     # print('IBIS samples:', len(ibis_indices))
     # print('training samples:', len(train_indices), len(ping_indices) + len(abide_indices) + len(ibis_indices))
 
-
-    train_labels = np.zeros((len(abide_indices), 3))
+    train_labels = np.zeros((len(train_indices), 2))
     print('labels shape:', train_labels.shape)
 
     good_subject_index = 0
     for index in train_indices:
         label = f['qc_label'][index, ...]
-        # print(label)
         train_labels[good_subject_index, ...] = label
         good_subject_index += 1
 
@@ -157,9 +178,11 @@ if __name__ == "__main__":
     print('train:', train_indices)
     print('test:', test_indices)
 
-
     # define model
     model = qc_model()
+
+    sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+    adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=1e-6)
 
     # print summary of model
     model.summary()
@@ -176,18 +199,21 @@ if __name__ == "__main__":
         epochs=num_epochs,
         callbacks=[model_checkpoint],
         validation_data=batch(validation_indices, f),
-        validation_steps=len(validation_indices),
-        use_multiprocessing=True
+        validation_steps=len(validation_indices)
     )
 
-    model.load_weights(workdir + 'best_qc_model.hdf5')
-    model.save(workdir + 'qc_model.hdf5')
+    model.load_weights(results_dir + 'best_qc_model.hdf5')
+    model.save(results_dir + 'qc_model.hdf5')
 
-    predicted = []
-    actual = []
 
-    for index in test_indices:
-        scores = model.test_on_batch(f['MRI'][index, ...], f['qc_label'][index, ...])
-        print(scores)
 
-    plot_training_error(hist)
+    metrics = model.evaluate_generator(batch(test_indices, f), len(test_indices))
+
+    print(model.metrics_names)
+    print(metrics)
+
+    pickle.dump(metrics, open(results_dir + 'test_metrics', 'wb'))
+
+    plot_metrics(hist, results_dir)
+
+    print('This experiment brought to you by the number:', experiment_number)
