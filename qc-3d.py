@@ -32,28 +32,29 @@ def qc_model():
 
     model = Sequential()
 
-    model.add(Conv3D(6, conv_size, activation='relu', strides=[2, 2, 2], input_shape=(image_size[0], image_size[1], image_size[2], 1)))
-    # model.add(Dropout(0.2))
-    # model.add(Conv3D(16, conv_size, activation='relu'))
-    # model.add(Dropout(0.2))
-    # model.add(BatchNormalization())
-    # model.add(MaxPooling3D(pool_size=pool_size))
+    model.add(Conv3D(16, conv_size, activation='relu', input_shape=(image_size[0], image_size[1], image_size[2], 1)))
+    model.add(Dropout(0.2))
+    model.add(BatchNormalization())
+    model.add(Conv3D(16, conv_size, activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(BatchNormalization())
+    model.add(MaxPooling3D(pool_size=pool_size))
 
-    # model.add(Conv3D(32, conv_size, activation='relu'))
-    # model.add(Dropout(0.2))
-    model.add(Conv3D(16, conv_size, strides=[2, 2, 2], activation='relu'))
+    model.add(Conv3D(32, conv_size, activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(Conv3D(16, conv_size, activation='relu'))
     # model.add(Dropout(0.2))
     # model.add(BatchNormalization())
     # model.add(MaxPooling3D(pool_size=pool_size))
 
     # model.add(Conv3D(64, conv_size, activation='relu'))
     # model.add(Dropout(0.3))
-    model.add(Conv3D(32, conv_size, strides=[2, 2, 2], activation='relu'))
+    model.add(Conv3D(32, conv_size, activation='relu'))
     # model.add(Dropout(0.3))
     # model.add(BatchNormalization())
     # model.add(MaxPooling3D(pool_size=pool_size))
 #
-    model.add(Conv3D(32, conv_size, strides=[2, 2, 2], activation='relu'))
+    model.add(Conv3D(32, conv_size, activation='relu'))
     # model.add(Dropout(0.4))
     # model.add(MaxPooling3D(pool_size=pool_size))
 
@@ -61,7 +62,7 @@ def qc_model():
     # # model.add(Dropout(0.4))
     # model.add(MaxPooling3D(pool_size=pool_size))
 
-    model.add(Conv3D(32, conv_size, strides=[2, 2, 2], activation='relu'))
+    model.add(Conv3D(32, conv_size, activation='relu'))
     model.add(Dropout(0.3))
 
     model.add(Conv3D(32, conv_size, activation='relu'))
@@ -135,10 +136,10 @@ def setup_experiment(workdir):
 if __name__ == "__main__":
     results_dir, experiment_number = setup_experiment(workdir)
 
-    abide_indices = pickle.load(open(workdir + 'abide_indices.pkl', 'rb'))
-    ds030_indices = pickle.load(open(workdir + 'ds030_indices.pkl', 'rb'))
-    ibis_indices = pickle.load(open(workdir + 'ibis_indices.pkl', 'rb'))
-    ping_indices = pickle.load(open(workdir + 'ping_indices.pkl', 'rb'))
+    abide_indices = pickle.load(open(workdir + 'abide_indices.pkl', 'r'))
+    ds030_indices = pickle.load(open(workdir + 'ds030_indices.pkl', 'r'))
+    ibis_indices = pickle.load(open(workdir + 'ibis_indices.pkl', 'r'))
+    ping_indices = pickle.load(open(workdir + 'ping_indices.pkl', 'r'))
 
     f = h5py.File(workdir + data_file, 'r')
     images = f['MRI']
