@@ -25,7 +25,7 @@ image_size = (192, 256, 192)
 
 
 def qc_model():
-    nb_classes = 3
+    nb_classes = 2
 
     conv_size = (3, 3, 3)
     pool_size = (2, 2, 2)
