@@ -26,6 +26,8 @@ from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
 
 from custom_loss import sensitivity, specificity
 
+from ndimage_aug import do_random_transform
+
 import tensorflow as tf
 
 
@@ -352,7 +354,11 @@ def top_batch(indices, augment=True):
                     if augment:
                         t1_image = flip(t1_image, 2)
                         # t1_image = elastic_transform(t1_image, [3,3,3], [3,3,3])
-
+                        ### This will apply a random rotation
+                        ### Input t1 image must be 3D.
+                        ### Output matrix is a 3D matrix.
+                        ### (Args: Rotations are in degrees not radians. )
+                        t1_image = do_random_transform(t1_image, 20, 20, 20)
                     xy = t1_image[np.newaxis, ...]
                     xz = np.swapaxes(t1_image[:, 32:-32, :], 1, 2)[np.newaxis, ...]
                     yz = np.swapaxes(t1_image, 0, 2)[np.newaxis, ...]
