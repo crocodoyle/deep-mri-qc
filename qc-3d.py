@@ -60,13 +60,7 @@ def qc_model():
 
     model.add(Conv3D(64, conv_size, activation='relu'))
     model.add(Dropout(0.4))
-    model.add(MaxPooling3D(pool_size=pool_size))
-
-    model.add(Conv3D(32, conv_size, activation='relu'))
-    model.add(Dropout(0.3))
-
-    model.add(Conv3D(32, conv_size, activation='relu'))
-    model.add(Dropout(0.3))
+    # model.add(MaxPooling3D(pool_size=pool_size))
 
     model.add(Conv3D(8, (1, 1, 1), activation='relu'))
 
