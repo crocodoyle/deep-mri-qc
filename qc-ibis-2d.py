@@ -257,7 +257,9 @@ def predict_and_visualize(model, indices, results_dir):
     filenames = f['filename']
 
     predictions = []
-    avg_grad = np.zeros((target_size[1], target_size[2]), dtype='float32')
+    avg_pass = np.zeros((target_size[1], target_size[2]), dtype='float32')
+    avg_fail = np.zeros((target_size[1], target_size[2]), dtype='float32')
+
 
     with open(results_dir + 'test_images.csv', 'w') as output_file:
         output_writer = csv.writer(output_file)
@@ -321,15 +323,24 @@ def predict_and_visualize(model, indices, results_dir):
             ax[j+1].set_yticks([])
             ax[j+1].set_xlabel(str(type))
 
-            avg_grad = np.add(avg_grad, np.divide(grads, float(len(predictions))))
+            if prediction == 0:
+                avg_fail = np.add(avg_fail, np.divide(grads, float(len(predictions))))
+            else:
+                avg_pass = np.add(avg_pass, np.divide(grads, float(len(predictions))))
+
 
         plt.savefig(results_dir + filename, bbox_inches='tight')
         plt.close()
 
     plt.figure()
-    plt.imshow(avg_grad)
+    plt.imshow(avg_pass)
     plt.axis('off')
-    plt.savefig(results_dir + 'average_gradient.png', bbox_inches='tight')
+    plt.savefig(results_dir + 'average_pass_gradient.png', bbox_inches='tight')
+    plt.figure()
+    plt.imshow(avg_fail)
+    plt.axis('off')
+    plt.savefig(results_dir + 'average_fail_gradient.png', bbox_inches='tight')
+    plt.close()
 
     f.close()
 
