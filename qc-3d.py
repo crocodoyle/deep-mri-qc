@@ -118,7 +118,7 @@ def plot_metrics(hist, results_dir):
 
 def setup_experiment(workdir):
     try:
-        experiment_number = pickle.load(open(workdir + 'experiment_number.pkl', 'r'))
+        experiment_number = pickle.load(open(workdir + 'experiment_number.pkl', 'rb'))
         experiment_number += 1
     except:
         print('Couldnt find the file to load experiment number')
@@ -129,19 +129,19 @@ def setup_experiment(workdir):
     results_dir = workdir + '/experiment-' + str(experiment_number) + '/'
     os.makedirs(results_dir)
 
-    pickle.dump(experiment_number, open(workdir + 'experiment_number.pkl', 'w'))
+    pickle.dump(experiment_number, open(workdir + 'experiment_number.pkl', 'wb'))
 
     return results_dir, experiment_number
 
 if __name__ == "__main__":
     results_dir, experiment_number = setup_experiment(workdir)
 
-    abide_indices = pickle.load(open(workdir + 'abide_indices.pkl', 'r'))
-    ds030_indices = pickle.load(open(workdir + 'ds030_indices.pkl', 'r'))
-    ibis_indices = pickle.load(open(workdir + 'ibis_indices.pkl', 'r'))
-    ping_indices = pickle.load(open(workdir + 'ping_indices.pkl', 'r'))
+    abide_indices = pickle.load(open(workdir + 'abide_indices.pkl', 'rb'))
+    ds030_indices = pickle.load(open(workdir + 'ds030_indices.pkl', 'rb'))
+    ibis_indices = pickle.load(open(workdir + 'ibis_indices.pkl', 'rb'))
+    ping_indices = pickle.load(open(workdir + 'ping_indices.pkl', 'rb'))
 
-    f = h5py.File(workdir + data_file, 'r')
+    f = h5py.File(workdir + data_file, 'rb')
     images = f['MRI']
 
     print('number of samples in dataset:', images.shape[0])
