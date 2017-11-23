@@ -257,8 +257,8 @@ def predict_and_visualize(model, indices, results_dir):
     filenames = f['filename']
 
     predictions = []
-    avg_pass = np.zeros((target_size[1], target_size[2]), dtype='float32')
-    avg_fail = np.zeros((target_size[1], target_size[2]), dtype='float32')
+    avg_pass = np.zeros((target_size[1], target_size[2], 3), dtype='float32')
+    avg_fail = np.zeros((target_size[1], target_size[2], 3), dtype='float32')
 
 
     with open(results_dir + 'test_images.csv', 'w') as output_file:
