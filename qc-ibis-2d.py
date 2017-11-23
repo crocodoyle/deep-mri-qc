@@ -336,8 +336,8 @@ def predict_and_visualize(model, indices, results_dir):
         plt.savefig(results_dir + filename, bbox_inches='tight')
         plt.close()
 
-    pass_regions = np.uint8(cm.jet(np.divide(avg_pass, pass_imgs))[:,:,0,:3]*255)
-    fail_regions = np.uint8(cm.jet(np.divide(avg_fail, fail_imgs))[:,:,0,:3]*255)
+    pass_regions = np.divide(avg_pass, pass_imgs)
+    fail_regions = np.divide(avg_fail, fail_imgs)
 
     plt.figure()
     plt.imshow(pass_regions)
