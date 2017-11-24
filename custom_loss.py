@@ -62,39 +62,38 @@ def dice_np(im1, im2):
     return overlap / total
 
 
-# def true_positive(y_true, y_pred):
-#     """Return number of true positives"""
-#     return y_true * K.round(y_pred)
-#
-#
+def true_positives(y_true, y_pred):
+    """Return number of true positives"""
+    return y_true * K.round(y_pred)
+
+
 def true_negatives(y_true, y_pred):
      """Return number of true negatives"""
      one = K.ones_like(y_pred)
      return (one-y_true) * (one-K.round(y_pred))
-#
-#
-# def false_positive(y_true, y_pred):
-#     """Return number of false positives"""
-#     one = K.ones(K.int_shape(y_pred))
-#     return (one-y_true) * K.round(y_pred)
-#
-#
-# def false_negative(y_true, y_pred):
-#     """Return number of false negatives"""
-#     print(K.int_shape(y_pred))
-#     one = K.ones(K.int_shape(y_pred))
-#     return y_true * (one-K.round(y_pred))
+
+
+def false_positives(y_true, y_pred):
+    """Return number of false positives"""
+    one = K.ones_like(y_pred)
+    return (one-y_true) * K.round(y_pred)
+
+
+def false_negatives(y_true, y_pred):
+    """Return number of false negatives"""
+    one = K.ones_like(y_pred)
+    return y_true * (one-K.round(y_pred))
 
 
 def sensitivity(y_true, y_pred):
     """Return sensitivity (how many of the positives were detected?)"""
-    tp = K.sum(tf.metrics.true_positives(y_true, y_pred))
-    fn = K.sum(tf.metrics.false_negatives(y_true, y_pred))
+    tp = K.sum(true_positives(y_true, y_pred))
+    fn = K.sum(false_negatives(y_true, y_pred))
     return tp / (tp + fn + K.epsilon())
 
 
 def specificity(y_true, y_pred):
     """Return specificity (how many of the negatives were detected?)"""
     tn = K.sum(true_negatives(y_true, y_pred))
-    fp = K.sum(tf.metrics.false_positives(y_true, y_pred))
+    fp = K.sum(false_positives(y_true, y_pred))
     return tn / (tn+fp + K.epsilon())
