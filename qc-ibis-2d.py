@@ -426,7 +426,7 @@ if __name__ == "__main__":
 
         model.compile(loss='categorical_crossentropy',
                       optimizer=adam,
-                      metrics=["accuracy", sensitivity, specificity])
+                      metrics=["accuracy", sensitivity, specificity, true_positives, true_negatives, false_positives, false_negatives])
 
         validation_indices = test_indices[::2]
         test_indices = test_indices[1::2]
