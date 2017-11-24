@@ -10,7 +10,7 @@ import os, csv, time
 import nibabel as nib
 
 from dltk.core.io.preprocessing import normalise_zero_one, resize_image_with_crop_or_pad
-from custom_loss import sensitivity, specificity
+from custom_loss import sensitivity, specificity, true_positives, true_negatives, false_positives, false_negatives
 
 from collections import defaultdict
 
