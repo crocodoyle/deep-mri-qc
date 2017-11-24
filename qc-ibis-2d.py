@@ -39,56 +39,55 @@ total_subjects = 2020
 target_size = (168, 256, 244)
 
 def make_ibis_qc():
-    f = h5py.File(workdir + 'ibis.hdf5', 'w')
-    f.create_dataset('ibis_t1', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float32')
-    f.create_dataset('qc_label', (total_subjects, 2), dtype='float32')
-    dt = h5py.special_dtype(vlen=bytes)
-    f.create_dataset('filename', (total_subjects, ), dtype=dt)
+    with h5py.File(workdir + 'ibis.hdf5', 'w') as f:
+        f.create_dataset('ibis_t1', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float32')
+        f.create_dataset('qc_label', (total_subjects, 2), dtype='float32')
+        dt = h5py.special_dtype(vlen=bytes)
+        f.create_dataset('filename', (total_subjects, ), dtype=dt)
 
-    index = 0
+        index = 0
 
-    indices = []
-    labels = []
+        indices = []
+        labels = []
 
-    with open(label_file, 'r') as labels_csv:
-        qc_reader = csv.reader(labels_csv)
-        next(qc_reader)
+        with open(label_file, 'r') as labels_csv:
+            qc_reader = csv.reader(labels_csv)
+            next(qc_reader)
 
-        for line in qc_reader:
-            try:
-                t1_filename = line[3][9:]
-                label = line[4]
+            for line in qc_reader:
+                try:
+                    t1_filename = line[3][9:]
+                    label = line[4]
 
-                if 'Pass' in label:
-                    one_hot = [0.0, 1.0]
-                    pass_fail = 1
-                else:
-                    one_hot = [1.0, 0.0]
-                    pass_fail = 0
+                    if 'Pass' in label:
+                        one_hot = [0.0, 1.0]
+                        pass_fail = 1
+                    else:
+                        one_hot = [1.0, 0.0]
+                        pass_fail = 0
 
-                f['qc_label'][index, :] = one_hot
-                t1_data = nib.load(datadir + t1_filename).get_data()
+                    f['qc_label'][index, :] = one_hot
+                    t1_data = nib.load(datadir + t1_filename).get_data()
 
-                if not t1_data.shape == target_size:
-                    # print('resizing from', t1_data.shape)
-                    t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
+                    if not t1_data.shape == target_size:
+                        # print('resizing from', t1_data.shape)
+                        t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
-                f['ibis_t1'][index, ...] = normalise_zero_one(t1_data)
-                f['filename'][index] = t1_filename.split('/')[-1]
+                    f['ibis_t1'][index, ...] = normalise_zero_one(t1_data)
+                    f['filename'][index] = t1_filename.split('/')[-1]
 
-                # plt.imshow(t1_data[96, ...])
-                # plt.axis('off')
-                # plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
+                    # plt.imshow(t1_data[96, ...])
+                    # plt.axis('off')
+                    # plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
 
-                indices.append(index)
-                labels.append(pass_fail)
+                    indices.append(index)
+                    labels.append(pass_fail)
 
-                index += 1
-            except Exception as e:
-                print('Error:', e)
+                    index += 1
+                except Exception as e:
+                    print('Error:', e)
 
-    print('Total subjects we actually have:', index+1)
-    f.close()
+        print('Total subjects we actually have:', index+1)
 
     return indices, labels
 
@@ -146,94 +145,94 @@ def qc_model():
     return model
 
 def batch(indices, n, random_slice=False):
-    f = h5py.File(workdir + 'ibis.hdf5', 'r')
-    images = f['ibis_t1']
-    labels = f['qc_label']
+    with h5py.File(workdir + 'ibis.hdf5', 'r') as f:
+        images = f['ibis_t1']
+        labels = f['qc_label']
 
-    x_train = np.zeros((n, target_size[1], target_size[2], 1), dtype=np.float32)
-    y_train = np.zeros((n, 2), dtype=np.int8)
+        x_train = np.zeros((n, target_size[1], target_size[2], 1), dtype=np.float32)
+        y_train = np.zeros((n, 2), dtype=np.int8)
 
-    while True:
-        np.random.shuffle(indices)
+        while True:
+            np.random.shuffle(indices)
 
-        samples_this_batch = 0
-        for i, index in enumerate(indices):
-            if random_slice:
-                rn=np.random.randint(-4, 4)
-            else:
-                rn=0
-            x_train[i%n, :, :, 0] = images[index, target_size[0]//2+rn, :, :]
-            y_train[i%n, :]   = labels[index, ...]
-            samples_this_batch += 1
-            if (i+1) % n == 0:
-                yield (x_train, y_train)
-                samples_this_batch = 0
-            elif i == len(indices)-1:
-                yield (x_train[0:samples_this_batch, ...], y_train[0:samples_this_batch, :])
+            samples_this_batch = 0
+            for i, index in enumerate(indices):
+                if random_slice:
+                    rn=np.random.randint(-4, 4)
+                else:
+                    rn=0
+                x_train[i%n, :, :, 0] = images[index, target_size[0]//2+rn, :, :]
+                y_train[i%n, :]   = labels[index, ...]
+                samples_this_batch += 1
+                if (i+1) % n == 0:
+                    yield (x_train, y_train)
+                    samples_this_batch = 0
+                elif i == len(indices)-1:
+                    yield (x_train[0:samples_this_batch, ...], y_train[0:samples_this_batch, :])
 
 
 def test_images(model, test_indices, save_imgs=True):
-    f = h5py.File(workdir + 'ibis.hdf5', 'r')
-    images = f['ibis_t1']
-    labels = f['qc_label']
-    filename_test = f['filenames']
+    with h5py.File(workdir + 'ibis.hdf5', 'r') as f:
+        images = f['ibis_t1']
+        labels = f['qc_label']
+        filename_test = f['filenames']
 
-    predictions = np.zeros((len(test_indices)))
-    actual = np.zeros((len(test_indices)))
+        predictions = np.zeros((len(test_indices)))
+        actual = np.zeros((len(test_indices)))
 
-    predict_batch = np.zeros((1, target_size[1], target_size[2], 1))
+        predict_batch = np.zeros((1, target_size[1], target_size[2], 1))
 
-    print("test indices:", len(test_indices))
-    print("test index max:", max(test_indices))
-    print("labels:", len(labels))
-    print("filenames:", len(filename_test))
+        print("test indices:", len(test_indices))
+        print("test index max:", max(test_indices))
+        print("labels:", len(labels))
+        print("filenames:", len(filename_test))
 
-    for i, index in enumerate(test_indices):
-        predict_batch[0,:,:,0] = images[index,target_size[0]//2, :,:]
+        for i, index in enumerate(test_indices):
+            predict_batch[0,:,:,0] = images[index,target_size[0]//2, :,:]
 
-        prediction = model.predict_on_batch(predict_batch)[0][0]
-        if prediction >= 0.5:
-            predictions[i] = 1
-        else:
-            predictions[i] = 0
-        actual[i] = labels[index,0]
+            prediction = model.predict_on_batch(predict_batch)[0][0]
+            if prediction >= 0.5:
+                predictions[i] = 1
+            else:
+                predictions[i] = 0
+            actual[i] = labels[index,0]
 
-        if save_imgs:
-            plt.imshow(images[index,target_size[0]//2+10,:,:], cmap='gray')
-            if predictions[i] == 1 and actual[i] == 1:
-                plt.savefig(results_dir + 'fail_right_' + os.path.basename(filename_test[i]) + ".png")
-            elif predictions[i] == 0 and actual[i] == 0:
-                plt.savefig('/home/adoyle/images/pass_right_' + os.path.basename(filename_test[i]) + '.png')
-            elif predictions[i] == 1 and actual[i] == 0:
-                plt.savefig('/home/adoyle/images/pass_wrong_' + os.path.basename(filename_test[i]) + '.png')
-            elif predictions[i]  == 0 and actual[i] == 1:
-                plt.savefig('/home/adoyle/images/fail_wrong_' + os.path.basename(filename_test[i]) + '.png')
-            plt.clf()
+            if save_imgs:
+                plt.imshow(images[index,target_size[0]//2+10,:,:], cmap='gray')
+                if predictions[i] == 1 and actual[i] == 1:
+                    plt.savefig(results_dir + 'fail_right_' + os.path.basename(filename_test[i]) + ".png")
+                elif predictions[i] == 0 and actual[i] == 0:
+                    plt.savefig('/home/adoyle/images/pass_right_' + os.path.basename(filename_test[i]) + '.png')
+                elif predictions[i] == 1 and actual[i] == 0:
+                    plt.savefig('/home/adoyle/images/pass_wrong_' + os.path.basename(filename_test[i]) + '.png')
+                elif predictions[i]  == 0 and actual[i] == 1:
+                    plt.savefig('/home/adoyle/images/fail_wrong_' + os.path.basename(filename_test[i]) + '.png')
+                plt.clf()
 
-    conf = confusion_matrix(actual, predictions)
-    print('Confusion Matrix')
-    print(conf)
+        conf = confusion_matrix(actual, predictions)
+        print('Confusion Matrix')
+        print(conf)
 
-    print(np.shape(conf))
+        print(np.shape(conf))
 
-    tp = conf[0][0]
-    tn = conf[1][1]
-    fp = conf[0][1]
-    fn = conf[1][0]
+        tp = conf[0][0]
+        tn = conf[1][1]
+        fp = conf[0][1]
+        fn = conf[1][0]
 
-    print('true negatives:', tn)
-    print('true positives:', tp)
-    print('false negatives:', fn)
-    print('false positives:', fp)
+        print('true negatives:', tn)
+        print('true positives:', tp)
+        print('false negatives:', fn)
+        print('false positives:', fp)
 
-    sensitivity = float(tp) / (float(tp) + float(fn))
-    specificity = float(tn) / (float(tn) + float(fp))
+        sensitivity = float(tp) / (float(tp) + float(fn))
+        specificity = float(tn) / (float(tn) + float(fp))
 
 
-    print('sens:', sensitivity)
-    print('spec:', specificity)
+        print('sens:', sensitivity)
+        print('spec:', specificity)
 
-    return sensitivity, specificity
+        return sensitivity, specificity
 
 def plot_graphs(hist, results_dir, fold_num):
     epoch_num = range(len(hist.history['acc']))
@@ -253,122 +252,120 @@ def plot_graphs(hist, results_dir, fold_num):
     plt.close()
 
 def predict_and_visualize(model, indices, results_dir):
-    f = h5py.File(workdir + 'ibis.hdf5', 'r')
-    images = f['ibis_t1']
-    labels = f['qc_label']
-    filenames = f['filename']
+    with h5py.File(workdir + 'ibis.hdf5', 'r') as f:
+        images = f['ibis_t1']
+        labels = f['qc_label']
+        filenames = f['filename']
 
-    predictions = []
-    avg_pass = np.zeros((target_size[1], target_size[2], 3), dtype='float32')
-    avg_fail = np.zeros((target_size[1], target_size[2], 3), dtype='float32')
+        predictions = []
+        avg_pass = np.zeros((target_size[1], target_size[2], 3), dtype='float32')
+        avg_fail = np.zeros((target_size[1], target_size[2], 3), dtype='float32')
 
-    pass_imgs = 0.0
-    fail_imgs = 0.0
+        pass_imgs = 0.0
+        fail_imgs = 0.0
 
-    with open(results_dir + 'test_images.csv', 'w') as output_file:
-        output_writer = csv.writer(output_file)
-        output_writer.writerow(['Filename', 'Pass Probability', 'Actual'])
+        with open(results_dir + 'test_images.csv', 'w') as output_file:
+            output_writer = csv.writer(output_file)
+            output_writer.writerow(['Filename', 'Pass Probability', 'Actual'])
 
-        for index in indices:
-            img = images[index, target_size[0]//2, ...][np.newaxis, ..., np.newaxis]
-            label = labels[index, ...]
+            for index in indices:
+                img = images[index, target_size[0]//2, ...][np.newaxis, ..., np.newaxis]
+                label = labels[index, ...]
 
-            prediction = model.predict(img, batch_size=1)
-            print('index:', index, 'probs:', prediction[0])
+                prediction = model.predict(img, batch_size=1)
+                print('index:', index, 'probs:', prediction[0])
 
-            output_writer.writerow([filenames[index, ...][2:-1], prediction[0][1], np.argmax(label)])
+                output_writer.writerow([filenames[index, ...][2:-1], prediction[0][1], np.argmax(label)])
 
-            predictions.append(np.argmax(prediction[0]))
+                predictions.append(np.argmax(prediction[0]))
 
-        model.compile(loss='categorical_crossentropy',
-                      optimizer='sgd',
-                      metrics = ["accuracy"])
-        layer_idx = utils.find_layer_idx(model, 'predictions')
-        model.layers[layer_idx].activation = activations.linear
-        model = utils.apply_modifications(model)
+            model.compile(loss='categorical_crossentropy',
+                          optimizer='sgd',
+                          metrics = ["accuracy"])
+            layer_idx = utils.find_layer_idx(model, 'predictions')
+            model.layers[layer_idx].activation = activations.linear
+            model = utils.apply_modifications(model)
 
-    for i, (index, prediction) in enumerate(zip(indices, predictions)):
-        fig, ax = plt.subplots(1, 2, figsize=(12, 6))
+        for i, (index, prediction) in enumerate(zip(indices, predictions)):
+            fig, ax = plt.subplots(1, 2, figsize=(12, 6))
 
-        actual = np.argmax(labels[index, ...])
-        print('actual, predicted PASS/FAIL:', actual, prediction)
-        if prediction == actual:
-            decision = '_right_'
-        else:
-            decision = '_wrong_'
-
-        if actual == 1:
-            qc_status = 'PASS'
-        else:
-            qc_status = 'FAIL'
-
-        filename = qc_status + decision + str(filenames[index, ...])[2:-1][:-4] + '.png'
-        # filename = str(i) + decision + qc_status + '.png'
-
-        plt.suptitle(filename)
-
-        img = images[index, target_size[0] // 2, ...][np.newaxis, ..., np.newaxis]
-
-        ax[0].imshow(img[0, ..., 0], cmap='gray')
-        ax[0].set_xticks([])
-        ax[0].set_yticks([])
-        ax[0].set_xlabel('input')
-
-        for j, type in enumerate(['guided']):
-            grads = visualize_cam(model, layer_idx, filter_indices=prediction, seed_input=img[0, ...], backprop_modifier=type)
-            # print('gradient shape:', grads.shape)
-
-            heatmap = np.uint8(cm.jet(grads)[:,:,0,:3]*255)
-            gray = np.uint8(img[0, :, :, :]*255)
-            gray3 = np.dstack((gray,)*3)
-
-            ax[j+1].imshow(overlay(heatmap, gray3, alpha=0.3))
-            ax[j+1].set_xticks([])
-            ax[j+1].set_yticks([])
-            ax[j+1].set_xlabel(str(type))
-
-            if prediction == 0:
-                avg_fail += grads
-                fail_imgs += 1.0
+            actual = np.argmax(labels[index, ...])
+            print('actual, predicted PASS/FAIL:', actual, prediction)
+            if prediction == actual:
+                decision = '_right_'
             else:
-                avg_pass += grads
-                pass_imgs += 1.0
+                decision = '_wrong_'
+
+            if actual == 1:
+                qc_status = 'PASS'
+            else:
+                qc_status = 'FAIL'
+
+            filename = qc_status + decision + str(filenames[index, ...])[2:-1][:-4] + '.png'
+            # filename = str(i) + decision + qc_status + '.png'
+
+            plt.suptitle(filename)
+
+            img = images[index, target_size[0] // 2, ...][np.newaxis, ..., np.newaxis]
+
+            ax[0].imshow(img[0, ..., 0], cmap='gray')
+            ax[0].set_xticks([])
+            ax[0].set_yticks([])
+            ax[0].set_xlabel('input')
+
+            for j, type in enumerate(['guided']):
+                grads = visualize_cam(model, layer_idx, filter_indices=prediction, seed_input=img[0, ...], backprop_modifier=type)
+                # print('gradient shape:', grads.shape)
+
+                heatmap = np.uint8(cm.jet(grads)[:,:,0,:3]*255)
+                gray = np.uint8(img[0, :, :, :]*255)
+                gray3 = np.dstack((gray,)*3)
+
+                ax[j+1].imshow(overlay(heatmap, gray3, alpha=0.3))
+                ax[j+1].set_xticks([])
+                ax[j+1].set_yticks([])
+                ax[j+1].set_xlabel(str(type))
+
+                if prediction == 0:
+                    avg_fail += grads
+                    fail_imgs += 1.0
+                else:
+                    avg_pass += grads
+                    pass_imgs += 1.0
 
 
-        plt.savefig(results_dir + filename, bbox_inches='tight')
+            plt.savefig(results_dir + filename, bbox_inches='tight')
+            plt.close()
+
+        # pass_regions = np.divide(avg_pass, pass_imgs)
+        # fail_regions = np.divide(avg_fail, fail_imgs)
+
+        plt.figure()
+        plt.imshow(avg_pass, vmin=0, vmax=1)
+        plt.axis('off')
+        plt.savefig(results_dir + 'average_pass_gradient.png', bbox_inches='tight')
+        plt.figure()
+        plt.imshow(avg_fail, vmin=0, vmax=1)
+        plt.axis('off')
+        plt.savefig(results_dir + 'average_fail_gradient.png', bbox_inches='tight')
         plt.close()
-
-    # pass_regions = np.divide(avg_pass, pass_imgs)
-    # fail_regions = np.divide(avg_fail, fail_imgs)
-
-    plt.figure()
-    plt.imshow(avg_pass, vmin=0, vmax=1)
-    plt.axis('off')
-    plt.savefig(results_dir + 'average_pass_gradient.png', bbox_inches='tight')
-    plt.figure()
-    plt.imshow(avg_fail, vmin=0, vmax=1)
-    plt.axis('off')
-    plt.savefig(results_dir + 'average_fail_gradient.png', bbox_inches='tight')
-    plt.close()
-
-    f.close()
 
 def verify_hdf5(indices, results_dir):
-    f = h5py.File(workdir + 'ibis.hdf5', 'r')
-    images = f['ibis_t1']
-    labels = f['qc_label']
-    filenames = f['filename']
+    with h5py.File(workdir + 'ibis.hdf5', 'r') as f:
+        images = f['ibis_t1']
+        labels = f['qc_label']
+        filenames = f['filename']
 
-    for index in indices:
-        img = images[index, target_size[0]//2, :, :]
-        label = labels[index, ...]
-        filename = filenames[index, ...]
+        for index in indices:
+            img = images[index, target_size[0]//2, :, :]
+            label = labels[index, ...]
+            filename = filenames[index, ...]
 
-        plt.imshow(img, cmap='gray')
-        plt.xlabel(str(label))
-        plt.ylabel(str(filename[2:-1]))
-        plt.savefig(results_dir + 'img-' + str(index), bbox_inches='tight')
-        plt.close()
+            plt.imshow(img, cmap='gray')
+            plt.xlabel(str(label))
+            plt.ylabel(str(filename[2:-1]))
+            plt.savefig(results_dir + 'img-' + str(index), bbox_inches='tight')
+            plt.close()
 
 
 if __name__ == "__main__":
@@ -447,6 +444,7 @@ if __name__ == "__main__":
         h5labels = f['qc_label']
         for index in train_indices:
             print(index, labels[index], h5labels[index, ...])
+        f.close()
 
         model_checkpoint = ModelCheckpoint(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5", monitor="val_acc", verbose=0, save_best_only=True, save_weights_only=False, mode='max')
 
