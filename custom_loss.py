@@ -64,13 +64,15 @@ def dice_np(im1, im2):
 
 def true_positives(y_true, y_pred):
     """Return number of true positives"""
-    positive_true = K.equal(K.argmax(y_true), 1)
-    positive_pred = K.equal(K.argmax(y_pred), 1)
+    predictions = K.argmax(y_pred)
+    truth = K.argmax(y_true)
 
-    print(positive_true)
-    print(positive_pred)
+    positive_true = K.equal(truth, 1)
+    positive_pred = K.equal(predictions, 1)
 
-    return K.cast(K.equal(positive_true, positive_pred), dtype='float32')
+    return positive_pred
+
+    # return K.cast(K.equal(positive_true, positive_pred), dtype='float32')
 
 
 def true_negatives(y_true, y_pred):
