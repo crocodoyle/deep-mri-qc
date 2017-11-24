@@ -10,7 +10,7 @@ import os, csv, time
 import nibabel as nib
 
 from dltk.core.io.preprocessing import normalise_zero_one, resize_image_with_crop_or_pad
-from custom_loss import sensitivity, specificity, true_positive, false_positive, true_negative, false_negative
+from custom_loss import sensitivity, specificity
 
 from collections import defaultdict
 
@@ -426,7 +426,7 @@ if __name__ == "__main__":
 
         model.compile(loss='categorical_crossentropy',
                       optimizer=adam,
-                      metrics=["accuracy", sensitivity, specificity, true_positive, false_positive, true_negative, false_negative])
+                      metrics=["accuracy", sensitivity, specificity])
 
         validation_indices = test_indices[::2]
         test_indices = test_indices[1::2]
