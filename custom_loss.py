@@ -68,7 +68,7 @@ def true_positives(y_true, y_pred):
     truth = K.equal(K.argmax(y_true), 1)
     positive_pred = K.equal(K.argmax(y_pred), 1)
 
-    return K.sum(K.equal(truth, positive_pred))
+    return K.sum(K.cast(K.equal(truth, positive_pred), dtype='float32'))
 
     # return K.cast(K.equal(positive_true, positive_pred), dtype='float32')
 
@@ -79,7 +79,7 @@ def true_negatives(y_true, y_pred):
      truth = K.equal(K.argmax(y_true), 0)
      negative_pred = K.equal(K.argmax(y_pred), 0)
 
-     return K.sum(K.equal(truth, negative_pred))
+     return K.sum(K.cast(K.equal(truth, negative_pred)), dtype='float32')
 
 
 def false_positives(y_true, y_pred):
@@ -87,7 +87,7 @@ def false_positives(y_true, y_pred):
     truth = K.equal(K.argmax(y_true), 0)
     positive_pred = K.equal(K.argmax(y_pred), 1)
 
-    return K.sum(K.equal(truth, positive_pred))
+    return K.sum(K.cast(K.equal(truth, positive_pred)), dtype='float32')
 
 
 def false_negatives(y_true, y_pred):
@@ -95,7 +95,7 @@ def false_negatives(y_true, y_pred):
     truth = K.equal(K.argmax(y_true), 1)
     negative_pred = K.equal(K.argmax(y_pred), 0)
 
-    return K.sum(K.equal(negative_pred, truth))
+    return K.sum(K.cast(K.equal(negative_pred, truth)), dtype='float32')
 
 
 def sensitivity(y_true, y_pred):
