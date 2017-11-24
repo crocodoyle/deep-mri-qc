@@ -61,8 +61,10 @@ def make_ibis_qc():
 
                 if 'Pass' in label:
                     one_hot = [0.0, 1.0]
+                    pass_fail = 1
                 else:
                     one_hot = [1.0, 0.0]
+                    pass_fail = 0
 
                 f['qc_label'][index, :] = one_hot
                 t1_data = nib.load(datadir + t1_filename).get_data()
@@ -79,7 +81,7 @@ def make_ibis_qc():
                 # plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
 
                 indices.append(index)
-                labels.append(np.argmax(one_hot))
+                labels.append(pass_fail)
 
                 index += 1
             except Exception as e:
@@ -388,7 +390,7 @@ if __name__ == "__main__":
 
     pkl.dump(experiment_number, open(workdir + 'experiment_number.pkl', 'wb'))
 
-    remake = False
+    remake = True
     if remake:
         indices, labels = make_ibis_qc()
         pkl.dump(indices, open(workdir + 'valid_indices.pkl', 'wb'))
