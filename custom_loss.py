@@ -70,7 +70,7 @@ def true_positives(y_true, y_pred):
     positive_true = K.equal(truth, 1)
     positive_pred = K.equal(predictions, 1)
 
-    return positive_pred
+    return K.cast(positive_pred, dtype='float32')
 
     # return K.cast(K.equal(positive_true, positive_pred), dtype='float32')
 
