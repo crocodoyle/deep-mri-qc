@@ -70,19 +70,33 @@ def true_positives(y_true, y_pred):
 def true_negatives(y_true, y_pred):
      """Return number of true negatives"""
      one = K.ones_like(y_pred)
-     return K.sum((one-y_true) * (one-K.round(y_pred)))
+
+     y_true_neg = y_true
+     y_pred_neg = K.round(y_pred)
+
+     y_true_neg = K.update_sub(y_true_neg, one)
+     y_pred_neg = K.update_sub(y_pred_neg, one)
+
+     return K.sum((y_true_neg) * (y_pred_neg))
 
 
 def false_positives(y_true, y_pred):
     """Return number of false positives"""
     one = K.ones_like(y_pred)
-    return K.sum((one-y_true) * K.round(y_pred))
+
+    y_true_neg = y_true
+    y_true_neg = K.update_sub(y_true_neg, one)
+    return K.sum((y_true_neg) * K.round(y_pred))
 
 
 def false_negatives(y_true, y_pred):
     """Return number of false negatives"""
     one = K.ones_like(y_pred)
-    return K.sum(y_true * (one-K.round(y_pred)))
+
+    y_pred_neg = K.round(y_pred)
+    y_pred_neg = K.update_sub(y_pred_neg, one)
+
+    return K.sum(y_true * y_pred_neg)
 
 
 def sensitivity(y_true, y_pred):
