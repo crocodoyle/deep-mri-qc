@@ -67,10 +67,10 @@ def dice_np(im1, im2):
 #     return y_true * K.round(y_pred)
 #
 #
-# def true_negative(y_true, y_pred):
-#     """Return number of true negatives"""
-#     one = K.ones(K.int_shape(y_pred))
-#     return (one-y_true) * (one-K.round(y_pred))
+def true_negatives(y_true, y_pred):
+     """Return number of true negatives"""
+     one = K.ones_like(y_pred)
+     return (one-y_true) * (one-K.round(y_pred))
 #
 #
 # def false_positive(y_true, y_pred):
@@ -95,6 +95,6 @@ def sensitivity(y_true, y_pred):
 
 def specificity(y_true, y_pred):
     """Return specificity (how many of the negatives were detected?)"""
-    tn = K.sum(tf.metrics.true_negatives(y_true, y_pred))
+    tn = K.sum(true_negatives(y_true, y_pred))
     fp = K.sum(tf.metrics.false_positives(y_true, y_pred))
     return tn / (tn+fp + K.epsilon())
