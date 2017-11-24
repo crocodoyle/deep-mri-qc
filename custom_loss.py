@@ -93,7 +93,7 @@ def false_positives(y_true, y_pred):
 def false_negatives(y_true, y_pred):
     """Return number of false negatives"""
     truth = K.equal(K.argmax(y_true, axis=1), 1)
-    negative_pred = K.equal(K.argmax(y_pred, axis=0), 0)
+    negative_pred = K.equal(K.argmax(y_pred, axis=1), 0)
 
     return K.cast(K.equal(negative_pred, truth), dtype='float32')
 
