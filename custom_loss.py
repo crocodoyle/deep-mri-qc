@@ -65,11 +65,11 @@ def dice_np(im1, im2):
 def true_positives(y_true, y_pred):
     """Return number of true positives"""
     predictions = K.argmax(y_pred)
-    truth = K.argmax(y_true)
+    truth = K.cast(K.argmax(y_true), dtype='bool')
 
-    positive_pred = K.cast(K.equal(predictions, 1), dtype='bool')
+    positive_pred = K.equal(predictions, 1)
 
-    return K.cast(K.equal(K.equal(truth, positive_pred), K.equal(truth, 1)), dtype='float32')
+    return K.cast(K.equal(K.equal(truth, positive_pred), K.equal(truth, True)), dtype='float32')
 
     # return K.cast(K.equal(positive_true, positive_pred), dtype='float32')
 
@@ -77,31 +77,31 @@ def true_positives(y_true, y_pred):
 def true_negatives(y_true, y_pred):
      """Return number of true negatives"""
      predictions = K.argmax(y_pred)
-     truth = K.argmax(y_true)
+     truth = K.cast(K.argmax(y_true), dtype='bool')
 
-     negative_pred = K.cast(K.equal(predictions, 0), dtype='bool')
+     negative_pred = K.equal(predictions, 0)
 
-     return K.cast(K.equal(K.equal(truth, negative_pred), K.equal(truth, 1)), dtype='float32')
+     return K.cast(K.equal(K.equal(truth, negative_pred), K.equal(truth, True)), dtype='float32')
 
 
 def false_positives(y_true, y_pred):
     """Return number of false positives"""
     predictions = K.argmax(y_pred)
-    truth = K.argmax(y_true)
+    truth = K.cast(K.argmax(y_true), dtype='bool')
 
-    positive_pred = K.cast(K.equal(predictions, 1), dtype='bool')
+    positive_pred = K.equal(predictions, 1)
 
-    return K.cast(K.equal(K.not_equal(truth, positive_pred), K.equal(truth, 0)), dtype='float32')
+    return K.cast(K.equal(K.not_equal(truth, positive_pred), K.equal(truth, False)), dtype='float32')
 
 
 def false_negatives(y_true, y_pred):
     """Return number of false negatives"""
     predictions = K.argmax(y_pred)
-    truth = K.argmax(y_true)
+    truth = K.cast(K.argmax(y_true), dtype='bool')
 
-    negative_pred = K.cast(K.equal(predictions, 0), dtype='bool')
+    negative_pred = K.equal(predictions, 0)
 
-    return K.cast(K.equal(K.not_equal(truth, negative_pred), K.equal(truth, 1)), dtype='float32')
+    return K.cast(K.equal(K.not_equal(truth, negative_pred), K.equal(truth, True)), dtype='float32')
 
 
 def sensitivity(y_true, y_pred):
