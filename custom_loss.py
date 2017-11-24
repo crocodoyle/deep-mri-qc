@@ -67,6 +67,9 @@ def true_positives(y_true, y_pred):
     positive_true = K.equal(K.argmax(y_true), 1)
     positive_pred = K.equal(K.argmax(y_pred), 1)
 
+    K.print_tensor(positive_true)
+    K.print_tensor(positive_pred)
+
     return K.cast(K.equal(positive_true, positive_pred), dtype='float32')
 
 
