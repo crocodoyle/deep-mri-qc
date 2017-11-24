@@ -79,6 +79,7 @@ def false_positive(y_true, y_pred):
 
 def false_negative(y_true, y_pred):
     """Return number of false negatives"""
+    print(K.int_shape(y_pred))
     one = K.ones(K.int_shape(y_pred))
     return y_true * (one-K.round(y_pred))
 
