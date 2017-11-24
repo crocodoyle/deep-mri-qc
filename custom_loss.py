@@ -65,10 +65,10 @@ def dice_np(im1, im2):
 def true_positives(y_true, y_pred):
     """Return number of true positives"""
 
-    truth = K.argmax(y_true)
+    truth = K.equal(K.argmax(y_true), 1)
     positive_pred = K.equal(K.argmax(y_pred), 1)
 
-    return K.cast(K.equal(positive_pred, K.equal(truth, 1)), dtype='float32')
+    return K.sum(K.equal(truth, positive_pred))
 
     # return K.cast(K.equal(positive_true, positive_pred), dtype='float32')
 
@@ -76,37 +76,37 @@ def true_positives(y_true, y_pred):
 def true_negatives(y_true, y_pred):
      """Return number of true negatives"""
 
-     truth = K.argmax(y_true)
+     truth = K.equal(K.argmax(y_true), 0)
      negative_pred = K.equal(K.argmax(y_pred), 0)
 
-     return K.cast(K.equal(negative_pred, K.equal(truth, 0)), dtype='float32')
+     return K.sum(K.equal(truth, negative_pred))
 
 
 def false_positives(y_true, y_pred):
     """Return number of false positives"""
-    truth = K.argmax(y_true)
+    truth = K.equal(K.argmax(y_true), 0)
     positive_pred = K.equal(K.argmax(y_pred), 1)
 
-    return K.cast(K.equal(positive_pred, K.equal(truth, 0)), dtype='float32')
+    return K.sum(K.equal(truth, positive_pred))
 
 
 def false_negatives(y_true, y_pred):
     """Return number of false negatives"""
-    truth = K.argmax(y_true)
+    truth = K.equal(K.argmax(y_true), 1)
     negative_pred = K.equal(K.argmax(y_pred), 0)
 
-    return K.cast(K.equal(negative_pred, K.equal(truth, 1)), dtype='float32')
+    return K.sum(K.equal(negative_pred, truth))
 
 
 def sensitivity(y_true, y_pred):
     """Return sensitivity (how many of the positives were detected?)"""
-    tp = K.sum(true_positives(y_true, y_pred))
-    fn = K.sum(false_negatives(y_true, y_pred))
+    tp = true_positives(y_true, y_pred)
+    fn = false_negatives(y_true, y_pred)
     return tp / (tp + fn + K.epsilon())
 
 
 def specificity(y_true, y_pred):
     """Return specificity (how many of the negatives were detected?)"""
-    tn = K.sum(true_negatives(y_true, y_pred))
-    fp = K.sum(false_positives(y_true, y_pred))
+    tn = true_negatives(y_true, y_pred)
+    fp = false_positives(y_true, y_pred)
     return tn / (tn+fp + K.epsilon())
