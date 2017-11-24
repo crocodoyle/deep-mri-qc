@@ -67,10 +67,9 @@ def true_positives(y_true, y_pred):
     predictions = K.argmax(y_pred)
     truth = K.argmax(y_true)
 
-    positive_true = K.equal(truth, 1.0)
-    positive_pred = K.equal(predictions, 1.0)
+    positive_pred = K.equal(predictions, 1)
 
-    return K.cast(K.equal(positive_pred, positive_true), dtype='float32')
+    return K.cast(K.equal(K.equal(truth, positive_pred), K.equal(truth, 1)), dtype='float32')
 
     # return K.cast(K.equal(positive_true, positive_pred), dtype='float32')
 
@@ -80,26 +79,29 @@ def true_negatives(y_true, y_pred):
      predictions = K.argmax(y_pred)
      truth = K.argmax(y_true)
 
-     negative_true = K.equal(K.argmax(y_true), 0.0)
-     negative_pred = K.equal(K.argmax(y_pred), 0.0)
+     negative_pred = K.equal(predictions, 0)
 
-     return K.cast(K.equal(negative_true, negative_pred), dtype='float32')
+     return K.cast(K.equal(K.equal(truth, negative_pred), K.equal(truth, 1)), dtype='float32')
 
 
 def false_positives(y_true, y_pred):
     """Return number of false positives"""
-    positive_true = K.equal(K.argmax(y_true), 1.0)
-    positive_pred = K.equal(K.argmax(y_pred), 1.0)
+    predictions = K.argmax(y_pred)
+    truth = K.argmax(y_true)
 
-    return K.cast(K.not_equal(positive_true, positive_pred), dtype='float32')
+    positive_pred = K.equal(predictions, 1)
+
+    return K.cast(K.equal(K.not_equal(truth, positive_pred), K.equal(truth, 0)), dtype='float32')
 
 
 def false_negatives(y_true, y_pred):
     """Return number of false negatives"""
-    negative_true = K.equal(K.argmax(y_true), 0.0)
-    negative_pred = K.equal(K.argmax(y_pred), 0.0)
+    predictions = K.argmax(y_pred)
+    truth = K.argmax(y_true)
 
-    return K.cast(K.not_equal(negative_true, negative_pred), dtype='float32')
+    negative_pred = K.equal(predictions, 0)
+
+    return K.cast(K.equal(K.not_equal(truth, negative_pred), K.equal(truth, 1)), dtype='float32')
 
 
 def sensitivity(y_true, y_pred):
