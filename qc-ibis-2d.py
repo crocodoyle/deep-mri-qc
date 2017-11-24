@@ -443,6 +443,11 @@ if __name__ == "__main__":
 
         # verify_hdf5(reversed(train_indices), results_dir)
 
+        f = h5py.File(workdir + 'ibis.hdf5', 'r')
+        h5labels = f['qc_label']
+        for index in train_indices:
+            print(index, labels[index], h5labels[index, ...])
+
         model_checkpoint = ModelCheckpoint(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5", monitor="val_acc", verbose=0, save_best_only=True, save_weights_only=False, mode='max')
 
         hist = model.fit_generator(batch(train_indices, batch_size, True), np.ceil(len(train_indices)/batch_size), epochs=100, validation_data=batch(validation_indices, batch_size), validation_steps=np.ceil(len(validation_indices)//batch_size), callbacks=[model_checkpoint], class_weight = {0:5, 1:1})
