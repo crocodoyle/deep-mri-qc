@@ -67,7 +67,7 @@ def true_positives(y_true, y_pred):
     positive_true = K.equal(K.argmax(y_true), 1)
     positive_pred = K.equal(K.argmax(y_pred), 1)
 
-    return K.equal(positive_true, positive_pred)
+    return K.cast(K.equal(positive_true, positive_pred), dtype='float32')
 
 
 def true_negatives(y_true, y_pred):
@@ -75,7 +75,7 @@ def true_negatives(y_true, y_pred):
      negative_true = K.equal(K.argmax(y_true), 0)
      negative_pred = K.equal(K.argmax(y_pred), 0)
 
-     return K.equal(negative_true, negative_pred)
+     return K.cast(K.equal(negative_true, negative_pred), dtype='float32')
 
 
 def false_positives(y_true, y_pred):
@@ -83,7 +83,7 @@ def false_positives(y_true, y_pred):
     positive_true = K.equal(K.argmax(y_true), 1)
     positive_pred = K.equal(K.argmax(y_pred), 1)
 
-    return K.not_equal(positive_true, positive_pred)
+    return K.cast(K.not_equal(positive_true, positive_pred), dtype='float32')
 
 
 def false_negatives(y_true, y_pred):
@@ -91,18 +91,18 @@ def false_negatives(y_true, y_pred):
     negative_true = K.equal(K.argmax(y_true), 0)
     negative_pred = K.equal(K.argmax(y_pred), 0)
 
-    return K.not_equal(negative_true, negative_pred)
+    return K.cast(K.not_equal(negative_true, negative_pred), dtype='float32')
 
 
 def sensitivity(y_true, y_pred):
     """Return sensitivity (how many of the positives were detected?)"""
     tp = true_positives(y_true, y_pred)
     fn = false_negatives(y_true, y_pred)
-    return tp / (tp + fn + K.epsilon())
+    return K.sum(tp / (tp + fn + K.epsilon()))
 
 
 def specificity(y_true, y_pred):
     """Return specificity (how many of the negatives were detected?)"""
     tn = true_negatives(y_true, y_pred)
     fp = false_positives(y_true, y_pred)
-    return tn / (tn+fp + K.epsilon())
+    return K.sum(tn / (tn+fp + K.epsilon()))
