@@ -64,36 +64,22 @@ def dice_np(im1, im2):
 
 def true_positives(y_true, y_pred):
     """Return number of true positives"""
-    truth = K.equal(K.argmax(y_true, axis=1), 1)
-    positive_pred = K.equal(K.argmax(y_pred, axis=1), 1)
-
-    return K.cast(K.equal(truth, positive_pred), dtype='float32')
-
-    # return K.cast(K.equal(positive_true, positive_pred), dtype='float32')
+    return K.round(y_pred) * y_true
 
 
 def true_negatives(y_true, y_pred):
-     """Return number of true negatives"""
-     truth = K.equal(K.argmax(y_true, axis=1), 0)
-     negative_pred = K.equal(K.argmax(K.ones_like(y_pred) - y_pred, axis=1), 0)
-
-     return K.cast(K.equal(truth, negative_pred), dtype='float32')
+    """Return number of true negatives"""
+    return (1 - K.round(y_pred)) * (1 - y_true)
 
 
 def false_positives(y_true, y_pred):
     """Return number of false positives"""
-    truth = K.equal(K.argmax(y_true, axis=1), 0)
-    positive_pred = K.equal(K.argmax(y_pred, axis=1), 1)
-
-    return K.cast(K.equal(truth, positive_pred), dtype='float32')
+    return K.round(y_pred) * (1 - y_true)
 
 
 def false_negatives(y_true, y_pred):
     """Return number of false negatives"""
-    truth = K.equal(K.argmax(y_true, axis=1), 1)
-    negative_pred = K.equal(K.argmax(K.ones_like(y_pred) - y_pred, axis=1), 0)
-
-    return K.cast(K.equal(negative_pred, truth), dtype='float32')
+    return (1 - K.round(y_pred)) * y_true
 
 
 def sensitivity(y_true, y_pred):
