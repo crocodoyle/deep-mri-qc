@@ -64,39 +64,34 @@ def dice_np(im1, im2):
 
 def true_positives(y_true, y_pred):
     """Return number of true positives"""
-    return K.sum(y_true * K.round(y_pred))
+    positive_true = K.equal(K.argmax(y_true), 1)
+    positive_pred = K.equal(K.argmax(y_pred), 1)
+
+    return K.equal(positive_true, positive_pred)
 
 
 def true_negatives(y_true, y_pred):
      """Return number of true negatives"""
-     one = K.ones_like(y_pred)
+     negative_true = K.equal(K.argmax(y_true), 0)
+     negative_pred = K.equal(K.argmax(y_pred), 0)
 
-     y_true_neg = y_true
-     y_pred_neg = K.round(y_pred)
-
-     y_true_neg = K.update_sub(y_true_neg, one)
-     y_pred_neg = K.update_sub(y_pred_neg, one)
-
-     return K.sum((y_true_neg) * (y_pred_neg))
+     return K.equal(negative_true, negative_pred)
 
 
 def false_positives(y_true, y_pred):
     """Return number of false positives"""
-    one = K.ones_like(y_pred)
+    positive_true = K.equal(K.argmax(y_true), 1)
+    positive_pred = K.equal(K.argmax(y_pred), 1)
 
-    y_true_neg = y_true
-    y_true_neg = K.update_sub(y_true_neg, one)
-    return K.sum((y_true_neg) * K.round(y_pred))
+    return K.not_equal(positive_true, positive_pred)
 
 
 def false_negatives(y_true, y_pred):
     """Return number of false negatives"""
-    one = K.ones_like(y_pred)
+    negative_true = K.equal(K.argmax(y_true), 0)
+    negative_pred = K.equal(K.argmax(y_pred), 0)
 
-    y_pred_neg = K.round(y_pred)
-    y_pred_neg = K.update_sub(y_pred_neg, one)
-
-    return K.sum(y_true * y_pred_neg)
+    return K.not_equal(negative_true, negative_pred)
 
 
 def sensitivity(y_true, y_pred):
