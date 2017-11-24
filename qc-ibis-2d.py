@@ -98,17 +98,17 @@ def qc_model():
 
     model = Sequential()
 
-    model.add(Conv2D(64, conv_size, activation='relu', input_shape=(target_size[1], target_size[2], 1)))
+    model.add(Conv2D(16, conv_size, activation='relu', input_shape=(target_size[1], target_size[2], 1)))
     model.add(BatchNormalization())
     # model.add(MaxPooling2D(pool_size=pool_size))
     model.add(Dropout(0.1))
 
-    model.add(Conv2D(64, conv_size, activation='relu'))
+    model.add(Conv2D(32, conv_size, activation='relu'))
     model.add(BatchNormalization())
     # model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.1))
 
-    model.add(Conv2D(128, conv_size, activation='relu'))
+    model.add(Conv2D(64, conv_size, activation='relu'))
     model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.2))
@@ -336,15 +336,15 @@ def predict_and_visualize(model, indices, results_dir):
         plt.savefig(results_dir + filename, bbox_inches='tight')
         plt.close()
 
-    pass_regions = np.divide(avg_pass, pass_imgs)
-    fail_regions = np.divide(avg_fail, fail_imgs)
+    # pass_regions = np.divide(avg_pass, pass_imgs)
+    # fail_regions = np.divide(avg_fail, fail_imgs)
 
     plt.figure()
-    plt.imshow(pass_regions)
+    plt.imshow(avg_pass, vmin=0, vmax=1)
     plt.axis('off')
     plt.savefig(results_dir + 'average_pass_gradient.png', bbox_inches='tight')
     plt.figure()
-    plt.imshow(fail_regions)
+    plt.imshow(avg_fail, vmin=0, vmax=1)
     plt.axis('off')
     plt.savefig(results_dir + 'average_fail_gradient.png', bbox_inches='tight')
     plt.close()
