@@ -67,7 +67,7 @@ def true_positives(y_true, y_pred):
     predictions = K.argmax(y_pred)
     truth = K.argmax(y_true)
 
-    positive_pred = K.equal(predictions, 1)
+    positive_pred = K.cast(K.equal(predictions, 1), dtype='bool')
 
     return K.cast(K.equal(K.equal(truth, positive_pred), K.equal(truth, 1)), dtype='float32')
 
@@ -79,7 +79,7 @@ def true_negatives(y_true, y_pred):
      predictions = K.argmax(y_pred)
      truth = K.argmax(y_true)
 
-     negative_pred = K.equal(predictions, 0)
+     negative_pred = K.cast(K.equal(predictions, 0), dtype='bool')
 
      return K.cast(K.equal(K.equal(truth, negative_pred), K.equal(truth, 1)), dtype='float32')
 
@@ -89,7 +89,7 @@ def false_positives(y_true, y_pred):
     predictions = K.argmax(y_pred)
     truth = K.argmax(y_true)
 
-    positive_pred = K.equal(predictions, 1)
+    positive_pred = K.cast(K.equal(predictions, 1), dtype='bool')
 
     return K.cast(K.equal(K.not_equal(truth, positive_pred), K.equal(truth, 0)), dtype='float32')
 
@@ -99,7 +99,7 @@ def false_negatives(y_true, y_pred):
     predictions = K.argmax(y_pred)
     truth = K.argmax(y_true)
 
-    negative_pred = K.equal(predictions, 0)
+    negative_pred = K.cast(K.equal(predictions, 0), dtype='bool')
 
     return K.cast(K.equal(K.not_equal(truth, negative_pred), K.equal(truth, 1)), dtype='float32')
 
