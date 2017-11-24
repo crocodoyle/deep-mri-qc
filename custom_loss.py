@@ -19,7 +19,7 @@ def dice_loss(y_true, y_pred):
 
     overlap = K.sum(ytf*ypf)
     total = K.sum(ytf*ytf) + K.sum(ypf * ypf)
-    return -(2*overlap +1e-10) / (total + 1e-10)
+    return -(2*overlap + K.epsilon()) / (total + K.epsilon())
 
 
 def dice_metric(y_true, y_pred):
@@ -67,17 +67,20 @@ def true_positive(y_true, y_pred):
 
 def true_negative(y_true, y_pred):
     """Return number of true negatives"""
-    return (1-y_true) * (1-K.round(y_pred))
+    one = K.ones(K.shape(y_true))
+    return (one-y_true) * (one-K.round(y_pred))
 
 
 def false_positive(y_true, y_pred):
     """Return number of false positives"""
-    return (1-y_true) * K.round(y_pred)
+    one = K.ones(K.shape(y_true))
+    return (one-y_true) * K.round(y_pred)
 
 
 def false_negative(y_true, y_pred):
     """Return number of false negatives"""
-    return y_true * (1-K.round(y_pred))
+    one = K.ones(K.shape(y_true))
+    return y_true * (one-K.round(y_pred))
 
 
 def sensitivity(y_true, y_pred):
