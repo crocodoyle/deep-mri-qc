@@ -67,19 +67,19 @@ def true_positive(y_true, y_pred):
 
 def true_negative(y_true, y_pred):
     """Return number of true negatives"""
-    one = K.ones(K.shape(y_true))
+    one = K.ones(K.int_shape(y_true))
     return (one-y_true) * (one-K.round(y_pred))
 
 
 def false_positive(y_true, y_pred):
     """Return number of false positives"""
-    one = K.ones(K.shape(y_true))
+    one = K.ones(K.int_shape(y_true))
     return (one-y_true) * K.round(y_pred)
 
 
 def false_negative(y_true, y_pred):
     """Return number of false negatives"""
-    one = K.ones(K.shape(y_true))
+    one = K.ones(K.int_shape(y_true))
     return y_true * (one-K.round(y_pred))
 
 
