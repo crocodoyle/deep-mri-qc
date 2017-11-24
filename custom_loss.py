@@ -3,6 +3,8 @@
 from keras import backend as K
 import numpy as np
 
+import tensorflow as tf
+
 def dice_loss(y_true, y_pred):
     """
     Computes approximate DICE coefficient as a loss by using the negative, computed with the Keras backend. The overlap\
@@ -60,53 +62,39 @@ def dice_np(im1, im2):
     return overlap / total
 
 
-def true_positive(y_true, y_pred):
-    """Return number of true positives"""
-    return y_true * K.round(y_pred)
-
-
-def true_negative(y_true, y_pred):
-    """Return number of true negatives"""
-    one = K.ones(K.int_shape(y_pred))
-    return (one-y_true) * (one-K.round(y_pred))
-
-
-def false_positive(y_true, y_pred):
-    """Return number of false positives"""
-    one = K.ones(K.int_shape(y_pred))
-    return (one-y_true) * K.round(y_pred)
-
-
-def false_negative(y_true, y_pred):
-    """Return number of false negatives"""
-    print(K.int_shape(y_pred))
-    one = K.ones(K.int_shape(y_pred))
-    return y_true * (one-K.round(y_pred))
+# def true_positive(y_true, y_pred):
+#     """Return number of true positives"""
+#     return y_true * K.round(y_pred)
+#
+#
+# def true_negative(y_true, y_pred):
+#     """Return number of true negatives"""
+#     one = K.ones(K.int_shape(y_pred))
+#     return (one-y_true) * (one-K.round(y_pred))
+#
+#
+# def false_positive(y_true, y_pred):
+#     """Return number of false positives"""
+#     one = K.ones(K.int_shape(y_pred))
+#     return (one-y_true) * K.round(y_pred)
+#
+#
+# def false_negative(y_true, y_pred):
+#     """Return number of false negatives"""
+#     print(K.int_shape(y_pred))
+#     one = K.ones(K.int_shape(y_pred))
+#     return y_true * (one-K.round(y_pred))
 
 
 def sensitivity(y_true, y_pred):
     """Return sensitivity (how many of the positives were detected?)"""
-    tp = K.sum(true_positive(y_true, y_pred))
-    fn = K.sum(false_negative(y_true, y_pred))
+    tp = K.sum(tf.metrics.true_positives(y_true, y_pred))
+    fn = K.sum(tf.metrics.false_negatives(y_true, y_pred))
     return tp / (tp + fn + K.epsilon())
 
 
 def specificity(y_true, y_pred):
     """Return specificity (how many of the negatives were detected?)"""
-    tn = K.sum( true_negative(y_true, y_pred))
-    fp = K.sum( false_positive(y_true, y_pred))
+    tn = K.sum(tf.metrics.true_negatives(y_true, y_pred))
+    fp = K.sum(tf.metrics.false_positives(y_true, y_pred))
     return tn / (tn+fp + K.epsilon())
-
-
-def precision(y_true, y_pred):
-    """Return precision (how many of the predicted positives are correct?)"""
-    tp = K.sum(true_positive(y_true, y_pred))
-    fp = K.sum(false_positive(y_true, y_pred))
-    return tp / (tp+fp + K.epsilon())
-
-
-def negative_predictive_value(y_true, y_pred):
-    """Return negative predictive value (how many of the predicted negatives are correct?)"""
-    tn = K.sum(true_negative(y_true, y_pred))
-    fn = K.sum(false_negative(y_true, y_pred))
-    return tn / (tn+fn + K.epsilon())
