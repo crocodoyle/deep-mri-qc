@@ -67,47 +67,50 @@ def true_positives(y_true, y_pred):
     predictions = K.argmax(y_pred)
     truth = K.argmax(y_true)
 
-    positive_true = K.equal(truth, 1)
-    positive_pred = K.equal(predictions, 1)
+    positive_true = K.equal(truth, 1.0)
+    positive_pred = K.equal(predictions, 1.0)
 
-    return K.cast(positive_pred, dtype='float32')
+    return K.cast(K.equal(positive_pred, positive_true), dtype='float32')
 
     # return K.cast(K.equal(positive_true, positive_pred), dtype='float32')
 
 
 def true_negatives(y_true, y_pred):
      """Return number of true negatives"""
-     negative_true = K.equal(K.argmax(y_true), 0)
-     negative_pred = K.equal(K.argmax(y_pred), 0)
+     predictions = K.argmax(y_pred)
+     truth = K.argmax(y_true)
+
+     negative_true = K.equal(K.argmax(y_true), 0.0)
+     negative_pred = K.equal(K.argmax(y_pred), 0.0)
 
      return K.cast(K.equal(negative_true, negative_pred), dtype='float32')
 
 
 def false_positives(y_true, y_pred):
     """Return number of false positives"""
-    positive_true = K.equal(K.argmax(y_true), 1)
-    positive_pred = K.equal(K.argmax(y_pred), 1)
+    positive_true = K.equal(K.argmax(y_true), 1.0)
+    positive_pred = K.equal(K.argmax(y_pred), 1.0)
 
     return K.cast(K.not_equal(positive_true, positive_pred), dtype='float32')
 
 
 def false_negatives(y_true, y_pred):
     """Return number of false negatives"""
-    negative_true = K.equal(K.argmax(y_true), 0)
-    negative_pred = K.equal(K.argmax(y_pred), 0)
+    negative_true = K.equal(K.argmax(y_true), 0.0)
+    negative_pred = K.equal(K.argmax(y_pred), 0.0)
 
     return K.cast(K.not_equal(negative_true, negative_pred), dtype='float32')
 
 
 def sensitivity(y_true, y_pred):
     """Return sensitivity (how many of the positives were detected?)"""
-    tp = true_positives(y_true, y_pred)
-    fn = false_negatives(y_true, y_pred)
-    return K.sum(tp / (tp + fn + K.epsilon()))
+    tp = K.sum(true_positives(y_true, y_pred))
+    fn = K.sum(false_negatives(y_true, y_pred))
+    return tp / (tp + fn + K.epsilon())
 
 
 def specificity(y_true, y_pred):
     """Return specificity (how many of the negatives were detected?)"""
-    tn = true_negatives(y_true, y_pred)
-    fp = false_positives(y_true, y_pred)
-    return K.sum(tn / (tn+fp + K.epsilon()))
+    tn = K.sum(true_negatives(y_true, y_pred))
+    fp = K.sum(false_positives(y_true, y_pred))
+    return tn / (tn+fp + K.epsilon())
