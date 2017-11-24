@@ -68,7 +68,7 @@ def true_positives(y_true, y_pred):
     truth = K.equal(K.argmax(y_true), 1)
     positive_pred = K.equal(K.argmax(y_pred), 1)
 
-    return K.sum(K.cast(K.equal(truth, positive_pred), dtype='float32'))
+    return K.sum(K.cast(K.equal(truth, positive_pred)), dtype='float32')
 
     # return K.cast(K.equal(positive_true, positive_pred), dtype='float32')
 
