@@ -108,5 +108,5 @@ def sensitivity(y_true, y_pred):
 def specificity(y_true, y_pred):
     """Return specificity (how many of the negatives were detected?)"""
     tn = K.sum(true_negatives(y_true, y_pred))
-    fp = K.sum(false_positives(y_true, y_pred)
+    fp = K.sum(false_positives(y_true, y_pred))
     return tn / (tn+fp + K.epsilon())
