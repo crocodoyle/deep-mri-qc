@@ -64,21 +64,21 @@ def dice_np(im1, im2):
 
 def true_positives(y_true, y_pred):
     """Return number of true positives"""
-    return K.sum(K.argmax(y_true) * K.argmax(y_pred))
+    return K.argmax(y_true) * K.argmax(y_pred)
 
 def true_negatives(y_true, y_pred):
     """Return number of true negatives"""
-    return K.sum((1 - K.argmax(y_pred)) * (1 - K.argmax(y_true)))
+    return (1 - K.argmax(y_pred)) * (1 - K.argmax(y_true))
 
 
 def false_positives(y_true, y_pred):
     """Return number of false positives"""
-    return K.sum((K.argmax(y_pred)) * (1 - K.argmax(y_true)))
+    return (K.argmax(y_pred)) * (1 - K.argmax(y_true))
 
 
 def false_negatives(y_true, y_pred):
     """Return number of false negatives"""
-    return K.sum((1 - K.argmax(y_pred)) * (K.argmax(y_true)))
+    return (1 - K.argmax(y_pred)) * (K.argmax(y_true))
 
 
 def sensitivity(y_true, y_pred):
