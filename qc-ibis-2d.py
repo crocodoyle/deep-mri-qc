@@ -287,7 +287,7 @@ def predict_and_visualize(model, indices, results_dir):
             model = utils.apply_modifications(model)
 
         for i, (index, prediction) in enumerate(zip(indices, predictions)):
-            fig, ax = plt.subplots(1, 2, figsize=(12, 6))
+            fig, ax = plt.subplots(1, 2, figsize=(12, 8))
 
             actual = np.argmax(labels[index, ...])
             print('actual, predicted PASS/FAIL:', actual, prediction)
@@ -311,7 +311,7 @@ def predict_and_visualize(model, indices, results_dir):
             ax[0].imshow(img[0, ..., 0], cmap='gray')
             ax[0].set_xticks([])
             ax[0].set_yticks([])
-            ax[0].set_xlabel('input')
+            ax[0].set_xlabel('Input Image')
 
             for j, type in enumerate(['guided']):
                 grads = visualize_cam(model, layer_idx, filter_indices=prediction, seed_input=img[0, ...], backprop_modifier=type)
@@ -321,10 +321,11 @@ def predict_and_visualize(model, indices, results_dir):
                 gray = np.uint8(img[0, :, :, :]*255)
                 gray3 = np.dstack((gray,)*3)
 
-                ax[j+1].imshow(overlay(heatmap, gray3, alpha=0.3))
+                ax[j+1].imshow(overlay(heatmap, gray3, alpha=0.2))
                 ax[j+1].set_xticks([])
                 ax[j+1].set_yticks([])
-                ax[j+1].set_xlabel(str(type))
+                fig.colorbar(ax[j+1], ticks=[0, 127, 255])
+                ax[j+1].set_xlabel('Decision Regions (Guided Grad-CAM)')
 
                 if prediction == 0:
                     avg_fail += grads
@@ -332,7 +333,6 @@ def predict_and_visualize(model, indices, results_dir):
                 else:
                     avg_pass += grads
                     pass_imgs += 1.0
-
 
             plt.savefig(results_dir + filename, bbox_inches='tight')
             plt.close()
@@ -466,6 +466,10 @@ if __name__ == "__main__":
             scores[metric_name].append(score)
 
         predict_and_visualize(model, test_indices, results_dir)
+
+        model.compile(loss='categorical-crossentropy', optimizer='adam', metrics=['acc'])
+        model.save(results_dir + 'ibis_qc_model' + str(k) + '.hdf5')
+
 
     print(metric, scores[metric])
     for metric in model.metrics_names:
