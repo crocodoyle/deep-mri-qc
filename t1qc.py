@@ -4,7 +4,7 @@ import argparse as ap
 import numpy as np
 import os
 
-from custom_loss import *
+from custom_loss import sensitivity, specificity
 
 from keras.models import load_model
 # from dltk.core.io.preprocessing import normalise_zero_one, resize_image_with_crop_or_pad
