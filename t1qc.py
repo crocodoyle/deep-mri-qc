@@ -4,8 +4,9 @@ import argparse as ap
 import numpy as np
 import os
 
-from keras.models import load_model
+from custom_loss import *
 
+from keras.models import load_model
 # from dltk.core.io.preprocessing import normalise_zero_one, resize_image_with_crop_or_pad
 
 import keras.backend as K
@@ -48,9 +49,7 @@ if __name__ == "__main__":
         # print('y_start, y_stop:', y_start, y_stop)
         # print('z_start, z_stop:', z_start, z_stop)
 
-
         # img_slice = img[x_slice, ][np.newaxis, ..., np.newaxis]
-
         # print(img_slice.shape)
 
         model = load_model(os.path.expanduser('~/IBIS-DeepMRIQC-model-v0.hdf5'))
