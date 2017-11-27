@@ -68,7 +68,7 @@ def true_positives(y_true, y_pred):
 
 def true_negatives(y_true, y_pred):
     """Return number of true negatives"""
-    return (1 - y_pred) * (1 - y_true)
+    return tf.multiply(1 - y_pred, 1 - y_true)
 
 
 def false_positives(y_true, y_pred):
