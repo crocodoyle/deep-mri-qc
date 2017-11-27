@@ -64,7 +64,7 @@ def dice_np(im1, im2):
 
 def true_positives(y_true, y_pred):
     """Return number of true positives"""
-    return y_true * y_pred
+    return tf.multiply(y_true, y_pred)
 
 def true_negatives(y_true, y_pred):
     """Return number of true negatives"""
