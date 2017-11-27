@@ -2,6 +2,7 @@ import nibabel as nib
 import argparse as ap
 
 import numpy as np
+import os
 
 from keras.models import load_model
 
@@ -48,15 +49,15 @@ if __name__ == "__main__":
         # print('z_start, z_stop:', z_start, z_stop)
 
 
-        img_slice = img[x_slice, y_start:y_stop, z_start:z_stop][np.newaxis, np.newaxis, ...]
+        # img_slice = img[x_slice, ][np.newaxis, ..., np.newaxis]
 
-        print(img_slice.shape)
+        # print(img_slice.shape)
 
-        model = load_model('~/IBIS-DeepMRIQC-model-v0.hdf5')
+        model = load_model(os.path.expanduser('~/IBIS-DeepMRIQC-model-v0.hdf5'))
 
         slice_predictions = []
         for i in range(10):
-            slice_predictions.append(model.predict(img[80+i, :, :][np.newaxis, ..., np.newaxis])[0][0])
+            slice_predictions.append(model.predict(img[x_slice-4+i, y_start:y_stop, z_start:z_stop][np.newaxis, ..., np.newaxis])[0][0])
 
         print(np.mean(slice_predictions))
 
