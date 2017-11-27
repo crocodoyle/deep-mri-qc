@@ -321,10 +321,10 @@ def predict_and_visualize(model, indices, results_dir):
                 gray = np.uint8(img[0, :, :, :]*255)
                 gray3 = np.dstack((gray,)*3)
 
-                ax[j+1].imshow(overlay(heatmap, gray3, alpha=0.2))
+                img_ax = ax[j+1].imshow(overlay(heatmap, gray3, alpha=0.2))
                 ax[j+1].set_xticks([])
                 ax[j+1].set_yticks([])
-                fig.colorbar(ax[j+1], ticks=[0, 127, 255])
+                plt.colorbar(img_ax, ticks=[0, 127, 255])
                 ax[j+1].set_xlabel('Decision Regions (Guided Grad-CAM)')
 
                 if prediction == 0:
