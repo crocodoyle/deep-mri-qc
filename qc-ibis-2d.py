@@ -467,9 +467,8 @@ if __name__ == "__main__":
 
         predict_and_visualize(model, test_indices, results_dir)
 
-        model.compile(loss='categorical-crossentropy', optimizer='adam', metrics=['acc'])
+        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['acc'])
         model.save(results_dir + 'ibis_qc_model' + str(k) + '.hdf5')
-
 
     print(metric, scores[metric])
     for metric in model.metrics_names:
