@@ -407,13 +407,13 @@ if __name__ == "__main__":
     sgd = SGD(lr=1e-3, momentum=0.9, decay=1e-6, nesterov=True)
     adam = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=1e-6)
 
-    metrics = ["accuracy", sensitivity, specificity, true_positives, true_negatives, false_positives, false_negatives]
+    score_metrics = ["accuracy", sensitivity, specificity, true_positives, true_negatives, false_positives, false_negatives]
 
     model = qc_model()
     model.summary()
     model.compile(loss='categorical_crossentropy',
                   optimizer=adam,
-                  metrics=metrics)
+                  metrics=score_metrics)
 
     scores = {}
     for metric in model.metrics_names:
@@ -427,7 +427,7 @@ if __name__ == "__main__":
 
         model.compile(loss='categorical_crossentropy',
                       optimizer=adam,
-                      metrics=metrics)
+                      metrics=score_metrics)
 
         validation_indices = test_indices[::2]
         test_indices = test_indices[1::2]
