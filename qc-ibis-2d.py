@@ -433,6 +433,7 @@ if __name__ == "__main__":
     scores['spec'] = []
     scores['val_sens'] = []
     scores['val_spec'] = []
+    scores['loss'] = []
 
     for k, (train_indices, test_indices) in enumerate(skf.split(np.asarray(indices), labels)):
 
