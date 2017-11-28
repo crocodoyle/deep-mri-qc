@@ -169,6 +169,8 @@ def pass_fail_graph():
     plt.close()
 
 def age_range_graph():
+    workdir = '/home/users/adoyle/deepqc/'
+
     ibis_range = [0.5, 2]
     ping_range = [3, 20]
     abide_range = [7, 64]
@@ -195,7 +197,7 @@ def age_range_graph():
     ax.invert_yaxis()  # labels read top-to-bottom
     ax.set_xlabel('Age Range of Subjects')
 
-    plt.show()
+    plt.savefig(workdir + 'ages.png')
 
 
 if __name__ == '__main__':
