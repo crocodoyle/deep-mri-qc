@@ -155,7 +155,6 @@ def deep_qc_graphs():
     width = 0.35
 
     fig, ax = plt.subplots()
-    plt.grid()
 
     ax.bar(ind, pass_plot, width, color='g', label='PASS')
     ax.bar(ind+width/2, fail_plot, width, color='r', label='FAIL')
@@ -164,9 +163,6 @@ def deep_qc_graphs():
     ax.set_ylabel('Number of Subjects')
     ax.set_xticks(ind + 3*width / 4)
     ax.set_xticklabels(datasets)
-
-
-
 
     plt.legend(shadow=True)
     plt.savefig(workdir + 'datasets-qc-pass-fail.png')
