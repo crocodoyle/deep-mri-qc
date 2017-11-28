@@ -7,6 +7,8 @@ import math
 import numpy as np
 
 import nibabel as nib
+import pickle
+import h5py
 
 workdir = '/data1/data/deepqc/'
 
@@ -112,13 +114,61 @@ def rename_abide(input_path, output_path):
         print(id)
         os.rename(input_path + file, output_path + id[2:] + '.mnc')
 
-def visualize_fail_regions():
-    pass
+def deep_qc_graphs():
 
+    workdir = '/home/users/adoyle/deepqc/'
+    data_file = 'deepqc-all-sets.hdf5'
+
+    abide_indices = pickle.load(open(workdir + 'abide_indices.pkl', 'rb'))
+    ds030_indices = pickle.load(open(workdir + 'ds030_indices.pkl', 'rb'))
+    ibis_indices = pickle.load(open(workdir + 'ibis_indices.pkl', 'rb'))
+    ping_indices = pickle.load(open(workdir + 'ping_indices.pkl', 'rb'))
+
+    f = h5py.File(workdir + data_file)
+    labels = f['qc_label']
+
+    pass_fail = {}
+    pass_fail['ABIDE'] = 0
+    pass_fail['ds030'] = 0
+    pass_fail['IBIS'] = 0
+    pass_fail['PING'] = 0
+
+    for index in abide_indices:
+        pass_fail['ABIDE'] += np.argmax(labels[index, ...])
+
+    for index in ds030_indices:
+        pass_fail['ds030'] += np.argmax(labels[index, ...])
+
+    for index in ibis_indices:
+        pass_fail['IBIS'] += np.argmax(labels[index, ...])
+
+    for index in ping_indices:
+        pass_fail['PING'] += np.argmax(labels[index, ...])
+
+    pass_plot = [pass_fail['IBIS'], pass_fail['PING'], pass_fail['ABIDE'], pass_fail['ds030']]
+    fail_plot = [len(ibis_indices) - pass_fail['IBIS'], len(ping_indices) - pass_fail['PING'], len(abide_indices) - pass_fail['ABIDE'], len(ds030_indices) - pass_fail['ds030']]
+
+    datasets = ['IBIS', 'PING', 'ABIDE', 'ds030']
+
+    ind = np.arange(len(datasets))
+    width = 0.35
+
+    fig, ax = plt.subplots()
+
+    ax.bar(ind, pass_plot, width, color='g')
+    ax.bar(ind+width/2, fail_plot, width, color='r')
+
+    ax.set_xlabel('Dataset')
+    ax.set_ylabel('Number of Subjects')
+    ax.set_xticks(ind + 3*width / 4)
+    ax.set_xticklabels(datasets)
+
+    plt.savefig(workdir + 'datasets-qc-pass-fail.png')
+    plt.close()
 
 if __name__ == '__main__':
-
-    plot_nonlinearities('E:/')
+    deep_qc_graphs()
+    # plot_nonlinearities('E:/')
 
     # gif_my_brain('E:/brains/andrew_mri_nov_2015.mnc')
 
