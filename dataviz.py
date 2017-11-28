@@ -156,13 +156,15 @@ def pass_fail_graph():
 
     fig, ax = plt.subplots()
 
-    ax.bar(ind, pass_plot, width, color='g', label='PASS')
-    ax.bar(ind+width/2, fail_plot, width, color='r', label='FAIL')
+    ax.bar(ind, pass_plot, width, color='darkgreen', label='PASS')
+    ax.bar(ind+width/2, fail_plot, width, color='darkred', label='FAIL')
 
     ax.set_xlabel('Dataset')
     ax.set_ylabel('Number of Subjects')
-    ax.set_xticks(ind + 3*width / 4)
+    ax.set_xticks(ind + width / 4)
     ax.set_xticklabels(datasets)
+    for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] + ax.get_xticklabels() + ax.get_yticklabels()):
+        item.set_fontsize(24)
 
     plt.legend(shadow=True)
     plt.savefig(workdir + 'datasets-qc-pass-fail.png')
@@ -189,19 +191,24 @@ def age_range_graph():
     datasets = ['IBIS', 'PING', 'ABIDE', 'ds030']
     y_pos = np.arange(len(datasets))
 
-    ax.barh(y_pos, age_range, left=start_age, align='center', color='darkred')
+    ax.barh(y_pos, age_range, 0.35, left=start_age, align='center', color='darkred')
 
     ax.set_yticks(y_pos)
     ax.set_yticklabels(datasets)
 
     ax.invert_yaxis()  # labels read top-to-bottom
     ax.set_xlabel('Age Range of Subjects')
+    ax.set_ylabel('Dataset')
+    for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] + ax.get_xticklabels() + ax.get_yticklabels()):
+        item.set_fontsize(24)
 
     plt.savefig(workdir + 'ages.png')
 
 
 if __name__ == '__main__':
     age_range_graph()
+    pass_fail_graph()
+
     # plot_nonlinearities('E:/')
 
     # gif_my_brain('E:/brains/andrew_mri_nov_2015.mnc')
