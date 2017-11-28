@@ -1,7 +1,7 @@
 from keras.models import Sequential
 from keras.layers import Dense, Conv2D, MaxPooling2D, Flatten, BatchNormalization, Dropout
 from keras.optimizers import SGD, Adam
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, Callback
 
 import numpy as np
 import h5py
@@ -10,7 +10,7 @@ import os, csv, time
 import nibabel as nib
 
 from dltk.core.io.preprocessing import normalise_zero_one, resize_image_with_crop_or_pad
-from custom_loss import sensitivity, specificity, true_positives, true_negatives, false_positives, false_negatives
+# from custom_loss import sensitivity, specificity, true_positives, true_negatives, false_positives, false_negatives
 
 from collections import defaultdict
 
@@ -37,6 +37,9 @@ label_file = datadir + 't1_ibis_QC_labels.csv'
 
 total_subjects = 2020
 target_size = (168, 256, 244)
+
+train_indices, validation_indices, test_indices = [], [], []
+results_dir = ''
 
 def make_ibis_qc():
     with h5py.File(workdir + 'ibis.hdf5', 'w') as f:
@@ -92,10 +95,80 @@ def make_ibis_qc():
     return indices, labels
 
 
+class SensSpec(Callback):
+
+    def on_train_begin(self, logs={}):
+        self.train_sens = []
+        self.train_spec = []
+
+        self.val_sens = []
+        self.val_spec = []
+
+    def on_epoch_end(self, batch, logs={}):
+
+        train_sensitivity, train_specificity = sens_spec(train_indices, self.model)
+        val_sensitivity, val_specificity = sens_spec(validation_indices, self.model)
+
+        self.train_sens.append(train_sensitivity)
+        self.train_spec.append(train_specificity)
+        self.val_sens.append(val_sensitivity)
+        self.val_spec.append(val_specificity)
+
+
+    def on_train_end(self, logs={}):
+        epoch_num = range(len(self.train_sens))
+
+        plt.close()
+        # plt.plot(epoch_num, hist.history['acc'], label='Training Accuracy')
+        # plt.plot(epoch_num, hist.history['val_acc'], label="Validation Accuracy")
+        plt.plot(epoch_num, self.train_sens, label='Train Sensitivity')
+        plt.plot(epoch_num, self.train_spec, label='Train Specificity')
+        plt.plot(epoch_num, self.val_sens, label='Validation Sensitivity')
+        plt.plot(epoch_num, self.val_spec, label='Val Specificity')
+
+        plt.legend(shadow=True)
+        plt.xlabel("Training Epoch Number")
+        plt.ylabel("Metric Value")
+        plt.savefig(results_dir + 'training_metrics.png', bbox_inches='tight')
+        plt.close()
+
+
+def sens_spec(indices, model):
+    with h5py.File(workdir + 'ibis.hdf5') as f:
+        images = f['ibis_t1']
+        labels = f['qc_label']
+
+        predictions = np.zeros((len(indices)))
+        actual = np.zeros((len(indices)))
+
+        predict_batch = np.zeros((1, target_size[1], target_size[2], 1))
+
+        for i, index in enumerate(indices):
+            predict_batch[0, :, :, 0] = images[index, target_size[0] // 2, :, :]
+
+            prediction = model.predict_on_batch(predict_batch)[0][0]
+            if prediction >= 0.5:
+                predictions[i] = 1
+            else:
+                predictions[i] = 0
+            actual[i] = np.argmax(labels[index, ...])
+
+        conf = confusion_matrix(actual, predictions)
+
+        tp = conf[0][0]
+        tn = conf[1][1]
+        fp = conf[0][1]
+        fn = conf[1][0]
+
+        sensitivity = float(tp) / (float(tp) + float(fn))
+        specificity = float(tn) / (float(tn) + float(fp))
+
+    return sensitivity, specificity
+
 def qc_model():
     nb_classes = 2
 
-    conv_size = (5, 5)
+    conv_size = (3, 3)
 
     model = Sequential()
 
@@ -109,27 +182,27 @@ def qc_model():
     # model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.1))
 
-    model.add(Conv2D(64, conv_size, activation='relu'))
+    model.add(Conv2D(32, conv_size, activation='relu'))
     model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.2))
 
-    model.add(Conv2D(128, conv_size, activation='relu'))
+    model.add(Conv2D(64, conv_size, activation='relu'))
     model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2,2)))
     model.add(Dropout(0.2))
 
-    model.add(Conv2D(256, conv_size, activation='relu'))
+    model.add(Conv2D(64, conv_size, activation='relu'))
     model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2,2)))
     model.add(Dropout(0.3))
 
-    model.add(Conv2D(256, conv_size, activation='relu'))
+    model.add(Conv2D(128, conv_size, activation='relu'))
     model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.4))
 
-    model.add(Conv2D(512, conv_size, activation='relu'))
+    model.add(Conv2D(256, conv_size, activation='relu'))
     model.add(BatchNormalization())
     model.add(Dropout(0.5))
 
@@ -171,79 +244,16 @@ def batch(indices, n, random_slice=False):
                     yield (x_train[0:samples_this_batch, ...], y_train[0:samples_this_batch, :])
 
 
-def test_images(model, test_indices, save_imgs=True):
-    with h5py.File(workdir + 'ibis.hdf5', 'r') as f:
-        images = f['ibis_t1']
-        labels = f['qc_label']
-        filename_test = f['filenames']
-
-        predictions = np.zeros((len(test_indices)))
-        actual = np.zeros((len(test_indices)))
-
-        predict_batch = np.zeros((1, target_size[1], target_size[2], 1))
-
-        print("test indices:", len(test_indices))
-        print("test index max:", max(test_indices))
-        print("labels:", len(labels))
-        print("filenames:", len(filename_test))
-
-        for i, index in enumerate(test_indices):
-            predict_batch[0,:,:,0] = images[index,target_size[0]//2, :,:]
-
-            prediction = model.predict_on_batch(predict_batch)[0][0]
-            if prediction >= 0.5:
-                predictions[i] = 1
-            else:
-                predictions[i] = 0
-            actual[i] = labels[index,0]
-
-            if save_imgs:
-                plt.imshow(images[index,target_size[0]//2+10,:,:], cmap='gray')
-                if predictions[i] == 1 and actual[i] == 1:
-                    plt.savefig(results_dir + 'fail_right_' + os.path.basename(filename_test[i]) + ".png")
-                elif predictions[i] == 0 and actual[i] == 0:
-                    plt.savefig('/home/adoyle/images/pass_right_' + os.path.basename(filename_test[i]) + '.png')
-                elif predictions[i] == 1 and actual[i] == 0:
-                    plt.savefig('/home/adoyle/images/pass_wrong_' + os.path.basename(filename_test[i]) + '.png')
-                elif predictions[i]  == 0 and actual[i] == 1:
-                    plt.savefig('/home/adoyle/images/fail_wrong_' + os.path.basename(filename_test[i]) + '.png')
-                plt.clf()
-
-        conf = confusion_matrix(actual, predictions)
-        print('Confusion Matrix')
-        print(conf)
-
-        print(np.shape(conf))
-
-        tp = conf[0][0]
-        tn = conf[1][1]
-        fp = conf[0][1]
-        fn = conf[1][0]
-
-        print('true negatives:', tn)
-        print('true positives:', tp)
-        print('false negatives:', fn)
-        print('false positives:', fp)
-
-        sensitivity = float(tp) / (float(tp) + float(fn))
-        specificity = float(tn) / (float(tn) + float(fp))
-
-
-        print('sens:', sensitivity)
-        print('spec:', specificity)
-
-        return sensitivity, specificity
-
 def plot_graphs(hist, results_dir, fold_num):
     epoch_num = range(len(hist.history['acc']))
 
     plt.clf()
-    # plt.plot(epoch_num, hist.history['acc'], label='Training Accuracy')
-    # plt.plot(epoch_num, hist.history['val_acc'], label="Validation Accuracy")
-    plt.plot(epoch_num, hist.history['sensitivity'], label='Train Sens')
-    plt.plot(epoch_num, hist.history['val_sensitivity'], label='Val Sens')
-    plt.plot(epoch_num, hist.history['specificity'], label='Train Spec')
-    plt.plot(epoch_num, hist.history['val_specificity'], label='Val Spec')
+    plt.plot(epoch_num, hist.history['acc'], label='Training Accuracy')
+    plt.plot(epoch_num, hist.history['val_acc'], label="Validation Accuracy")
+    # plt.plot(epoch_num, hist.history['sensitivity'], label='Train Sens')
+    # plt.plot(epoch_num, hist.history['val_sensitivity'], label='Val Sens')
+    # plt.plot(epoch_num, hist.history['specificity'], label='Train Spec')
+    # plt.plot(epoch_num, hist.history['val_specificity'], label='Val Spec')
 
     plt.legend(shadow=True)
     plt.xlabel("Training Epoch Number")
@@ -408,7 +418,7 @@ if __name__ == "__main__":
     sgd = SGD(lr=1e-3, momentum=0.9, decay=1e-6, nesterov=True)
     adam = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=1e-6)
 
-    score_metrics = ["accuracy", sensitivity, specificity, true_positives, true_negatives, false_positives, false_negatives]
+    score_metrics = ["accuracy"]
 
     model = qc_model()
     model.summary()
@@ -417,8 +427,12 @@ if __name__ == "__main__":
                   metrics=score_metrics)
 
     scores = {}
-    for metric in model.metrics_names:
-        scores[metric] = []
+    scores['acc'] = []
+    scores['val_acc'] = []
+    scores['sens'] = []
+    scores['spec'] = []
+    scores['val_sens'] = []
+    scores['val_spec'] = []
 
     for k, (train_indices, test_indices) in enumerate(skf.split(np.asarray(indices), labels)):
 
@@ -463,17 +477,50 @@ if __name__ == "__main__":
 
         plot_graphs(hist, results_dir, k)
 
+        train_sens, train_spec = sens_spec(train_indices, model)
+        val_sens, val_spec = sens_spec(validation_indices, model)
+
         for metric_name, score in zip(model.metrics_names, metrics):
             scores[metric_name].append(score)
+
+        scores['sens'].append(train_sens)
+        scores['spec'].append(train_spec)
+        scores['val_sens'].append(val_sens)
+        scores['val_spec'].append(val_spec)
 
         predict_and_visualize(model, test_indices, results_dir)
 
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['acc'])
         model.save(results_dir + 'ibis_qc_model' + str(k) + '.hdf5')
 
-    print(metric, scores[metric])
-    for metric in model.metrics_names:
-        print(metric, np.mean(scores[metric]))
+    plt.close()
+
+    score_data = []
+    score_labels = []
+
+    score_data.append(scores['acc'])
+    score_labels.append('Training Accuracy')
+
+    score_data.append(scores['val_acc'])
+    score_labels.append('Validation Accuracy')
+
+    score_data.append(scores['sens'])
+    score_labels.append('Training Sensitivity')
+
+    score_data.append(scores['spec'])
+    score_labels.append('Training Specificity')
+
+    score_data.append(scores['val_sens'])
+    score_labels.append('Validation Sensitivity')
+
+    score_data.append(scores['val_spec'])
+    score_labels.append('Validation Specificity')
+
+    plt.boxplot(score_data)
+    plt.xticks(np.arange(len(score_data)), score_labels)
+
+    plt.xlabel('Metric')
+    plt.ylabel('Value')
 
     print(scores)
 
