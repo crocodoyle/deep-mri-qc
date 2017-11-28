@@ -167,6 +167,7 @@ def pass_fail_graph():
         item.set_fontsize(24)
 
     plt.legend(shadow=True)
+    plt.tight_layout()
     plt.savefig(workdir + 'datasets-qc-pass-fail.png')
     plt.close()
 
@@ -201,6 +202,7 @@ def age_range_graph():
     ax.set_ylabel('Dataset')
     for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] + ax.get_xticklabels() + ax.get_yticklabels()):
         item.set_fontsize(24)
+    plt.tight_layout()
 
     plt.savefig(workdir + 'ages.png')
 
