@@ -160,8 +160,8 @@ def sens_spec(indices, model):
         fp = conf[0][1]
         fn = conf[1][0]
 
-        sensitivity = float(tp) / (float(tp) + float(fn))
-        specificity = float(tn) / (float(tn) + float(fp))
+        sensitivity = float(tp) / (float(tp) + float(fn) + 1e-10)
+        specificity = float(tn) / (float(tn) + float(fp) + 1e-10)
 
     return sensitivity, specificity
 
