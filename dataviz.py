@@ -114,7 +114,7 @@ def rename_abide(input_path, output_path):
         print(id)
         os.rename(input_path + file, output_path + id[2:] + '.mnc')
 
-def deep_qc_graphs():
+def pass_fail_graph():
 
     workdir = '/home/users/adoyle/deepqc/'
     data_file = 'deepqc-all-sets.hdf5'
@@ -168,8 +168,38 @@ def deep_qc_graphs():
     plt.savefig(workdir + 'datasets-qc-pass-fail.png')
     plt.close()
 
+def age_range_graph():
+    ibis_range = [0.5, 2]
+    ping_range = [3, 20]
+    abide_range = [7, 64]
+    ds030_range = [21, 50]
+
+    start_age = [0.5, 3, 7, 21]
+    end_age = [2, 20, 64, 50]
+
+    age_range = []
+    for i in range(4):
+        age_range.append(end_age[i] - start_age[i])
+
+    plt.rcdefaults()
+    fig, ax = plt.subplots()
+
+    datasets = ['IBIS', 'PING', 'ABIDE', 'ds030']
+    y_pos = np.arange(len(datasets))
+
+    ax.barh(y_pos, age_range, left=start_age, align='center', color='darkred')
+
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(datasets)
+
+    ax.invert_yaxis()  # labels read top-to-bottom
+    ax.set_xlabel('Age Range of Subjects')
+
+    plt.show()
+
+
 if __name__ == '__main__':
-    deep_qc_graphs()
+    age_range_graph()
     # plot_nonlinearities('E:/')
 
     # gif_my_brain('E:/brains/andrew_mri_nov_2015.mnc')
