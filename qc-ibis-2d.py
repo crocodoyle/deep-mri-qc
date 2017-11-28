@@ -324,16 +324,17 @@ def predict_and_visualize(model, indices, results_dir):
                 img_ax = ax[j+1].imshow(overlay(heatmap, gray3, alpha=0.2))
                 ax[j+1].set_xticks([])
                 ax[j+1].set_yticks([])
-                plt.colorbar(img_ax, ticks=[0, 127, 255])
+                plt.colorbar(img_ax)
                 ax[j+1].set_xlabel('Decision Regions (Guided Grad-CAM)')
 
                 if prediction == 0:
-                    avg_fail += grads
+                    avg_fail += heatmap
                     fail_imgs += 1.0
                 else:
-                    avg_pass += grads
+                    avg_pass += heatmap
                     pass_imgs += 1.0
 
+            plt.subplots_adjust()
             plt.savefig(results_dir + filename, bbox_inches='tight')
             plt.close()
 
