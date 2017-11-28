@@ -145,6 +145,7 @@ def deep_qc_graphs():
     for index in ping_indices:
         pass_fail['PING'] += np.argmax(labels[index, ...])
 
+    print(pass_fail)
     pass_plot = [pass_fail['IBIS'], pass_fail['PING'], pass_fail['ABIDE'], pass_fail['ds030']]
     fail_plot = [len(ibis_indices) - pass_fail['IBIS'], len(ping_indices) - pass_fail['PING'], len(abide_indices) - pass_fail['ABIDE'], len(ds030_indices) - pass_fail['ds030']]
 
@@ -155,14 +156,18 @@ def deep_qc_graphs():
 
     fig, ax = plt.subplots()
 
-    ax.bar(ind, pass_plot, width, color='g')
-    ax.bar(ind+width/2, fail_plot, width, color='r')
+    ax.bar(ind, pass_plot, width, color='g', label='PASS')
+    ax.bar(ind+width/2, fail_plot, width, color='r', label='FAIL')
 
     ax.set_xlabel('Dataset')
     ax.set_ylabel('Number of Subjects')
     ax.set_xticks(ind + 3*width / 4)
     ax.set_xticklabels(datasets)
 
+
+
+    plt.grid()
+    plt.legend(shadow=True)
     plt.savefig(workdir + 'datasets-qc-pass-fail.png')
     plt.close()
 
