@@ -36,7 +36,7 @@ datadir = '/data1/users/adoyle/IBIS/'
 label_file = datadir + 't1_ibis_QC_labels.csv'
 
 total_subjects = 2020
-target_size = (168, 256, 244)
+target_size = (168, 256, 224)
 
 train_indices, validation_indices, test_indices = [], [], []
 results_dir = ''
