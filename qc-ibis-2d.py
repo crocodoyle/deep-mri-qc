@@ -174,37 +174,37 @@ def qc_model():
 
     model.add(Conv2D(16, conv_size, activation='relu', input_shape=(target_size[1], target_size[2], 1)))
     model.add(BatchNormalization())
-    # model.add(MaxPooling2D(pool_size=pool_size))
-    model.add(Dropout(0.1))
-
-    model.add(Conv2D(32, conv_size, activation='relu'))
-    model.add(BatchNormalization())
-    # model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.1))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    # model.add(Dropout(0.1))
 
     model.add(Conv2D(32, conv_size, activation='relu'))
     model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.2))
+    # model.add(Dropout(0.1))
+
+    model.add(Conv2D(32, conv_size, activation='relu'))
+    model.add(BatchNormalization())
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    # model.add(Dropout(0.2))
 
     model.add(Conv2D(64, conv_size, activation='relu'))
     model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2,2)))
-    model.add(Dropout(0.2))
+    # model.add(Dropout(0.2))
 
     model.add(Conv2D(64, conv_size, activation='relu'))
     model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2,2)))
-    model.add(Dropout(0.3))
+    # model.add(Dropout(0.3))
 
     model.add(Conv2D(128, conv_size, activation='relu'))
     model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.4))
+    # model.add(Dropout(0.4))
 
-    model.add(Conv2D(256, conv_size, activation='relu'))
-    model.add(BatchNormalization())
-    model.add(Dropout(0.5))
+    # model.add(Conv2D(256, conv_size, activation='relu'))
+    # model.add(BatchNormalization())
+    # model.add(Dropout(0.5))
 
     model.add(Flatten())
     model.add(Dense(256, activation='relu'))
@@ -423,7 +423,7 @@ if __name__ == "__main__":
     model = qc_model()
     model.summary()
     model.compile(loss='categorical_crossentropy',
-                  optimizer=adam,
+                  optimizer=sgd,
                   metrics=score_metrics)
 
     scores = {}
@@ -468,7 +468,7 @@ if __name__ == "__main__":
 
         model_checkpoint = ModelCheckpoint(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5", monitor="val_acc", verbose=0, save_best_only=True, save_weights_only=False, mode='max')
 
-        hist = model.fit_generator(batch(train_indices, batch_size, True), np.ceil(len(train_indices)/batch_size), epochs=100, validation_data=batch(validation_indices, batch_size), validation_steps=np.ceil(len(validation_indices)//batch_size), callbacks=[model_checkpoint], class_weight = {0:5, 1:1})
+        hist = model.fit_generator(batch(train_indices, batch_size, True), np.ceil(len(train_indices)/batch_size), epochs=400, validation_data=batch(validation_indices, batch_size), validation_steps=np.ceil(len(validation_indices)//batch_size), callbacks=[model_checkpoint], class_weight = {0:10, 1:1})
 
         model.load_weights(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5")
         model.save(results_dir + 'ibis_qc_model' + str(k) + '.hdf5')
@@ -543,6 +543,9 @@ if __name__ == "__main__":
 
     plt.xlabel('Metric')
     plt.ylabel('Value')
+
+    results_dir = workdir + '/experiment-' + str(experiment_number) + '/'
+    plt.savefig(results_dir + 'metrics_boxplot.png')
 
     print(scores)
 
