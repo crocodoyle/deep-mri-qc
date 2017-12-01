@@ -4,13 +4,8 @@ import argparse as ap
 import numpy as np
 import os
 
-from custom_loss import sensitivity, specificity
-
 from keras.models import load_model
-# from dltk.core.io.preprocessing import normalise_zero_one, resize_image_with_crop_or_pad
-
 import keras.backend as K
-# from vis.utils import utils
 
 if __name__ == "__main__":
 
@@ -33,7 +28,7 @@ if __name__ == "__main__":
         (x_size, y_size, z_size) = img.shape
         # print('original image size:', img.shape)
 
-        y_max, z_max = 256, 224
+        y_max, z_max = 256, 244
 
         while y_size < y_max or z_size < z_max:
             img = np.pad(img, 1, 'constant')
@@ -60,7 +55,10 @@ if __name__ == "__main__":
 
         print(np.mean(slice_predictions))
 
-        K.clear_session()
+        try:
+            K.clear_session()
+        except:
+            pass
 
     except Exception as e:
         print(e)
