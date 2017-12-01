@@ -29,6 +29,8 @@ if __name__ == "__main__":
         img = np.divide(img, np.max(img))
         img = np.float32(img)
 
+        print('img statistics:', np.min(img), np.max(img), img.shape)
+
         (x_size, y_size, z_size) = img.shape
         # print('original image size:', img.shape)
 
@@ -55,7 +57,9 @@ if __name__ == "__main__":
 
         slice_predictions = []
         for i in range(10):
-            slice_predictions.append(model.predict(img[x_slice-4+i, y_start:y_stop, z_start:z_stop][np.newaxis, ..., np.newaxis])[0][0])
+            predictions = model.predict(img[x_slice-4+i, y_start:y_stop, z_start:z_stop][np.newaxis, ..., np.newaxis])
+            print('predictions slice:', i, predictions)
+            slice_predictions.append(predictions[0][0])
 
         print(slice_predictions)
         print(np.mean(slice_predictions))
