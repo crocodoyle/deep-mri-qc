@@ -25,7 +25,7 @@ if __name__ == "__main__":
         # img = resize_image_with_crop_or_pad(img, (168, 256, 244), mode='constant')
         # img = normalise_zero_one(img)
 
-        img = np.add(img, np.min(img))
+        img = np.subtract(img, np.min(img))
         img = np.divide(img, np.max(img))
         img = np.float32(img)
 
