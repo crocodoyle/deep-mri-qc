@@ -53,6 +53,7 @@ if __name__ == "__main__":
         for i in range(10):
             slice_predictions.append(model.predict(img[x_slice-4+i, y_start:y_stop, z_start:z_stop][np.newaxis, ..., np.newaxis])[0][0])
 
+        print(slice_predictions)
         print(np.mean(slice_predictions))
 
         try:
