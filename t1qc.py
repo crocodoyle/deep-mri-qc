@@ -25,6 +25,8 @@ if __name__ == "__main__":
         # img = resize_image_with_crop_or_pad(img, (168, 256, 244), mode='constant')
         # img = normalise_zero_one(img)
 
+        img = np.divide(img, np.max(img))
+
         (x_size, y_size, z_size) = img.shape
         # print('original image size:', img.shape)
 
