@@ -184,7 +184,7 @@ def age_range_graph():
     end_age = [2, 20, 95, 64, 50]
 
     age_range = []
-    for i in range(4):
+    for i in range(len(start_age)):
         age_range.append(end_age[i] - start_age[i])
 
     plt.rcdefaults()
