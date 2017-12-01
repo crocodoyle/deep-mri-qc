@@ -155,18 +155,22 @@ def pass_fail_graph():
     width = 0.35
 
     fig, ax = plt.subplots()
+    ax.grid(zorder=0)
 
-    ax.bar(ind, pass_plot, width, color='darkgreen', label='PASS')
-    ax.bar(ind+width/2, fail_plot, width, color='darkred', label='FAIL')
+    ax.bar(ind, pass_plot, width, color='darkgreen', label='PASS', zorder=3)
+    ax.bar(ind+width/2, fail_plot, width, color='darkred', label='FAIL', zorder=3)
 
     ax.set_xlabel('Dataset')
-    ax.set_ylabel('Number of Subjects')
+    ax.set_ylabel('Subjects')
     ax.set_xticks(ind + width / 4)
     ax.set_xticklabels(datasets)
-    for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] + ax.get_xticklabels() + ax.get_yticklabels()):
+    for item in ([ax.title, ax.xaxis.label, ax.yaxis.label]):
         item.set_fontsize(24)
 
-    plt.legend(shadow=True, fontsize=24)
+    for item in (ax.get_xticklabels() + ax.get_yticklabels()):
+        item.set_fontsize(20)
+
+    plt.legend(shadow=True, fontsize=20)
     plt.tight_layout()
     plt.savefig(workdir + 'datasets-qc-pass-fail.png')
     plt.close()
@@ -203,8 +207,12 @@ def age_range_graph():
     ax.invert_yaxis()  # labels read top-to-bottom
     ax.set_xlabel('Age Range of Subjects')
     ax.set_ylabel('Dataset')
-    for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] + ax.get_xticklabels() + ax.get_yticklabels()):
+    for item in ([ax.title, ax.xaxis.label, ax.yaxis.label]):
         item.set_fontsize(24)
+
+    for item in (ax.get_xticklabels() + ax.get_yticklabels()):
+        item.set_fontsize(20)
+
     plt.tight_layout()
 
     plt.savefig(workdir + 'ages.png')
