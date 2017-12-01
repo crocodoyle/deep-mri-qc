@@ -166,7 +166,7 @@ def pass_fail_graph():
     for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] + ax.get_xticklabels() + ax.get_yticklabels()):
         item.set_fontsize(24)
 
-    plt.legend(shadow=True)
+    plt.legend(shadow=True, fontsize=24)
     plt.tight_layout()
     plt.savefig(workdir + 'datasets-qc-pass-fail.png')
     plt.close()
@@ -178,9 +178,10 @@ def age_range_graph():
     ping_range = [3, 20]
     abide_range = [7, 64]
     ds030_range = [21, 50]
+    adni_range = [55, 95]
 
-    start_age = [0.5, 3, 7, 21]
-    end_age = [2, 20, 64, 50]
+    start_age = [0.5, 3, 55, 7, 21]
+    end_age = [2, 20, 95, 64, 50]
 
     age_range = []
     for i in range(4):
@@ -189,7 +190,7 @@ def age_range_graph():
     plt.rcdefaults()
     fig, ax = plt.subplots()
 
-    datasets = ['IBIS', 'PING', 'ABIDE', 'ds030']
+    datasets = ['IBIS', 'PING', 'ADNI', 'ABIDE', 'ds030']
     y_pos = np.arange(len(datasets))
 
     ax.barh(y_pos, age_range, 0.35, left=start_age, align='center', color='darkred')
