@@ -427,13 +427,15 @@ if __name__ == "__main__":
                   metrics=score_metrics)
 
     scores = {}
-    scores['acc'] = []
+    scores['train_acc'] = []
     scores['val_acc'] = []
-    scores['sens'] = []
-    scores['spec'] = []
+    scores['test_acc'] = []
+    scores['train_sens'] = []
+    scores['train_spec'] = []
     scores['val_sens'] = []
     scores['val_spec'] = []
-    scores['loss'] = []
+    scores['test_sens'] = []
+    scores['test_spec'] = []
 
     for k, (train_indices, test_indices) in enumerate(skf.split(np.asarray(indices), labels)):
 
@@ -471,21 +473,25 @@ if __name__ == "__main__":
         model.load_weights(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5")
         model.save(results_dir + 'ibis_qc_model' + str(k) + '.hdf5')
 
-        metrics = model.evaluate_generator(batch(test_indices, batch_size, True), np.ceil(len(test_indices)/batch_size))
+        train_metrics = model.evaluate_generator(batch(train_indices, batch_size, True), np.ceil(len(train_indices)/batch_size))
+        val_metrics = model.evaluate_generator(batch(validation_indices, batch_size, True), np.ceil(len(validation_indices)/batch_size))
+        test_metrics = model.evaluate_generator(batch(test_indices, batch_size, True), np.ceil(len(test_indices)/batch_size))
 
         print(model.metrics_names)
-        print(metrics)
+        print('train:', train_metrics, 'val:', val_metrics, 'test:', test_metrics)
 
         plot_graphs(hist, results_dir, k)
 
         train_sens, train_spec = sens_spec(train_indices, model)
         val_sens, val_spec = sens_spec(validation_indices, model)
+        test_sens, test_spec = sens_spec(test_indices, model)
 
-        for metric_name, score in zip(model.metrics_names, metrics):
-            scores[metric_name].append(score)
+        scores['train_acc'].append(train_metrics[1])
+        scores['val_acc'].append(val_metrics[1])
+        scores['test_acc'].append(test_metrics[1])
 
-        scores['sens'].append(train_sens)
-        scores['spec'].append(train_spec)
+        scores['train_sens'].append(train_sens)
+        scores['train_spec'].append(train_spec)
         scores['val_sens'].append(val_sens)
         scores['val_spec'].append(val_spec)
 
@@ -499,26 +505,41 @@ if __name__ == "__main__":
     score_data = []
     score_labels = []
 
-    score_data.append(scores['acc'])
-    score_labels.append('Training Accuracy')
+    score_data.append(scores['train_acc'])
+    score_labels.append('Training\nAccuracy')
 
     score_data.append(scores['val_acc'])
-    score_labels.append('Validation Accuracy')
+    score_labels.append('Validation\nAccuracy')
 
-    score_data.append(scores['sens'])
-    score_labels.append('Training Sensitivity')
+    score_data.append(scores['test_acc'])
+    score_labels.append('Test\nAccuracy')
 
-    score_data.append(scores['spec'])
-    score_labels.append('Training Specificity')
+    score_data.append(scores['train_sens'])
+    score_labels.append('Training\nSensitivity')
 
     score_data.append(scores['val_sens'])
-    score_labels.append('Validation Sensitivity')
+    score_labels.append('Validation\nSensitivity')
+
+    score_data.append(scores['test_sens'])
+    score_labels.append('Test\nSensitivity')
+
+    score_data.append(scores['train_spec'])
+    score_labels.append('Training\nSpecificity')
 
     score_data.append(scores['val_spec'])
-    score_labels.append('Validation Specificity')
+    score_labels.append('Validation\nSpecificity')
 
-    plt.boxplot(score_data)
+    score_data.append(scores['test_spec'])
+    score_labels.append('Test\nSpecificity')
+
+    bplot = plt.boxplot(score_data, patch_artist=True)
     plt.xticks(np.arange(len(score_data)), score_labels)
+
+    # fill with colors
+    colors = ['pink', 'red', 'darkred', 'pink', 'red', 'darkred', 'pink', 'red', 'darkred']
+
+    for patch, color in zip(bplot['boxes'], colors):
+        patch.set_facecolor(color)
 
     plt.xlabel('Metric')
     plt.ylabel('Value')
