@@ -190,10 +190,12 @@ def age_range_graph():
     plt.rcdefaults()
     fig, ax = plt.subplots()
 
+    ax.grid(zorder=0)
+
     datasets = ['IBIS', 'PING', 'ADNI', 'ABIDE', 'ds030']
     y_pos = np.arange(len(datasets))
 
-    ax.barh(y_pos, age_range, 0.35, left=start_age, align='center', color='darkred')
+    ax.barh(y_pos, age_range, 0.35, left=start_age, align='center', color='darkred', zorder=3)
 
     ax.set_yticks(y_pos)
     ax.set_yticklabels(datasets)
