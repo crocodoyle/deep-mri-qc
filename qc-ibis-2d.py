@@ -562,6 +562,7 @@ if __name__ == "__main__":
 
     plt.xlabel('Metric')
     plt.ylabel('Value')
+    plt.tight_layout()
 
     results_dir = workdir + '/experiment-' + str(experiment_number) + '/'
     plt.savefig(results_dir + 'metrics_boxplot.png')
