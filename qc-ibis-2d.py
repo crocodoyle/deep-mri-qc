@@ -145,7 +145,7 @@ def sens_spec(indices, model):
 
             slice_predictions = []
             for j in range(10):
-                slice_predictions.append(model.predict(images[index, (target_size[0] // 2) - 4 + j, :, :])[0][0])
+                slice_predictions.append(model.predict(images[index, (target_size[0] // 2) - 4 + j, :, :][np.newaxis, ..., np.newaxis])[0][0])
 
             prediction = np.mean(slice_predictions)
             if prediction >= 0.5:
