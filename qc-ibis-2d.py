@@ -141,24 +141,39 @@ def sens_spec(indices, model):
         predictions = np.zeros((len(indices)))
         actual = np.zeros((len(indices)))
 
-        predict_batch = np.zeros((1, target_size[1], target_size[2], 1))
-
         for i, index in enumerate(indices):
-            predict_batch[0, :, :, 0] = images[index, target_size[0] // 2, :, :]
 
-            prediction = model.predict_on_batch(predict_batch)[0][0]
+            slice_predictions = []
+            for j in range(10):
+                slice_predictions.append(model.predict(images[index, (target_size[0] // 2) - 4 + j, :, :])[0][0])
+
+            prediction = np.mean(slice_predictions)
             if prediction >= 0.5:
                 predictions[i] = 1
             else:
                 predictions[i] = 0
             actual[i] = np.argmax(labels[index, ...])
 
-        conf = confusion_matrix(actual, predictions)
+        tp, tn, fp, fn = 0, 0, 0, 0
 
-        tp = conf[0][0]
-        tn = conf[1][1]
-        fp = conf[0][1]
-        fn = conf[1][0]
+        for k, (true_label, predicted_label) in enumerate(zip(actual, predictions)):
+            if true_label == 1:
+                if predicted_label == 1:
+                    tp += 1
+                else:
+                    fn += 1
+            else:
+                if predicted_label == 0:
+                    tn += 1
+                else:
+                    fp += 1
+                    
+        # conf = confusion_matrix(actual, predictions)
+        #
+        # tp = conf[0][0]
+        # tn = conf[1][1]
+        # fp = conf[0][1]
+        # fn = conf[1][0]
 
         sensitivity = float(tp) / (float(tp) + float(fn) + 1e-10)
         specificity = float(tn) / (float(tn) + float(fp) + 1e-10)
@@ -494,6 +509,8 @@ if __name__ == "__main__":
         scores['train_spec'].append(train_spec)
         scores['val_sens'].append(val_sens)
         scores['val_spec'].append(val_spec)
+        scores['test_sens'].append(test_sens)
+        scores['test_spec'].append(test_spec)
 
         predict_and_visualize(model, test_indices, results_dir)
 
@@ -532,8 +549,10 @@ if __name__ == "__main__":
     score_data.append(scores['test_spec'])
     score_labels.append('Test\nSpecificity')
 
-    bplot = plt.boxplot(score_data, patch_artist=True)
+    bplot = plt.boxplot(score_data, patch_artist=True, zorder=3)
+
     plt.xticks(np.arange(len(score_data)), score_labels)
+    bplot.grid(zorder=0)
 
     # fill with colors
     colors = ['pink', 'red', 'darkred', 'pink', 'red', 'darkred', 'pink', 'red', 'darkred']
