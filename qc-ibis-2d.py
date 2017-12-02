@@ -167,7 +167,7 @@ def sens_spec(indices, model):
                     tn += 1
                 else:
                     fp += 1
-                    
+
         # conf = confusion_matrix(actual, predictions)
         #
         # tp = conf[0][0]
