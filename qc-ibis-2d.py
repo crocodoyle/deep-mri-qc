@@ -552,7 +552,7 @@ if __name__ == "__main__":
     bplot = plt.boxplot(score_data, patch_artist=True, zorder=3)
 
     plt.xticks(np.arange(len(score_data)), score_labels)
-    bplot.grid(zorder=0)
+    plt.grid(zorder=0)
 
     # fill with colors
     colors = ['pink', 'red', 'darkred', 'pink', 'red', 'darkred', 'pink', 'red', 'darkred']
