@@ -125,93 +125,112 @@ def top_model():
     inputs = [Input(shape=(192, 256, 192)), Input(shape=(192, 192, 192)), Input(shape=(192, 256, 192))]
 
     # XY plane
-    xy_conv1 = Conv2D(64, conv_size, activation='relu')(inputs[0])
+    xy_conv1 = Conv2D(16, conv_size, activation='relu')(inputs[0])
     xy_norm1 = BatchNormalization()(xy_conv1)
-    xy_drop1 = Dropout(0.5)(xy_norm1)
-    # xy_pool1 = MaxPooling2D(pool_size=pool_size)(xy_drop1)
+    # xy_drop1 = Dropout(0.5)(xy_norm1)
+    xy_pool1 = MaxPooling2D(pool_size=pool_size)(xy_norm1)
 
-    xy_conv2 = Conv2D(64, conv_size, activation='relu')(xy_drop1)
-    # xy_norm2 = BatchNormalization()(xy_conv2)
-    xy_drop2 = Dropout(0.5)(xy_conv2)
-    # xy_pool2 = MaxPooling2D(pool_size=pool_size)(xy_drop2)
+    xy_conv2 = Conv2D(32, conv_size, activation='relu')(xy_pool1)
+    xy_norm2 = BatchNormalization()(xy_conv2)
+    # xy_drop2 = Dropout(0.5)(xy_conv2)
+    xy_pool2 = MaxPooling2D(pool_size=pool_size)(xy_norm2)
 
-    xy_conv3 = Conv2D(64, conv_size, strides=[2, 2], activation='relu')(xy_drop2)
-    # xy_norm3 = BatchNormalization()(xy_conv3)
-    xy_drop3 = Dropout(0.5)(xy_conv3)
-    # xy_pool3 = MaxPooling2D(pool_size=pool_size)(xy_drop3)
+    xy_conv3 = Conv2D(32, conv_size, activation='relu')(xy_pool2)
+    xy_norm3 = BatchNormalization()(xy_conv3)
+    # xy_drop3 = Dropout(0.5)(xy_conv3)
+    xy_pool3 = MaxPooling2D(pool_size=pool_size)(xy_norm3)
 
-    xy_conv4 = Conv2D(64, conv_size, strides=[2, 2], activation='relu')(xy_drop3)
-    # xy_norm4 = BatchNormalization()(xy_conv4)
-    xy_drop4 = Dropout(0.5)(xy_conv4)
-    # xy_pool4 = MaxPooling2D(pool_size=pool_size)(xy_drop4)
+    xy_conv4 = Conv2D(64, conv_size, activation='relu')(xy_pool3)
+    xy_norm4 = BatchNormalization()(xy_conv4)
+    # xy_drop4 = Dropout(0.5)(xy_conv4)
+    xy_pool4 = MaxPooling2D(pool_size=pool_size)(xy_norm4)
 
-    # xy_conv5 = Conv2D(32, conv_size, strides=[2, 2], activation='relu')(xy_drop4)
-    # xy_conv6 = Conv2D(32, conv_size, activation='relu')(xy_conv5)
-    # xy_conv7 = Conv2D(32, conv_size, activation='relu')(xy_conv6)
+    xy_conv5 = Conv2D(64, conv_size, activation='relu')(xy_pool4)
+    xy_norm5 = BatchNormalization()(xy_conv5)
+    # xy_drop4 = Dropout(0.5)(xy_conv4)
+    xy_pool5 = MaxPooling2D(pool_size=pool_size)(xy_norm5)
 
-    xy_fully = Conv2D(32, (1, 1), activation='relu')(xy_drop4)
+    xy_conv6 = Conv2D(128, conv_size, activation='relu')(xy_pool5)
+    xy_norm6 = BatchNormalization()(xy_conv6)
+    # xy_drop4 = Dropout(0.5)(xy_conv4)
+    xy_pool6 = MaxPooling2D(pool_size=pool_size)(xy_norm6)
+
+    xy_fully = Conv2D(128, (1, 1), activation='relu')(xy_pool6)
     xy_flat  = Flatten()(xy_fully)
 
     # XZ plane
-    xz_conv1 = Conv2D(32, conv_size, activation='relu')(inputs[1])
+    xz_conv1 = Conv2D(16, conv_size, activation='relu')(inputs[1])
     xz_norm1 = BatchNormalization()(xz_conv1)
-    xz_drop1 = Dropout(0.5)(xz_norm1)
-    # xz_pool1 = MaxPooling2D(pool_size=pool_size)(xz_drop1)
+    # xz_drop1 = Dropout(0.5)(xz_norm1)
+    xz_pool1 = MaxPooling2D(pool_size=pool_size)(xz_norm1)
 
-    xz_conv2 = Conv2D(64, conv_size, activation='relu')(xz_drop1)
-    # xz_norm2 = BatchNormalization()(xz_conv2)
-    xz_drop2 = Dropout(0.5)(xz_conv2)
-    # xz_pool2 = MaxPooling2D(pool_size=pool_size)(xz_drop2)
+    xz_conv2 = Conv2D(32, conv_size, activation='relu')(xz_pool1)
+    xz_norm2 = BatchNormalization()(xz_conv2)
+    # xz_drop2 = Dropout(0.5)(xz_conv2)
+    xz_pool2 = MaxPooling2D(pool_size=pool_size)(xz_norm2)
 
-    xz_conv3 = Conv2D(64, conv_size, strides=[2, 2], activation='relu')(xz_drop2)
-    # xz_norm3 = BatchNormalization()(xz_conv3)
-    xz_drop3 = Dropout(0.5)(xz_conv3)
-    # xz_pool3 = MaxPooling2D(pool_size=pool_size)(xz_drop3)
+    xz_conv3 = Conv2D(32, conv_size, activation='relu')(xz_pool2)
+    xz_norm3 = BatchNormalization()(xz_conv3)
+    # xz_drop3 = Dropout(0.5)(xz_conv3)
+    xz_pool3 = MaxPooling2D(pool_size=pool_size)(xz_norm3)
 
-    xz_conv4 = Conv2D(64, conv_size, strides=[2, 2], activation='relu')(xz_drop3)
-    # xz_norm4 = BatchNormalization()(xz_conv4)
-    xz_drop4 = Dropout(0.5)(xz_conv4)
-    # xz_pool4 = MaxPooling2D(pool_size=pool_size)(xz_drop4)
+    xz_conv4 = Conv2D(64, conv_size, activation='relu')(xz_pool3)
+    xz_norm4 = BatchNormalization()(xz_conv4)
+    # xz_drop4 = Dropout(0.5)(xz_conv4)
+    xz_pool4 = MaxPooling2D(pool_size=pool_size)(xz_norm4)
 
-    # xz_conv5 = Conv2D(32, conv_size, strides=[2, 2], activation='relu')(xz_drop4)
-    # xz_conv6 = Conv2D(32, conv_size, activation='relu')(xz_conv5)
-    # xz_conv7 = Conv2D(32, conv_size, activation='relu')(xz_conv6)
+    xz_conv5 = Conv2D(64, conv_size, activation='relu')(xz_pool4)
+    xz_norm5 = BatchNormalization()(xz_conv5)
+    # xz_drop4 = Dropout(0.5)(xz_conv4)
+    xz_pool5 = MaxPooling2D(pool_size=pool_size)(xz_norm5)
 
-    xz_fully = Conv2D(32, (1, 1), activation='relu')(xz_drop4)
+    xz_conv6 = Conv2D(128, conv_size, activation='relu')(xz_pool5)
+    xz_norm6 = BatchNormalization()(xz_conv6)
+    # xz_drop4 = Dropout(0.5)(xz_conv4)
+    xz_pool6 = MaxPooling2D(pool_size=pool_size)(xz_norm6)
+
+
+    xz_fully = Conv2D(128, (1, 1), activation='relu')(xz_pool6)
     xz_flat = Flatten()(xz_fully)
 
-    # YZ plane
-    yz_conv1 = Conv2D(64, conv_size, activation='relu')(inputs[2])
+    # YZ planef
+    yz_conv1 = Conv2D(16, conv_size, activation='relu')(inputs[2])
     yz_norm1 = BatchNormalization()(yz_conv1)
-    yz_drop1 = Dropout(0.5)(yz_norm1)
-    # yz_pool1 = MaxPooling2D(pool_size=pool_size)(yz_drop1)
+    # yz_drop1 = Dropout(0.5)(yz_norm1)
+    yz_pool1 = MaxPooling2D(pool_size=pool_size)(yz_norm1)
 
-    yz_conv2 = Conv2D(64, conv_size, activation='relu')(yz_drop1)
-    # yz_norm2 = BatchNormalization()(yz_conv2)
-    yz_drop2 = Dropout(0.5)(yz_conv2)
-    # yz_pool2 = MaxPooling2D(pool_size=pool_size)(yz_drop2)
+    yz_conv2 = Conv2D(32, conv_size, activation='relu')(yz_pool1)
+    yz_norm2 = BatchNormalization()(yz_conv2)
+    # yz_drop2 = Dropout(0.5)(yz_conv2)
+    yz_pool2 = MaxPooling2D(pool_size=pool_size)(yz_norm2)
 
-    yz_conv3 = Conv2D(64, conv_size, strides=[2, 2], activation='relu')(yz_drop2)
-    # yz_norm3 = BatchNormalization()(yz_conv3)
-    yz_drop3 = Dropout(0.5)(yz_conv3)
-    # yz_pool3 = MaxPooling2D(pool_size=pool_size)(yz_drop3)
+    yz_conv3 = Conv2D(32, conv_size, activation='relu')(yz_pool2)
+    yz_norm3 = BatchNormalization()(yz_conv3)
+    # yz_drop3 = Dropout(0.5)(yz_conv3)
+    yz_pool3 = MaxPooling2D(pool_size=pool_size)(yz_norm3)
 
-    yz_conv4 = Conv2D(64, conv_size, strides=[2, 2], activation='relu')(yz_drop3)
-    # yz_norm4 = BatchNormalization()(yz_conv4)
-    yz_drop4 = Dropout(0.5)(yz_conv4)
-    # yz_pool4 = MaxPooling2D(pool_size=pool_size)(yz_drop4)
+    yz_conv4 = Conv2D(64, conv_size, activation='relu')(yz_pool3)
+    yz_norm4 = BatchNormalization()(yz_conv4)
+    # yz_drop4 = Dropout(0.5)(yz_conv4)
+    yz_pool4 = MaxPooling2D(pool_size=pool_size)(yz_norm4)
 
-    # yz_conv5 = Conv2D(32, conv_size, strides=[2, 2], activation='relu')(yz_drop4)
-    # yz_conv6 = Conv2D(32, conv_size, activation='relu')(yz_conv5)
-    # yz_conv7 = Conv2D(32, conv_size, activation='relu')(yz_conv6)
+    yz_conv5 = Conv2D(64, conv_size, activation='relu')(yz_pool4)
+    yz_norm5 = BatchNormalization()(yz_conv5)
+    # yz_drop4 = Dropout(0.5)(yz_conv5)
+    yz_pool5 = MaxPooling2D(pool_size=pool_size)(yz_norm5)
 
-    yz_fully = Conv2D(32, (1, 1), activation='relu')(yz_drop4)
+    yz_conv6 = Conv2D(128, conv_size, activation='relu')(yz_pool5)
+    yz_norm6 = BatchNormalization()(yz_conv6)
+    # yz_drop4 = Dropout(0.5)(yz_conv4)
+    yz_pool6 = MaxPooling2D(pool_size=pool_size)(yz_norm6)
+
+    yz_fully = Conv2D(128, (1, 1), activation='relu')(yz_pool6)
     yz_flat = Flatten()(yz_fully)
 
     allplanes = concatenate([xy_flat, xz_flat, yz_flat])
     all_drop = Dropout(0.5)(allplanes)
 
-    last_layer = Dense(128, activation='relu')(all_drop)
+    last_layer = Dense(256, activation='relu')(all_drop)
     last_drop = Dropout(0.5)(last_layer)
 
     output = Dense(nb_classes, activation='softmax')(last_drop)
@@ -358,7 +377,7 @@ def top_batch(indices, augment=True):
                         ### Input t1 image must be 3D.
                         ### Output matrix is a 3D matrix.
                         ### (Args: Rotations are in degrees not radians. )
-                        t1_image = do_random_transform(t1_image, 20, 20, 20)
+                        # t1_image = do_random_transform(t1_image, 20, 20, 20)
                     xy = t1_image[np.newaxis, ...]
                     xz = np.swapaxes(t1_image[:, 32:-32, :], 1, 2)[np.newaxis, ...]
                     yz = np.swapaxes(t1_image, 0, 2)[np.newaxis, ...]
