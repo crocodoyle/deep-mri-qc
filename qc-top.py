@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 
 from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
 
-from custom_loss import sensitivity, specificity
+# from custom_loss import sensitivity, specificity
 
 from ndimage_aug import do_random_transform
 
@@ -468,14 +468,14 @@ if __name__ == "__main__":
     print('test:', test_indices)
 
     # define model
-    model = dilated_top()
+    model = top_model()
 
     sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
     adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=1e-6)
 
     model.compile(loss='categorical_crossentropy',
                   optimizer=sgd,
-                  metrics=["accuracy", sensitivity, specificity])
+                  metrics=["accuracy"])
 
     # print summary of model
     model.summary()
