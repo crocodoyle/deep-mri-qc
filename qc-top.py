@@ -353,7 +353,7 @@ def top_model_shared_weights():
 
     model.compile(loss='categorical_crossentropy',
                   optimizer='adam',
-                  metrics=["accuracy", sensitivity, specificity])
+                  metrics=["accuracy"])
 
     return model
 
@@ -480,7 +480,7 @@ if __name__ == "__main__":
     # print summary of model
     model.summary()
 
-    num_epochs = 100
+    num_epochs = 20
 
     model_checkpoint = ModelCheckpoint( results_dir + 'best_qc_model.hdf5',
                                         monitor="val_acc",
