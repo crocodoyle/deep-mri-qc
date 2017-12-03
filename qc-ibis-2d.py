@@ -147,6 +147,7 @@ def sens_spec(indices, model):
             for j in range(10):
                 slice_predictions.append(model.predict(images[index, (target_size[0] // 2) - 4 + j, :, :][np.newaxis, ..., np.newaxis])[0][0])
 
+            print(slice_predictions)
             prediction = np.mean(slice_predictions)
             if prediction >= 0.5:
                 predictions[i] = 1
@@ -157,6 +158,7 @@ def sens_spec(indices, model):
         tp, tn, fp, fn = 0, 0, 0, 0
 
         for k, (true_label, predicted_label) in enumerate(zip(actual, predictions)):
+            print('true:', true_label, 'predicted:', predicted_label)
             if true_label == 1:
                 if predicted_label == 1:
                     tp += 1
@@ -167,6 +169,9 @@ def sens_spec(indices, model):
                     tn += 1
                 else:
                     fp += 1
+
+        print('tp, fn, tn, fp')
+        print(tp, fn, tn, fp)
 
         # conf = confusion_matrix(actual, predictions)
         #
