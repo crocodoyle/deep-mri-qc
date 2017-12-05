@@ -432,12 +432,8 @@ def sens_spec(indices, model):
 
         for i, index in enumerate(indices):
 
-            slice_predictions = []
-            for j in range(10):
-                slice_predictions.append(model.predict(images[index, (target_size[0] // 2) - 4 + j, :, :][np.newaxis, ..., np.newaxis])[0][1])
+            prediction = model.predict_on_batch(top_batch(index, augment=False))[0][1]
 
-            print(slice_predictions)
-            prediction = np.mean(slice_predictions)
             if prediction >= 0.5:
                 predictions[i] = 1
             else:
