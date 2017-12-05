@@ -524,17 +524,17 @@ if __name__ == "__main__":
 
     plt.close()
 
-    score_data = [None]
-    score_labels = ['']
+    score_data = []
+    score_labels = []
 
-    score_data.append(scores['train_acc'])
-    score_labels.append('Training\nAccuracy')
-
-    score_data.append(scores['val_acc'])
-    score_labels.append('Validation\nAccuracy')
-
-    score_data.append(scores['test_acc'])
-    score_labels.append('Test\nAccuracy')
+    # score_data.append(scores['train_acc'])
+    # score_labels.append('Training\nAccuracy')
+    #
+    # score_data.append(scores['val_acc'])
+    # score_labels.append('Validation\nAccuracy')
+    #
+    # score_data.append(scores['test_acc'])
+    # score_labels.append('Test\nAccuracy')
 
     score_data.append(scores['train_sens'])
     score_labels.append('Training\nSensitivity')

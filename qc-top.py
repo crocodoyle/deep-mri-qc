@@ -421,6 +421,60 @@ def setup_experiment(workdir):
 
     return results_dir, experiment_number
 
+
+def sens_spec(indices, model):
+    with h5py.File(workdir + data_file) as f:
+        images = f['MRI']
+        labels = f['qc_label']
+
+        predictions = np.zeros((len(indices)))
+        actual = np.zeros((len(indices)))
+
+        for i, index in enumerate(indices):
+
+            slice_predictions = []
+            for j in range(10):
+                slice_predictions.append(model.predict(images[index, (target_size[0] // 2) - 4 + j, :, :][np.newaxis, ..., np.newaxis])[0][1])
+
+            print(slice_predictions)
+            prediction = np.mean(slice_predictions)
+            if prediction >= 0.5:
+                predictions[i] = 1
+            else:
+                predictions[i] = 0
+            actual[i] = np.argmax(labels[index, ...])
+
+        tp, tn, fp, fn = 0, 0, 0, 0
+
+        for k, (true_label, predicted_label) in enumerate(zip(actual, predictions)):
+            print('true:', true_label, 'predicted:', predicted_label)
+            if true_label == 1:
+                if predicted_label == 1:
+                    tp += 1
+                else:
+                    fn += 1
+            else:
+                if predicted_label == 0:
+                    tn += 1
+                else:
+                    fp += 1
+
+        print('tp, fn, tn, fp')
+        print(tp, fn, tn, fp)
+
+        # conf = confusion_matrix(actual, predictions)
+        #
+        # tp = conf[0][0]
+        # tn = conf[1][1]
+        # fp = conf[0][1]
+        # fn = conf[1][0]
+
+        sensitivity = float(tp) / (float(tp) + float(fn) + 1e-10)
+        specificity = float(tn) / (float(tn) + float(fp) + 1e-10)
+
+    return sensitivity, specificity
+
+
 if __name__ == "__main__":
     results_dir, experiment_number = setup_experiment(workdir)
 
@@ -528,6 +582,15 @@ if __name__ == "__main__":
     # results['spec'] = spec
     #
     # pickle.dump(results, open(results_dir + 'test_results.pkl', 'wb'))
+
+    train_sens, train_spec = sens_spec(train_indices, model)
+    val_sens, val_spec = sens_spec(validation_indices, model)
+    test_sens, test_spec = sens_spec(test_indices, model)
+
+    print('sensitivity, specificity')
+    print('training:', train_sens, train_spec)
+    print('validation:', val_sens, val_spec)
+    print('testing:', test_sens, test_spec)
 
     plot_metrics(hist, results_dir)
 
