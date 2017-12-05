@@ -556,7 +556,8 @@ if __name__ == "__main__":
 
     bplot = plt.boxplot(score_data, patch_artist=True, zorder=3)
 
-    plt.xticks(np.arange(1, len(score_data)), score_labels, rotation=30, horizontalalignment='right')
+    plt.xticks(np.arange(1, len(score_data)+1), score_labels, rotation=30, horizontalalignment='right')
+    plt.xlim(0, len(score_data) + 1)
     plt.grid(zorder=0)
 
     # fill with colors
@@ -568,6 +569,7 @@ if __name__ == "__main__":
     plt.xlabel('Metric')
     plt.ylabel('Value')
     plt.tight_layout()
+
 
     results_dir = workdir + '/experiment-' + str(experiment_number) + '/'
     plt.savefig(results_dir + 'metrics_boxplot.png')
