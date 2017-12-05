@@ -556,7 +556,7 @@ if __name__ == "__main__":
 
     bplot = plt.boxplot(score_data, patch_artist=True, zorder=3)
 
-    plt.xticks(np.arange(len(score_data)), score_labels, rotation=30, horizontalalignment='right')
+    plt.xticks(np.arange(1, len(score_data)), score_labels, rotation=30, horizontalalignment='right')
     plt.grid(zorder=0)
 
     # fill with colors
