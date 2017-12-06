@@ -274,7 +274,7 @@ def batch(indices, n, random_slice=False):
 def plot_graphs(hist, results_dir, fold_num):
     epoch_num = range(len(hist.history['acc']))
 
-    plt.clf()
+    plt.close()
     plt.plot(epoch_num, hist.history['acc'], label='Training Accuracy')
     plt.plot(epoch_num, hist.history['val_acc'], label="Validation Accuracy")
     # plt.plot(epoch_num, hist.history['sensitivity'], label='Train Sens')
@@ -285,9 +285,6 @@ def plot_graphs(hist, results_dir, fold_num):
     plt.legend(shadow=True, fontsize=20)
     plt.xlabel("Training Epoch Number", fontsize=24)
     plt.ylabel("Metric Value", fontsize=24)
-
-    for item in (plt.get_xticklabels() + plt.get_yticklabels()):
-        item.set_fontsize(20)
 
     plt.savefig(results_dir + 'training_metrics_fold' + str(fold_num) + '.png', bbox_inches='tight')
     plt.close()
@@ -570,12 +567,9 @@ if __name__ == "__main__":
 
     bplot = plt.boxplot(score_data, patch_artist=True, zorder=3)
 
-    plt.xticks(np.arange(1, len(score_data)+1), score_labels, rotation=30, horizontalalignment='right')
+    plt.xticks(np.arange(1, len(score_data)+1), score_labels, rotation=30, horizontalalignment='right', fontsize=20)
     plt.xlim(0, len(score_data) + 1)
     plt.grid(zorder=0)
-
-    for item in (plt.get_xticklabels() + plt.get_yticklabels()):
-        item.set_fontsize(20)
 
     # fill with colors
     colors = ['pink', 'red', 'darkred', 'pink', 'red', 'darkred', 'pink', 'red', 'darkred']
