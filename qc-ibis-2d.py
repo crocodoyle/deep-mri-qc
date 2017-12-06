@@ -1,7 +1,7 @@
 from keras.models import Sequential
 from keras.layers import Dense, Conv2D, MaxPooling2D, Flatten, BatchNormalization, Dropout
 from keras.optimizers import SGD, Adam
-from keras.callbacks import ModelCheckpoint, Callback
+from keras.callbacks import ModelCheckpoint, Callback, LearningRateScheduler
 
 import numpy as np
 import h5py
@@ -173,17 +173,23 @@ def sens_spec(indices, model):
         print('tp, fn, tn, fp')
         print(tp, fn, tn, fp)
 
-        # conf = confusion_matrix(actual, predictions)
-        #
-        # tp = conf[0][0]
-        # tn = conf[1][1]
-        # fp = conf[0][1]
-        # fn = conf[1][0]
-
         sensitivity = float(tp) / (float(tp) + float(fn) + 1e-10)
         specificity = float(tn) / (float(tn) + float(fp) + 1e-10)
 
     return sensitivity, specificity
+
+def lr_scheduler(model):
+    # reduce learning rate by factor of 10 every 100 epochs
+    def schedule(epoch):
+        new_lr = K.get_value(model.optimizer.lr)
+
+        if epoch % 100 == 0:
+            new_lr = new_lr / 2
+
+        return new_lr
+
+    scheduler = LearningRateScheduler(schedule)
+    return scheduler
 
 def qc_model():
     nb_classes = 2
@@ -275,9 +281,13 @@ def plot_graphs(hist, results_dir, fold_num):
     # plt.plot(epoch_num, hist.history['specificity'], label='Train Spec')
     # plt.plot(epoch_num, hist.history['val_specificity'], label='Val Spec')
 
-    plt.legend(shadow=True)
-    plt.xlabel("Training Epoch Number")
-    plt.ylabel("Metric Value")
+    plt.legend(shadow=True, fontsize=20)
+    plt.xlabel("Training Epoch Number", fontsize=24)
+    plt.ylabel("Metric Value", fontsize=24)
+
+    for item in (plt.get_xticklabels() + plt.get_yticklabels()):
+        item.set_fontsize(20)
+
     plt.savefig(results_dir + 'training_metrics_fold' + str(fold_num) + '.png', bbox_inches='tight')
     plt.close()
 
@@ -354,7 +364,9 @@ def predict_and_visualize(model, indices, results_dir):
                 img_ax = ax[j+1].imshow(overlay(heatmap, gray3, alpha=0.2))
                 ax[j+1].set_xticks([])
                 ax[j+1].set_yticks([])
-                plt.colorbar(img_ax)
+                cbar = plt.colorbar(img_ax, ticks=[0, 255])
+                cbar.ax.set_yticklabels(['No influence', 'High influence'])
+                
                 ax[j+1].set_xlabel('Decision Regions (Guided Grad-CAM)')
 
                 if prediction == 0:
@@ -480,15 +492,16 @@ if __name__ == "__main__":
 
         # verify_hdf5(reversed(train_indices), results_dir)
 
-        f = h5py.File(workdir + 'ibis.hdf5', 'r')
-        h5labels = f['qc_label']
-        for index in train_indices:
-            print(index, labels[index], h5labels[index, ...])
-        f.close()
+        # f = h5py.File(workdir + 'ibis.hdf5', 'r')
+        # h5labels = f['qc_label']
+        # for index in train_indices:
+        #     print(index, labels[index], h5labels[index, ...])
+        # f.close()
 
+        lr_sched = lr_scheduler(model)
         model_checkpoint = ModelCheckpoint(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5", monitor="val_acc", verbose=0, save_best_only=True, save_weights_only=False, mode='max')
 
-        hist = model.fit_generator(batch(train_indices, batch_size, True), np.ceil(len(train_indices)/batch_size), epochs=400, validation_data=batch(validation_indices, batch_size), validation_steps=np.ceil(len(validation_indices)//batch_size), callbacks=[model_checkpoint], class_weight = {0:20, 1:1})
+        hist = model.fit_generator(batch(train_indices, batch_size, True), np.ceil(len(train_indices)/batch_size), epochs=400, validation_data=batch(validation_indices, batch_size), validation_steps=np.ceil(len(validation_indices)//batch_size), callbacks=[model_checkpoint, lr_sched], class_weight = {0:20, 1:1})
 
         model.load_weights(results_dir + "best_weights" + "_fold_" + str(k) + ".hdf5")
         model.save(results_dir + 'ibis_qc_model' + str(k) + '.hdf5')
@@ -519,8 +532,8 @@ if __name__ == "__main__":
 
         predict_and_visualize(model, test_indices, results_dir)
 
-        # model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['acc'])
-        # model.save(results_dir + 'ibis_qc_model' + str(k) + '.hdf5')
+        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=score_metrics)
+        model.save(results_dir + 'ibis_qc_model' + str(k) + '.hdf5')
 
     plt.close()
 
@@ -560,16 +573,18 @@ if __name__ == "__main__":
     plt.xlim(0, len(score_data) + 1)
     plt.grid(zorder=0)
 
+    for item in (plt.get_xticklabels() + plt.get_yticklabels()):
+        item.set_fontsize(20)
+
     # fill with colors
     colors = ['pink', 'red', 'darkred', 'pink', 'red', 'darkred', 'pink', 'red', 'darkred']
 
     for patch, color in zip(bplot['boxes'], colors):
         patch.set_facecolor(color)
 
-    plt.xlabel('Metric')
-    plt.ylabel('Value')
+    plt.xlabel('Metric', fontsize=24)
+    plt.ylabel('Value', fontsize=24)
     plt.tight_layout()
-
 
     results_dir = workdir + '/experiment-' + str(experiment_number) + '/'
     plt.savefig(results_dir + 'metrics_boxplot.png')
