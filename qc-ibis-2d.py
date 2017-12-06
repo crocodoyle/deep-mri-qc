@@ -2,6 +2,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Conv2D, MaxPooling2D, Flatten, BatchNormalization, Dropout
 from keras.optimizers import SGD, Adam
 from keras.callbacks import ModelCheckpoint, Callback, LearningRateScheduler
+import keras.backend as K
 
 import numpy as np
 import h5py
