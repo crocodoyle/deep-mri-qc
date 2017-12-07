@@ -325,7 +325,7 @@ def predict_and_visualize(model, indices, results_dir):
             model = utils.apply_modifications(model)
 
         for i, (index, prediction) in enumerate(zip(indices, predictions)):
-            fig, ax = plt.subplots(1, 2, figsize=(12, 8))
+            fig, ax = plt.subplots(1, 2, figsize=(12, 9))
 
             actual = np.argmax(labels[index, ...])
             print('actual, predicted PASS/FAIL:', actual, prediction)
@@ -564,6 +564,8 @@ if __name__ == "__main__":
 
     score_data.append(scores['test_spec'])
     score_labels.append('Test\nSpecificity')
+
+    plt.figure(figsize=(12, 9))
 
     bplot = plt.boxplot(score_data, patch_artist=True, zorder=3)
 
