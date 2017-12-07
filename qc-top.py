@@ -530,7 +530,7 @@ if __name__ == "__main__":
     # print summary of model
     model.summary()
 
-    num_epochs = 20
+    num_epochs = 10
 
     model_checkpoint = ModelCheckpoint( results_dir + 'best_qc_model.hdf5',
                                         monitor="val_acc",
