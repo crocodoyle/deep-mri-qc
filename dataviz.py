@@ -127,7 +127,7 @@ def dataset_examples():
 
         filepath = new_filepath
 
-        register_MINC(filepath, atlas, root_path + filename + '.mnc')
+        # register_MINC(filepath, atlas, root_path + filename + '.mnc')
 
         img = nib.load(root_path + filename + '.mnc')
         print('shape:', img.shape)
@@ -143,7 +143,7 @@ def dataset_examples():
         #     slice = img[img.shape[0] // 2, :, :, 0]
         # else:
         t1_data = img.get_data()
-        slice = t1_data[:, :, t1_data.shape[2] // 2]
+        slice = t1_data[:, t1_data.shape[1] // 2, :]
 
         plt.close()
         plt.imshow(slice, cmap='gray', origin='lower')
