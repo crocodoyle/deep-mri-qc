@@ -11,7 +11,7 @@ import pickle
 import h5py
 
 from nibabel.processing import resample_from_to
-
+from make_datasets import register_MINC
 
 workdir = '/data1/data/deepqc/'
 atlas = '/data1/users/adoyle/mni_icbm152_t1_tal_nlin_asym_09a.mnc'
@@ -125,14 +125,14 @@ def dataset_examples():
         if 'ADNI' in filename:
             t1 = img.get_data()[..., 0]
             img = nib.Nifti1Image(t1, np.eye(4))
-            
+
         img = resample_from_to(img, atlas_img)
 
 
         #     slice = img[img.shape[0] // 2, :, :, 0]
         # else:
         t1_data = img.get_data()
-        slice = t1_data[t1_data.shape[0] // 2, :, :]
+        slice = t1_data[:, :, t1_data.shape[2] // 2,]
 
         plt.close()
         plt.imshow(slice, cmap='gray')
