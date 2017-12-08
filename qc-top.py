@@ -125,7 +125,7 @@ def top_model():
     inputs = [Input(shape=(192, 256, 192)), Input(shape=(192, 192, 192)), Input(shape=(192, 256, 192))]
 
     # XY plane
-    xy_conv1 = Conv2D(16, conv_size, activation='relu')(inputs[0])
+    xy_conv1 = Conv2D(32, conv_size, activation='relu')(inputs[0])
     xy_norm1 = BatchNormalization()(xy_conv1)
     # xy_drop1 = Dropout(0.5)(xy_norm1)
     xy_pool1 = MaxPooling2D(pool_size=pool_size)(xy_norm1)
@@ -155,11 +155,11 @@ def top_model():
     # xy_drop4 = Dropout(0.5)(xy_conv4)
     xy_pool6 = MaxPooling2D(pool_size=pool_size)(xy_norm6)
 
-    xy_fully = Conv2D(128, (1, 1), activation='relu')(xy_pool6)
+    xy_fully = Conv2D(512, (1, 1), activation='relu')(xy_pool6)
     xy_flat  = Flatten()(xy_fully)
 
     # XZ plane
-    xz_conv1 = Conv2D(16, conv_size, activation='relu')(inputs[1])
+    xz_conv1 = Conv2D(32, conv_size, activation='relu')(inputs[1])
     xz_norm1 = BatchNormalization()(xz_conv1)
     # xz_drop1 = Dropout(0.5)(xz_norm1)
     xz_pool1 = MaxPooling2D(pool_size=pool_size)(xz_norm1)
@@ -190,11 +190,11 @@ def top_model():
     xz_pool6 = MaxPooling2D(pool_size=pool_size)(xz_norm6)
 
 
-    xz_fully = Conv2D(128, (1, 1), activation='relu')(xz_pool6)
+    xz_fully = Conv2D(512, (1, 1), activation='relu')(xz_pool6)
     xz_flat = Flatten()(xz_fully)
 
     # YZ planef
-    yz_conv1 = Conv2D(16, conv_size, activation='relu')(inputs[2])
+    yz_conv1 = Conv2D(32, conv_size, activation='relu')(inputs[2])
     yz_norm1 = BatchNormalization()(yz_conv1)
     # yz_drop1 = Dropout(0.5)(yz_norm1)
     yz_pool1 = MaxPooling2D(pool_size=pool_size)(yz_norm1)
@@ -224,13 +224,13 @@ def top_model():
     # yz_drop4 = Dropout(0.5)(yz_conv4)
     yz_pool6 = MaxPooling2D(pool_size=pool_size)(yz_norm6)
 
-    yz_fully = Conv2D(128, (1, 1), activation='relu')(yz_pool6)
+    yz_fully = Conv2D(512, (1, 1), activation='relu')(yz_pool6)
     yz_flat = Flatten()(yz_fully)
 
     allplanes = concatenate([xy_flat, xz_flat, yz_flat])
     all_drop = Dropout(0.5)(allplanes)
 
-    last_layer = Dense(256, activation='relu')(all_drop)
+    last_layer = Dense(512, activation='relu')(all_drop)
     last_drop = Dropout(0.5)(last_layer)
 
     output = Dense(nb_classes, activation='softmax')(last_drop)
@@ -524,7 +524,7 @@ if __name__ == "__main__":
     adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=1e-6)
 
     model.compile(loss='categorical_crossentropy',
-                  optimizer=sgd,
+                  optimizer=adam,
                   metrics=["accuracy"])
 
     # print summary of model
