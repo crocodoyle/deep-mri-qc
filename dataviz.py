@@ -122,6 +122,9 @@ def dataset_examples():
         new_filepath = root_path + filepath.split('/')[-1][:-4] + '.mnc'
         if '.nii' in filepath:
             subprocess.run(['nii2mnc', filepath, new_filepath], stdout=open(os.devnull, 'wb'))
+        else:
+            subprocess.run(['cp', filepath, new_filepath])
+
         filepath = new_filepath
 
         register_MINC(filepath, atlas, root_path + filename + '.mnc')
