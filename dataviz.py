@@ -119,10 +119,10 @@ def dataset_examples():
 
     for filepath, filename in zip([abide_file, ping_file, ibis_file, adni_file, ds030_file], datasets):
 
+        new_filepath = root_path + filepath.split('/')[-1][:-4] + '.mnc'
         if '.nii' in filepath:
-            new_filepath = root_path + filepath.split('/')[-1][:-4] + '.mnc'
             subprocess.run(['nii2mnc', filepath, new_filepath], stdout=open(os.devnull, 'wb'))
-            filepath = new_filepath
+        filepath = new_filepath
 
         register_MINC(filepath, atlas, root_path + filename + '.mnc')
 
