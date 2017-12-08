@@ -440,7 +440,7 @@ def combine_objs(obj1, obj2, newname):
 
 
 def register_MINC(moving_image, atlas, output_image):
-    register_command_line = ['/home/users/adoyle/quarantines/Linux-x86_64/SRC/civet-2.1.0/progs/bestlinreg.pl',
+    register_command_line = ['/data1/users/adoyle/quarantines/Linux-x86_64/SRC/civet-2.1.0/progs/bestlinreg.pl',
                              '-lsq12',
                              '-nmi',
                              moving_image,
@@ -449,7 +449,7 @@ def register_MINC(moving_image, atlas, output_image):
                              output_image,
                              '-clobber',
                              '-target_mask',
-                             '/data1/data/mni_icbm152_t1_tal_nlin_asym_09a_mask.mnc']
+                             '/data1/users/adoyle/mni_icbm152_t1_tal_nlin_asym_09a_mask.mnc']
 
     subprocess.run(register_command_line, stdout=open(os.devnull, 'wb'))
 
