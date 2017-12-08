@@ -124,9 +124,11 @@ def dataset_examples():
             subprocess.run(['nii2mnc', filepath, new_filepath], stdout=open(os.devnull, 'wb'))
             filepath = new_filepath
 
-        img = nib.load(filepath)
+        register_MINC(filepath, atlas, root_path + filename + '.mnc')
+
+        img = nib.load(root_path + filename + '.mnc')
         print('shape:', img.shape)
-        atlas_img = nib.load(atlas)
+        # atlas_img = nib.load(atlas)
 
         # if 'ADNI' in filename:
         #     t1 = img.get_data()[..., 0]
@@ -138,7 +140,7 @@ def dataset_examples():
         #     slice = img[img.shape[0] // 2, :, :, 0]
         # else:
         t1_data = img.get_data()
-        slice = t1_data[:, :, t1_data.shape[2] // 2,]
+        slice = t1_data[:, :, t1_data.shape[2] // 2]
 
         plt.close()
         plt.imshow(slice, cmap='gray', origin='lower')
