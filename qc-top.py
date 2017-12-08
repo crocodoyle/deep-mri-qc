@@ -432,7 +432,7 @@ def sens_spec(indices, model):
 
         for i, index in enumerate(indices):
 
-            prediction = model.predict_generator(top_batch(list(index), augment=False), steps=1)[1]
+            prediction = model.predict_generator(top_batch([index], augment=False), steps=1)[0][1]
 
             if prediction >= 0.5:
                 predictions[i] = 1
