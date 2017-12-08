@@ -544,7 +544,8 @@ if __name__ == "__main__":
         epochs=num_epochs,
         callbacks=[model_checkpoint],
         validation_data=top_batch(validation_indices, augment=False),
-        validation_steps=len(validation_indices)
+        validation_steps=len(validation_indices),
+        class_weight={0:20, 1:1}
     )
 
     model.load_weights(results_dir + 'best_qc_model.hdf5')
