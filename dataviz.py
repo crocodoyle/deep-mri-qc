@@ -137,8 +137,6 @@ def dataset_examples():
         plt.savefig(root_path + filename + '.png', bbox_inches='tight')
 
 
-
-
 def rename_abide(input_path, output_path):
 
     for file in os.listdir(input_path):
