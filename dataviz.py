@@ -101,6 +101,29 @@ def plot_nonlinearities(output_path):
 def sigmoid(x):
   return 1 / (1 + math.exp(-x))
 
+def dataset_examples():
+
+    root_path = '/data1/users/adoyle/'
+
+    abide_file = '/deep_abide/resampled/50002.mnc'
+    ping_file = '/PING/resampled/p0008_20100127_150603_2_mri.mnc'
+    ibis_file = '/IBIS/103430/V06/native/ibis_103430_V06_t1w_001.mnc'
+    adni_file = '/ADNI/ADNI_002_S_0413_MR_MPRAGE_br_raw_20061117170342571_1_S22684_I30119.nii'
+    ds030_file = '/ds030/sub-10159.nii.gz'
+
+    datasets = ['ABIDE', 'PING', 'IBIS', 'ADNI', 'ds030']
+
+    for filepath, filename in zip([abide_file, ping_file, ibis_file, adni_file, ds030_file], datasets):
+        img = nib.load(filepath).get_data()
+        print('shape:', img.shape)
+
+        slice = img[96, :, :]
+        plt.imshow(slice, cmap='gray')
+        plt.xticks([])
+        plt.yticks([])
+        plt.tight_layout()
+        plt.savefig(root_path + filename + '.png', bbox_inches='tight')
+
 
 
 
@@ -221,6 +244,7 @@ def age_range_graph():
 if __name__ == '__main__':
     age_range_graph()
     pass_fail_graph()
+    dataset_examples()
 
     # plot_nonlinearities('E:/')
 
