@@ -117,11 +117,11 @@ def dataset_examples():
         img = nib.load(filepath).get_data()
         print('shape:', img.shape)
 
-        if 'IBIS' in filename:
+        if 'ADNI' in filename:
             slice = img[img.shape[0] // 2, :, :, 0]
         else:
             slice = img[img.shape[0] // 2, :, :]
-            
+
         plt.imshow(slice, cmap='gray')
         plt.xticks([])
         plt.yticks([])
