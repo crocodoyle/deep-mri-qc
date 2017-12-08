@@ -120,8 +120,9 @@ def dataset_examples():
     for filepath, filename in zip([abide_file, ping_file, ibis_file, adni_file, ds030_file], datasets):
         img = nib.load(filepath)
         print('shape:', img.shape)
+        atlas_img = nib.load(atlas)
 
-        img = resample_from_to(img, atlas_image)
+        img = resample_from_to(img, atlas_img)
 
         if 'ADNI' in filename:
             slice = img[img.shape[0] // 2, :, :, 0]
