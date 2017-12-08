@@ -128,11 +128,11 @@ def dataset_examples():
         print('shape:', img.shape)
         atlas_img = nib.load(atlas)
 
-        if 'ADNI' in filename:
-            t1 = img.get_data()[..., 0]
-            img = nib.Nifti1Image(t1, np.eye(4))
+        # if 'ADNI' in filename:
+        #     t1 = img.get_data()[..., 0]
+        #     img = nib.Nifti1Image(t1, np.eye(4))
 
-        img = resample_from_to(img, atlas_img)
+        # img = resample_from_to(img, atlas_img)
 
 
         #     slice = img[img.shape[0] // 2, :, :, 0]
