@@ -432,7 +432,7 @@ def sens_spec(indices, model):
 
         for i, index in enumerate(indices):
 
-            prediction = model.predict_generator(top_batch(list(index), augment=False), steps=len(indices))[0][1]
+            prediction = model.predict_generator(top_batch(list(index), augment=False), steps=1)[0][1]
 
             if prediction >= 0.5:
                 predictions[i] = 1
@@ -530,7 +530,7 @@ if __name__ == "__main__":
     # print summary of model
     model.summary()
 
-    num_epochs = 10
+    num_epochs = 1
 
     model_checkpoint = ModelCheckpoint( results_dir + 'best_qc_model.hdf5',
                                         monitor="val_acc",
