@@ -10,7 +10,11 @@ import nibabel as nib
 import pickle
 import h5py
 
+from nibabel.processing import resample_from_to
+
+
 workdir = '/data1/data/deepqc/'
+atlas = '/data1/users/adoyle/mni_icbm152_t1_tal_nlin_asym_09a.mnc'
 
 
 import imageio
@@ -114,14 +118,17 @@ def dataset_examples():
     datasets = ['ABIDE', 'PING', 'IBIS', 'ADNI', 'ds030']
 
     for filepath, filename in zip([abide_file, ping_file, ibis_file, adni_file, ds030_file], datasets):
-        img = nib.load(filepath).get_data()
+        img = nib.load(filepath)
         print('shape:', img.shape)
+
+        img = resample_from_to(img, atlas_image)
 
         if 'ADNI' in filename:
             slice = img[img.shape[0] // 2, :, :, 0]
         else:
             slice = img[img.shape[0] // 2, :, :]
 
+        plt.close()
         plt.imshow(slice, cmap='gray')
         plt.xticks([])
         plt.yticks([])
