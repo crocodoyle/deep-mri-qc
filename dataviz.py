@@ -105,11 +105,11 @@ def dataset_examples():
 
     root_path = '/data1/users/adoyle/'
 
-    abide_file = '/deep_abide/resampled/50002.mnc'
-    ping_file = '/PING/resampled/p0008_20100127_150603_2_mri.mnc'
-    ibis_file = '/IBIS/103430/V06/native/ibis_103430_V06_t1w_001.mnc'
-    adni_file = '/ADNI/ADNI_002_S_0413_MR_MPRAGE_br_raw_20061117170342571_1_S22684_I30119.nii'
-    ds030_file = '/ds030/sub-10159.nii.gz'
+    abide_file = root_path + '/deep_abide/resampled/50002.mnc'
+    ping_file = root_path + '/PING/resampled/p0008_20100127_150603_2_mri.mnc'
+    ibis_file = root_path + '/IBIS/103430/V06/native/ibis_103430_V06_t1w_001.mnc'
+    adni_file = root_path + '/ADNI/ADNI_002_S_0413_MR_MPRAGE_br_raw_20061117170342571_1_S22684_I30119.nii'
+    ds030_file = root_path + '/ds030/sub-10159.nii.gz'
 
     datasets = ['ABIDE', 'PING', 'IBIS', 'ADNI', 'ds030']
 
