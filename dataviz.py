@@ -124,10 +124,10 @@ def dataset_examples():
 
         img = resample_from_to(img, atlas_img)
 
-        if 'ADNI' in filename:
-            slice = img[img.shape[0] // 2, :, :, 0]
-        else:
-            slice = img[img.shape[0] // 2, :, :]
+        # if 'ADNI' in filename:
+        #     slice = img[img.shape[0] // 2, :, :, 0]
+        # else:
+        slice = img[img.shape[0] // 2, :, :]
 
         plt.close()
         plt.imshow(slice, cmap='gray')
