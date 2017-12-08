@@ -16,7 +16,7 @@ from make_datasets import register_MINC
 workdir = '/data1/data/deepqc/'
 atlas = '/data1/users/adoyle/mni_icbm152_t1_tal_nlin_asym_09a.mnc'
 
-
+import subprocess
 import imageio
 import os
 
@@ -118,6 +118,12 @@ def dataset_examples():
     datasets = ['ABIDE', 'PING', 'IBIS', 'ADNI', 'ds030']
 
     for filepath, filename in zip([abide_file, ping_file, ibis_file, adni_file, ds030_file], datasets):
+
+        if '.nii' in filepath:
+            new_filepath = root_path + filepath.split('/')[-1][:-4] + '.mnc'
+            subprocess.run(['nii2mnc', filepath, new_filepath], stdout=open(os.devnull, 'wb'))
+            filepath = new_filepath
+
         img = nib.load(filepath)
         print('shape:', img.shape)
         atlas_img = nib.load(atlas)
@@ -135,7 +141,7 @@ def dataset_examples():
         slice = t1_data[:, :, t1_data.shape[2] // 2,]
 
         plt.close()
-        plt.imshow(slice, cmap='gray')
+        plt.imshow(slice, cmap='gray', origin='lower')
         plt.xticks([])
         plt.yticks([])
         plt.tight_layout()
