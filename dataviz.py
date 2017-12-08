@@ -127,7 +127,8 @@ def dataset_examples():
         # if 'ADNI' in filename:
         #     slice = img[img.shape[0] // 2, :, :, 0]
         # else:
-        slice = img[img.shape[0] // 2, :, :]
+        t1_data = img.get_data()
+        slice = t1_data[t1_data.shape[0] // 2, :, :]
 
         plt.close()
         plt.imshow(slice, cmap='gray')
