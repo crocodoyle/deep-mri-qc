@@ -143,6 +143,9 @@ def dataset_examples():
         #     slice = img[img.shape[0] // 2, :, :, 0]
         # else:
         t1_data = img.get_data()
+        t1_data = np.subtract(t1_data, np.min(t1_data))
+        t1_data = np.divide(t1_data, np.max(t1_data))
+        
         slice = t1_data[:, t1_data.shape[1] // 2, :]
 
         plt.close()
