@@ -451,8 +451,8 @@ def register_MINC(moving_image, atlas, output_image):
                              '-target_mask',
                              '/data1/users/adoyle/mni_icbm152_t1_tal_nlin_asym_09a_mask.mnc']
 
-    subprocess.run(register_command_line, stdout=open(os.devnull, 'wb'))
-
+    # subprocess.run(register_command_line, stdout=open(os.devnull, 'wb'))
+    subprocess.run(register_command_line)
 
     return
 
