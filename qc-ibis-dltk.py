@@ -118,8 +118,8 @@ def train(args):
 
     target_df = pd.read_csv('/data1/users/adoyle/IBIS/ibis_t1_qc.csv', dtype=object, keep_default_na=False)
 
-    all_filenames = list(target_df.iloc(0))
-    all_labels = list(target_df.iloc(1))
+    all_filenames = target_df.iloc(0).tolist()
+    all_labels = target_df.iloc(1).tolist()
 
     skf = StratifiedKFold(n_splits=10)
 
