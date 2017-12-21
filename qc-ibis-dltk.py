@@ -90,7 +90,7 @@ def model_fn(features, labels, mode, params):
     my_image_summaries = {}
     my_image_summaries['feat_t1'] = features['x'][0, 32, :, :, 0]
 
-    expected_output_size = [1, 96, 96, 1]  # [B, W, H, C]
+    expected_output_size = [1, 256, 244, 1]  # [B, W, H, C]
     [tf.summary.image(name, tf.reshape(image, expected_output_size))
      for name, image in my_image_summaries.items()]
 
