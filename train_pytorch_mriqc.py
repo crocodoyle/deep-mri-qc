@@ -61,7 +61,7 @@ class QCDataset(Dataset):
 
         image = self.images[good_index, ...][np.newaxis, :, :, 192//2]
         label = np.argmax(self.labels[good_index, ...])
-        print(label.shape)
+        print(label.shape, image.shape)
         return_label = torch.from_numpy(label)
 
         return image, return_label
