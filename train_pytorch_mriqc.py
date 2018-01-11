@@ -95,7 +95,7 @@ class Net(nn.Module):
         self.conv4 = nn.Conv2d(32, 64, kernel_size=3)
         self.conv5 = nn.Conv2d(64, 128, kernel_size=3)
         self.conv5_drop = nn.Dropout2d()
-        self.fc1 = nn.Linear(99, 256)
+        self.fc1 = nn.Linear(3072, 256)
         self.fc2 = nn.Linear(256, 2)
 
     def forward(self, x):
