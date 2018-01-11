@@ -59,7 +59,7 @@ class QCDataset(Dataset):
     def __getitem__(self, index):
         good_index = self.indices[index]
 
-        image = self.images[good_index, ...]
+        image = self.images[good_index, ...][:, :, 192//2]
         label = torch.from_numpy(self.labels[good_index, ...])
 
         return image, label
