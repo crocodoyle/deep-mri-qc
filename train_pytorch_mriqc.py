@@ -124,7 +124,7 @@ def train(epoch):
         data, target = Variable(data), Variable(target).type(torch.LongTensor)
         optimizer.zero_grad()
         output = model(data)
-        loss = F.CrossEntropyLoss()
+        loss = nn.CrossEntropyLoss()
         loss_val = loss(output, target)
         loss_val.backward()
         optimizer.step()
