@@ -60,9 +60,11 @@ class QCDataset(Dataset):
         good_index = self.indices[index]
 
         image = self.images[good_index, ...][np.newaxis, :, :, 192//2]
-        label = torch.from_numpy(np.asarray(np.argmax(self.labels[good_index, ...])))
+        label = np.argmax(self.labels[good_index, ...])
+        print(label.shape)
+        return_label = torch.from_numpy(label)
 
-        return image, label
+        return image, return_label
 
     def __len__(self):
         return self.n_subjects
