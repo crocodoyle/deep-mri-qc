@@ -40,8 +40,8 @@ if args.cuda:
 
 
 
-workdir = '/data1/users/adoyle/'
-
+# workdir = '/data1/users/adoyle/'
+workdir = '/home/users/adoyle/deepqc/'
 
 class QCDataset(Dataset):
     def __init__(self, hdf5_file_path, all_indices, augmentation_type=None):
