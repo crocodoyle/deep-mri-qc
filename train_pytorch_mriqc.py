@@ -60,7 +60,7 @@ class QCDataset(Dataset):
         good_index = self.indices[index]
 
         image = self.images[good_index, ...][np.newaxis, :, :, 192//2]
-        label = torch.from_numpy(np.round(self.labels[good_index, ...]))
+        label = torch.from_numpy(np.asarray(np.argmax(self.labels[good_index, ...])))
 
         return image, label
 
