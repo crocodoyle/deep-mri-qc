@@ -145,7 +145,7 @@ def test():
         output = model(data)
         loss_function = nn.CrossEntropyLoss()
 
-        test_loss += loss_function(output, target, size_average=False).data[0] # sum up batch loss
+        test_loss += loss_function(output, target).data[0] # sum up batch loss
         pred = output.data.max(1, keepdim=True)[1] # get the index of the max log-probability
         correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
