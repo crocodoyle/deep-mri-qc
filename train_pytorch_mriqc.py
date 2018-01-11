@@ -124,13 +124,14 @@ def train(epoch):
         data, target = Variable(data), Variable(target).type(torch.LongTensor)
         optimizer.zero_grad()
         output = model(data)
-        loss = F.nll_loss(output, target)
-        loss.backward()
+        loss = F.CrossEntropyLoss()
+        loss_val = loss(output, target)
+        loss_val.backward()
         optimizer.step()
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader), loss.data[0]))
+                100. * batch_idx / len(train_loader), loss_val.data[0]))
 
 # def test():
 #     model.eval()
