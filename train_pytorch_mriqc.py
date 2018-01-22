@@ -119,7 +119,7 @@ def train(epoch):
         class_weight = torch.FloatTensor([1.0, 0.001])
         if args.cuda:
             data, target, class_weight = data.cuda(), target.cuda(), class_weight.cuda()
-        data, target, class_weight = Variable(data), Variable(target), Variable(class_weight)
+        data, target, class_weight = Variable(data), Variable(target).type(torch.cuda.LongTensor), Variable(class_weight)
         optimizer.zero_grad()
         output = model(data)
         loss = nn.CrossEntropyLoss(weight=class_weight)
