@@ -121,20 +121,20 @@ train_ground_truth = np.zeros(len(train_indices))
 for batch_idx, (data, target) in enumerate(train_loader):
     train_ground_truth[args.batch_size*batch_idx:args.batch_size*(1+batch_idx)] = target
 
-n_pass = np.sum(train_ground_truth)
-n_fail = len(train_indices) - np.sum(train_ground_truth)
+n_pass = np.sum(train_ground_truth, dtype='int')
+n_fail = len(train_indices) - np.sum(train_ground_truth, dtype='int')
 
 print('Training set has ' + str(n_pass) + ' PASS and ' + str(n_fail) + ' FAIL images')
 fail_weight = n_pass / len(train_indices)
 pass_weight = n_fail / len(train_indices)
 
 print('Setting class weighting to ' + str(fail_weight) + ' for FAIL class and ' + str(pass_weight) + ' for PASS class')
-class_weight = torch.FloatTensor([fail_weight, pass_weight])
 
 def train(epoch, fold_num=-1):
     model.train()
 
     truth, probabilities = np.zeros((len(train_indices))), np.zeros((len(train_indices), 2))
+    class_weight = torch.FloatTensor([fail_weight, pass_weight])
 
     for batch_idx, (data, target) in enumerate(train_loader):
         if args.cuda:
