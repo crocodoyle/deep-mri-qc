@@ -5,9 +5,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, Sampler
 
-from torchvision import datasets, transforms
 from torch.autograd import Variable
 
 import h5py, pickle
@@ -25,8 +24,8 @@ parser.add_argument('--batch-size', type=int, default=32, metavar='N',
 parser.add_argument('--test-batch-size', type=int, default=32, metavar='N',
                     help='input batch size for testing (default: 32)')
 parser.add_argument('--epochs', type=int, default=10, metavar='N',
-                    help='number of epochs to train (default: 200)')
-parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
+                    help='number of epochs to train (default: 10)')
+parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',
                     help='learning rate (default: 0.01)')
 parser.add_argument('--momentum', type=float, default=0.5, metavar='M',
                     help='SGD momentum (default: 0.5)')
@@ -69,7 +68,16 @@ class QCDataset(Dataset):
     def __len__(self):
         return self.n_subjects
 
+class QCSampler(Sampler):
 
+    def __init__(self, data_source):
+        pass
+
+    def __iter__(self):
+        raise NotImplementedError
+
+    def __len__(self):
+        raise NotImplementedError
 
 abide_indices = pickle.load(open(workdir + 'abide_indices.pkl', 'rb'))
 ds030_indices = pickle.load(open(workdir + 'ds030_indices.pkl', 'rb'))
@@ -197,9 +205,3 @@ if __name__ == '__main__':
         test_specificity[epoch_idx] = test_tn / (test_tn + test_fp)
 
     plot_sens_spec(training_sensitivity, training_specificity, None, None, test_sensitivity, test_specificity, results_dir)
-
-
-
-
-        # plot_sens_spec()
-
