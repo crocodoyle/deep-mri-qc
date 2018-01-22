@@ -1,26 +1,27 @@
-import torch
-
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 
+from sklearn.metrics import roc_curve, roc_auc_score
 
 
-def plot_roc(probs, truth, results_dir, fold_num):
-    plt.figure(figsize=(8,8))
+def plot_roc(truth, probs, results_dir, fold_num):
+    plt.figure(figsize=(8, 8))
 
-    epoch_num = range(truth)
+    lw = 2
+    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
 
-    plt.close()
-    # plt.plot(epoch_num, hist.history['acc'], label='Training Accuracy')
-    # plt.plot(epoch_num, hist.history['val_acc'], label="Validation Accuracy")
-    plt.plot(epoch_num, self.train_sens, label='Train Sensitivity')
-    plt.plot(epoch_num, self.train_spec, label='Train Specificity')
-    plt.plot(epoch_num, self.val_sens, label='Validation Sensitivity')
-    plt.plot(epoch_num, self.val_spec, label='Val Specificity')
+    roc_auc = roc_auc_score(truth, probs[:, 1], 'weighted')
+    fpr, tpr, _ = roc_curve(truth, probs[:, 1])
 
-    plt.legend(shadow=True)
-    plt.xlabel("Training Epoch Number")
-    plt.ylabel("Metric Value")
-    plt.savefig(results_dir + 'training_metrics.png', bbox_inches='tight')
+    plt.plot(fpr, tpr, color='darkorange', lw=lw, label='ROC (area = %0.2f)' % roc_auc)
+
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate', fontsize=20)
+    plt.ylabel('True Positive Rate', fontsize=20)
+    # plt.title('Receiver operating characteristic example', fontsize=24)
+    plt.legend(loc="lower right", shadow=True, fontsize=20)
+
+    plt.savefig(results_dir + '_roc.png', bbox_inches='tight')
     plt.close()

@@ -116,6 +116,9 @@ optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
 def train(epoch, fold_num=-1):
     model.train()
+
+    truth, probabilities = np.zeros((len(train_indices))), np.zeros((len(train_indices), 2))
+
     for batch_idx, (data, target) in enumerate(train_loader):
         class_weight = torch.FloatTensor([1.0, 0.001])
         if args.cuda:
@@ -133,7 +136,11 @@ def train(epoch, fold_num=-1):
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss_val.data[0]))
 
-    # plot_roc(output.cpu(), target.cpu(), results_dir, fold_num)
+        truth[batch_idx*args.batch_size:(batch_idx+1)*args.batch_size] = target.data.cpu().numpy()
+        probabilities[batch_idx*args.batch_size:(batch_idx+1)*args.batch_size] = output.data.cpu().numpy()
+
+
+    plot_roc(truth, probabilities, results_dir, fold_num)
 
 def test():
     model.eval()
