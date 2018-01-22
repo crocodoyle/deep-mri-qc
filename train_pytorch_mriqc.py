@@ -14,15 +14,17 @@ import h5py, pickle
 import numpy as np
 
 from ml_experiment import setup_experiment
-from visualizations import plot_roc
+from visualizations import plot_roc, plot_sens_spec
+
+from sklearn.metrics import confusion_matrix
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch DeepMRIQC training.')
 parser.add_argument('--batch-size', type=int, default=32, metavar='N',
-                    help='input batch size for training (default: 1)')
+                    help='input batch size for training (default: 32)')
 parser.add_argument('--test-batch-size', type=int, default=32, metavar='N',
-                    help='input batch size for testing (default: 1)')
-parser.add_argument('--epochs', type=int, default=20, metavar='N',
+                    help='input batch size for testing (default: 32)')
+parser.add_argument('--epochs', type=int, default=10, metavar='N',
                     help='number of epochs to train (default: 200)')
 parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
                     help='learning rate (default: 0.01)')
@@ -139,14 +141,15 @@ def train(epoch, fold_num=-1):
         truth[batch_idx*args.batch_size:(batch_idx+1)*args.batch_size] = target.data.cpu().numpy()
         probabilities[batch_idx*args.batch_size:(batch_idx+1)*args.batch_size] = output.data.cpu().numpy()
 
-
-    plot_roc(truth, probabilities, results_dir, epoch)
+    return truth, probabilities
 
 def test():
     model.eval()
-    test_loss = 0
-    correct = 0
-    for data, target in test_loader:
+    test_loss, correct = 0, 0
+
+    truth, probabilities = np.zeros((len(ds030_indices))), np.zeros((len(ds030_indices), 2))
+
+    for batch_idx, (data, target) in enumerate(test_loader):
         if args.cuda:
             data, target = data.cuda(), target.cuda()
         data, target = Variable(data, volatile=True), Variable(target)
@@ -157,17 +160,46 @@ def test():
         pred = output.data.max(1, keepdim=True)[1]              # get the index of the max log-probability
         correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
+        truth[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = target.data.cpu().numpy()
+        probabilities[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = output.data.cpu().numpy()
+
     test_loss /= len(test_loader.dataset)
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
         test_loss, correct, len(test_loader.dataset),
         100. * correct / len(test_loader.dataset)))
 
+    return truth, probabilities
 
 if __name__ == '__main__':
     print('PyTorch implementation of DeepMRIQC.')
 
     results_dir, experiment_number = setup_experiment(workdir)
+    n_train = len(train_indices)
+
+    train_sens, specificity, loss = [], [], []
 
     for epoch in range(1, args.epochs + 1):
-        train(epoch, 0)
-        test()
+        train_truth, train_probabilities = train(epoch)
+        train_predictions = np.argmax(train_probabilities, axis=-1)
+
+        plot_roc(train_truth, train_probabilities, results_dir, epoch)
+
+        test_truth, test_probabilities = test()
+        test_predictions = np.argmax(test_probabilities, axis=-1)
+
+        [[train_tp, train_fn], [train_fp, train_tn]] = confusion_matrix(train_truth, train_predictions)
+        [[test_tp, test_fn], [test_fp, test_tn]] = confusion_matrix(test_truth, test_predictions)
+
+        train_sens = train_tp / (train_tp + train_fn)
+        train_spec = train_tn / (train_tn + train_fp)
+
+        test_sens = test_tp / (test_tp + test_fn)
+        test_spec = test_tn / (test_tn + test_fp)
+
+    plot_sens_spec(train_sens, train_spec, None, None, test_sens, test_spec, results_dir)
+
+
+
+
+        # plot_sens_spec()
+
