@@ -123,7 +123,7 @@ def train(epoch, fold_num=-1):
         data, target, class_weight = Variable(data), Variable(target).type(torch.cuda.LongTensor), Variable(class_weight)
         optimizer.zero_grad()
         output = model(data)
-        print('P(qc=0):', np.exp(output[0]))
+        print('P(qc=0):', np.exp(output.data.cpu().numpy()[0]))
         loss = nn.CrossEntropyLoss(weight=class_weight)
         loss_val = loss(output, target)
         loss_val.backward()
