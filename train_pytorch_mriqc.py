@@ -9,13 +9,17 @@ from torch.utils.data import Dataset, DataLoader
 
 from torch.autograd import Variable
 
-import h5py, pickle
+import h5py, pickle, os
 import numpy as np
 
 from ml_experiment import setup_experiment
 from visualizations import plot_roc, plot_sens_spec
 
 from sklearn.metrics import confusion_matrix
+
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch DeepMRIQC training.')
@@ -187,6 +191,31 @@ def test():
 
     return truth, probabilities
 
+def example_pass_fails(results_dir):
+    model.eval()
+
+    os.makedirs(results_dir + '/imgs/')
+    for batch_idx, (data, target) in enumerate(train_loader):
+        if args.cuda:
+            data, target = data.cuda(), target.cuda()
+        data, target = Variable(data), Variable(target)
+
+        target_batch = target.data.cpu().numpy()
+        image_batch = data.data.cpu().numpy()
+
+        for i in range(args.batch_size):
+
+            if target_batch[i] == 0:
+                qc_decision = 'FAIL'
+            else:
+                qc_decision = 'PASS'
+
+            plt.close()
+            plt.imshow(target_batch[i, ...], cmap='gray')
+            plt.axes('off')
+            plt.savefig(results_dir + '/imgs/' + qc_decision + '_batch_' + str(batch_idx) + '_img_' + str(i) + '.png', bbox_inches='tight')
+
+
 if __name__ == '__main__':
     print('PyTorch implementation of DeepMRIQC.')
 
@@ -213,4 +242,5 @@ if __name__ == '__main__':
         test_sensitivity[epoch_idx] = test_tp / (test_tp + test_fn)
         test_specificity[epoch_idx] = test_tn / (test_tn + test_fp)
 
+    example_pass_fails(results_dir)
     plot_sens_spec(training_sensitivity, training_specificity, None, None, test_sensitivity, test_specificity, results_dir)
