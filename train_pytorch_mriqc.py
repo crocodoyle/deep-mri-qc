@@ -213,7 +213,7 @@ def example_pass_fails(results_dir):
                 qc_decision = 'PASS'
 
             plt.close()
-            plt.imshow(image_batch[i, 1, :, :], cmap='gray')
+            plt.imshow(image_batch[i, 0, :, :], cmap='gray')
             plt.axes('off')
             plt.savefig(results_dir + '/imgs/' + qc_decision + '_batch_' + str(batch_idx) + '_img_' + str(i) + '.png', bbox_inches='tight')
 
