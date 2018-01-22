@@ -13,13 +13,16 @@ from torch.autograd import Variable
 import h5py, pickle
 import numpy as np
 
+from ml_experiment import setup_experiment
+from visualizations import plot_roc
+
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch DeepMRIQC training.')
 parser.add_argument('--batch-size', type=int, default=1, metavar='N',
                     help='input batch size for training (default: 1)')
 parser.add_argument('--test-batch-size', type=int, default=1, metavar='N',
                     help='input batch size for testing (default: 1)')
-parser.add_argument('--epochs', type=int, default=200, metavar='N',
+parser.add_argument('--epochs', type=int, default=5, metavar='N',
                     help='number of epochs to train (default: 200)')
 parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
                     help='learning rate (default: 0.01)')
@@ -37,8 +40,6 @@ args.cuda = not args.no_cuda and torch.cuda.is_available()
 torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
-
-
 
 # workdir = '/data1/users/adoyle/'
 workdir = '/home/users/adoyle/deepqc/'
@@ -113,7 +114,7 @@ if args.cuda:
 
 optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
-def train(epoch):
+def train(epoch, fold_num=-1):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         class_weight = torch.FloatTensor([1.0, 0.001])
@@ -122,6 +123,7 @@ def train(epoch):
         data, target, class_weight = Variable(data), Variable(target).type(torch.cuda.LongTensor), Variable(class_weight)
         optimizer.zero_grad()
         output = model(data)
+        print('prediction:', output)
         loss = nn.CrossEntropyLoss(weight=class_weight)
         loss_val = loss(output, target)
         loss_val.backward()
@@ -130,6 +132,8 @@ def train(epoch):
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss_val.data[0]))
+
+    # plot_roc(output.cpu(), target.cpu(), results_dir, fold_num)
 
 def test():
     model.eval()
@@ -154,6 +158,10 @@ def test():
 
 if __name__ == '__main__':
     print('PyTorch implementation of DeepMRIQC.')
+
+    results_dir, experiment_number = setup_experiment(workdir)
+
+
     for epoch in range(1, args.epochs + 1):
-        train(epoch)
+        train(epoch, 0)
         test()
