@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-from torch.utils.data import Dataset, DataLoader, Sampler
+from torch.utils.data import Dataset, DataLoader
 
 from torch.autograd import Variable
 
@@ -68,16 +68,6 @@ class QCDataset(Dataset):
     def __len__(self):
         return self.n_subjects
 
-class QCSampler(Sampler):
-
-    def __init__(self, data_source):
-        pass
-
-    def __iter__(self):
-        raise NotImplementedError
-
-    def __len__(self):
-        raise NotImplementedError
 
 abide_indices = pickle.load(open(workdir + 'abide_indices.pkl', 'rb'))
 ds030_indices = pickle.load(open(workdir + 'ds030_indices.pkl', 'rb'))
