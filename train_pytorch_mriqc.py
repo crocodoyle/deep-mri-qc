@@ -203,15 +203,17 @@ def example_pass_fails(results_dir):
         target_batch = target.data.cpu().numpy()
         image_batch = data.data.cpu().numpy()
 
-        for i in range(args.batch_size):
+        if batch_idx == 0:
+            print(target_batch.shape, image_batch.shape)
 
+        for i in range(args.batch_size):
             if target_batch[i] == 0:
                 qc_decision = 'FAIL'
             else:
                 qc_decision = 'PASS'
 
             plt.close()
-            plt.imshow(target_batch[i, ...], cmap='gray')
+            plt.imshow(image_batch[i, ...], cmap='gray')
             plt.axes('off')
             plt.savefig(results_dir + '/imgs/' + qc_decision + '_batch_' + str(batch_idx) + '_img_' + str(i) + '.png', bbox_inches='tight')
 
