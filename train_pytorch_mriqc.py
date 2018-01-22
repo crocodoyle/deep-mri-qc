@@ -139,6 +139,9 @@ def train(epoch, fold_num=-1):
         truth[batch_idx*args.batch_size:(batch_idx+1)*args.batch_size] = target.data.cpu().numpy()
         probabilities[batch_idx*args.batch_size:(batch_idx+1)*args.batch_size] = output.data.cpu().numpy()
 
+    print('Training GT:', truth)
+    print('Predictions:', probabilities)
+
     return truth, probabilities
 
 def test():
