@@ -176,9 +176,9 @@ if __name__ == '__main__':
     results_dir, experiment_number = setup_experiment(workdir)
     n_train = len(train_indices)
 
-    train_sens, specificity, loss = [], [], []
+    training_sensitivity, training_specificity, validation_sensitivity, validation_specificity, test_sensitivity, test_specificity = np.zeros(args.epochs), np.zeros(args.epochs), np.zeros(args.epochs), np.zeros(args.epochs), np.zeros(args.epochs), np.zeros(args.epochs)
 
-    for epoch in range(1, args.epochs + 1):
+    for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
         train_truth, train_probabilities = train(epoch)
         train_predictions = np.argmax(train_probabilities, axis=-1)
 
@@ -190,13 +190,13 @@ if __name__ == '__main__':
         [[train_tp, train_fn], [train_fp, train_tn]] = confusion_matrix(train_truth, train_predictions)
         [[test_tp, test_fn], [test_fp, test_tn]] = confusion_matrix(test_truth, test_predictions)
 
-        train_sens = train_tp / (train_tp + train_fn)
-        train_spec = train_tn / (train_tn + train_fp)
+        training_sensitivity[epoch_idx] = train_tp / (train_tp + train_fn)
+        training_specificity[epoch_idx] = train_tn / (train_tn + train_fp)
 
-        test_sens = test_tp / (test_tp + test_fn)
-        test_spec = test_tn / (test_tn + test_fp)
+        test_sensitivity[epoch_idx] = test_tp / (test_tp + test_fn)
+        test_specificity[epoch_idx] = test_tn / (test_tn + test_fp)
 
-    plot_sens_spec(train_sens, train_spec, None, None, test_sens, test_spec, results_dir)
+    plot_sens_spec(training_sensitivity, training_specificity, None, None, test_sensitivity, test_specificity, results_dir)
 
 
 
