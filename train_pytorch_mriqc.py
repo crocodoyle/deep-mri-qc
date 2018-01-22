@@ -79,13 +79,9 @@ train_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', train_indices)
 test_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', ds030_indices)
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
-train_loader = torch.utils.data.DataLoader(
-    train_dataset,
-    batch_size=args.batch_size, **kwargs)
 
-test_loader = torch.utils.data.DataLoader(
-    test_dataset,
-    batch_size=args.batch_size, **kwargs)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, **kwargs)
+test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.batch_size, **kwargs)
 
 class Net(nn.Module):
     def __init__(self):
@@ -122,10 +118,10 @@ def train(epoch):
     for batch_idx, (data, target) in enumerate(train_loader):
         if args.cuda:
             data, target = data.cuda(), target.cuda()
-        data, target = Variable(data), Variable(target).type(torch.LongTensor)
+        data, target, class_weight = Variable(data), Variable(target).type(torch.LongTensor), torch.FloatTensor([1.0, 0.001])
         optimizer.zero_grad()
         output = model(data)
-        loss = nn.CrossEntropyLoss()
+        loss = nn.CrossEntropyLoss(weight=class_weight)
         loss_val = loss(output, target)
         loss_val.backward()
         optimizer.step()
@@ -145,8 +141,8 @@ def test():
         output = model(data)
         loss_function = nn.CrossEntropyLoss()
 
-        test_loss += loss_function(output, target).data[0] # sum up batch loss
-        pred = output.data.max(1, keepdim=True)[1] # get the index of the max log-probability
+        test_loss += loss_function(output, target).data[0]      # sum up batch loss
+        pred = output.data.max(1, keepdim=True)[1]              # get the index of the max log-probability
         correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
     test_loss /= len(test_loader.dataset)
@@ -155,6 +151,8 @@ def test():
         100. * correct / len(test_loader.dataset)))
 
 
-for epoch in range(1, args.epochs + 1):
-    train(epoch)
-    test()
+if __name__ == '__main__':
+    print('PyTorch implementation of DeepMRIQC.')
+    for epoch in range(1, args.epochs + 1):
+        train(epoch)
+        test()
