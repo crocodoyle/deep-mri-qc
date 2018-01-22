@@ -206,17 +206,19 @@ def example_pass_fails(results_dir):
         if batch_idx == 0:
             print(target_batch.shape, image_batch.shape)
 
-        for i in range(args.batch_size):
-            if target_batch[i] == 0:
-                qc_decision = 'FAIL'
-            else:
-                qc_decision = 'PASS'
+        try:
+            for i in range(args.batch_size):
+                if target_batch[i] == 0:
+                    qc_decision = 'FAIL'
+                else:
+                    qc_decision = 'PASS'
 
-            plt.close()
-            plt.imshow(image_batch[i, 0, :, :], cmap='gray')
-            plt.axis('off')
-            plt.savefig(results_dir + '/imgs/' + qc_decision + '_batch_' + str(batch_idx) + '_img_' + str(i) + '.png', bbox_inches='tight')
-
+                plt.close()
+                plt.imshow(image_batch[i, 0, :, :], cmap='gray', origin='lower')
+                plt.axis('off')
+                plt.savefig(results_dir + '/imgs/' + qc_decision + '_batch_' + str(batch_idx) + '_img_' + str(i) + '.png', bbox_inches='tight')
+        except IndexError as e:
+            pass
 
 if __name__ == '__main__':
     print('PyTorch implementation of DeepMRIQC.')
