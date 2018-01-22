@@ -112,7 +112,24 @@ model = Net()
 if args.cuda:
     model.cuda()
 
-optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
+# optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
+optimizer = optim.Adam(model.parameters(), lr=0.0001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, amsgrad=False)
+
+pass_weight, fail_weight = 0, 0
+train_ground_truth = np.zeros(len(train_indices))
+
+for batch_idx, (data, target) in enumerate(train_loader):
+    train_ground_truth[args.batch_size*batch_idx:args.batch_size*(1+batch_idx)] = target
+
+n_pass = np.sum(train_ground_truth)
+n_fail = len(train_indices) - np.sum(train_ground_truth)
+
+print('Training set has ' + str(n_pass) + ' PASS and ' + str(n_fail) + ' FAIL images')
+fail_weight = n_pass / len(train_indices)
+pass_weight = n_fail / len(train_indices)
+
+print('Setting class weighting to ' + str(fail_weight) + ' for FAIL class and ' + str(pass_weight) + ' for PASS class')
+class_weight = torch.FloatTensor([fail_weight, pass_weight])
 
 def train(epoch, fold_num=-1):
     model.train()
@@ -120,7 +137,6 @@ def train(epoch, fold_num=-1):
     truth, probabilities = np.zeros((len(train_indices))), np.zeros((len(train_indices), 2))
 
     for batch_idx, (data, target) in enumerate(train_loader):
-        class_weight = torch.FloatTensor([1.0, 0.001])
         if args.cuda:
             data, target, class_weight = data.cuda(), target.cuda(), class_weight.cuda()
         data, target, class_weight = Variable(data), Variable(target).type(torch.cuda.LongTensor), Variable(class_weight)
