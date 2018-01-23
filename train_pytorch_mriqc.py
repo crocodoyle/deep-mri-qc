@@ -131,7 +131,7 @@ class ConvolutionalQCNet(nn.Module):
         self.output = nn.Linear(64, 2)
 
     def forward(self, x):
-        x = F.relu(F.max_pool2d(self.conv1_bn(self.conv1(x), 2)))
+        x = F.relu(F.max_pool2d(self.conv1_bn(self.conv1(x)), 2))
         x = F.relu(F.max_pool2d(self.conv2(x), 2))
         x = F.relu(F.max_pool2d(self.conv3(x), 2))
         x = F.relu(F.max_pool2d(self.conv4(x), 2))
