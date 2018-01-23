@@ -6,7 +6,6 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 from torch.utils.data import Dataset, DataLoader
-
 from torch.autograd import Variable
 
 import h5py, pickle, os
@@ -49,8 +48,9 @@ if args.cuda:
 # workdir = '/data1/users/adoyle/'
 workdir = '/home/users/adoyle/deepqc/'
 
+
 class QCDataset(Dataset):
-    def __init__(self, hdf5_file_path, all_indices, augmentation_type=None):
+    def __init__(self, hdf5_file_path, all_indices, random_slice=False, augmentation_type=None):
         f = h5py.File(hdf5_file_path)
         self.images = f['MRI']
         self.labels = f['qc_label']
@@ -58,13 +58,20 @@ class QCDataset(Dataset):
         self.n_subjects = len(all_indices)
         self.indices = np.zeros((self.n_subjects))
 
+        self.random_slice = random_slice
+
         for i, index in enumerate(all_indices):
             self.indices[i] = index
 
     def __getitem__(self, index):
         good_index = self.indices[index]
 
-        image = self.images[good_index, ...][np.newaxis, :, :, 192//2]
+        if self.random_slice:
+            slice_modifier = np.random.randint(-10, 10)
+        else:
+            slice_modifier = 0
+
+        image = self.images[good_index, ...][np.newaxis, :, :, 192//2 + slice_modifier]
         label = np.argmax(self.labels[good_index, ...])
 
         return image, label
@@ -78,9 +85,9 @@ ds030_indices = pickle.load(open(workdir + 'ds030_indices.pkl', 'rb'))
 ibis_indices = pickle.load(open(workdir + 'ibis_indices.pkl', 'rb'))
 ping_indices = pickle.load(open(workdir + 'ping_indices.pkl', 'rb'))
 
-train_indices = abide_indices + ds030_indices + ibis_indices + ping_indices
-
-train_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', train_indices)
+# train_indices = abide_indices + ds030_indices + ibis_indices + ping_indices
+train_indices = abide_indices
+train_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', train_indices, random_slice=True)
 test_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', ds030_indices)
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
@@ -88,10 +95,32 @@ kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, **kwargs)
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.batch_size, **kwargs)
 
-class Net(nn.Module):
+
+class FullyConnectedQCNet(nn.Module):
     def __init__(self):
-        super(Net, self).__init__()
+        super(FullyConnectedQCNet, self).__init__()
+        self.fc1 = nn.Linear(1, 32)
+        self.fc2 = nn.Linear(32, 64)
+        self.fc3 = nn.Linear(64, 128)
+        self.fc4 = nn.Linear(128, 64)
+        self.fc5 = nn.Linear(64, 32)
+        self.output = nn.Linear(2)
+
+    def forward(self, x):
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = F.relu(self.fc3(x))
+        x = F.relu(self.fc4(x))
+        x = F.relu(self.fc5(x))
+        x = self.output(x)
+        return F.log_softmax(x, dim=1)
+
+
+class ConvolutionalQCNet(nn.Module):
+    def __init__(self):
+        super(ConvolutionalQCNet, self).__init__()
         self.conv1 = nn.Conv2d(1, 8, kernel_size=3)
+        self.conv1_bn = nn.BatchNorm2d(8)
         self.conv2 = nn.Conv2d(8, 16, kernel_size=3)
         self.conv3 = nn.Conv2d(16, 32, kernel_size=3)
         self.conv4 = nn.Conv2d(32, 64, kernel_size=3)
@@ -102,7 +131,7 @@ class Net(nn.Module):
         self.output = nn.Linear(64, 2)
 
     def forward(self, x):
-        x = F.relu(F.max_pool2d(self.conv1(x), 2))
+        x = F.relu(F.max_pool2d(self.conv1_bn(self.conv1(x), 2)))
         x = F.relu(F.max_pool2d(self.conv2(x), 2))
         x = F.relu(F.max_pool2d(self.conv3(x), 2))
         x = F.relu(F.max_pool2d(self.conv4(x), 2))
@@ -115,7 +144,7 @@ class Net(nn.Module):
         x = self.output(x)
         return F.log_softmax(x, dim=1)
 
-model = Net()
+model = ConvolutionalQCNet()
 if args.cuda:
     model.cuda()
 
@@ -249,5 +278,5 @@ if __name__ == '__main__':
         test_sensitivity[epoch_idx] = test_tp / (test_tp + test_fn)
         test_specificity[epoch_idx] = test_tn / (test_tn + test_fp)
 
-    example_pass_fails(results_dir)
+    # example_pass_fails(results_dir)
     plot_sens_spec(training_sensitivity, training_specificity, None, None, test_sensitivity, test_specificity, results_dir)
