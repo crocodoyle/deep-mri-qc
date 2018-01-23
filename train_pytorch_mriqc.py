@@ -26,7 +26,7 @@ parser.add_argument('--batch-size', type=int, default=32, metavar='N',
                     help='input batch size for training (default: 32)')
 parser.add_argument('--test-batch-size', type=int, default=32, metavar='N',
                     help='input batch size for testing (default: 32)')
-parser.add_argument('--epochs', type=int, default=10, metavar='N',
+parser.add_argument('--epochs', type=int, default=100, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',
                     help='learning rate (default: 0.01)')
@@ -119,26 +119,29 @@ class FullyConnectedQCNet(nn.Module):
 class ConvolutionalQCNet(nn.Module):
     def __init__(self):
         super(ConvolutionalQCNet, self).__init__()
-        self.conv1 = nn.Conv2d(1, 8, kernel_size=3)
-        self.conv1_bn = nn.BatchNorm2d(8)
-        self.conv2 = nn.Conv2d(8, 16, kernel_size=3)
+        self.conv1 = nn.Conv2d(1, 16, kernel_size=3)
+        self.conv1_bn = nn.BatchNorm2d(16)
+        self.conv2 = nn.Conv2d(16, 16, kernel_size=3)
+        self.conv2_bn = nn.BatchNorm2d(16)
         self.conv3 = nn.Conv2d(16, 32, kernel_size=3)
+        self.conv3_bn = nn.BatchNorm2d(32)
         self.conv4 = nn.Conv2d(32, 64, kernel_size=3)
         self.conv5 = nn.Conv2d(64, 128, kernel_size=3)
         self.conv5_drop = nn.Dropout2d()
         self.fc1 = nn.Linear(3072, 256)
+        self.fc1_bn = nn.BatchNorm(256)
         self.fc2 = nn.Linear(256, 64)
         self.output = nn.Linear(64, 2)
 
     def forward(self, x):
         x = F.relu(F.max_pool2d(self.conv1_bn(self.conv1(x)), 2))
-        x = F.relu(F.max_pool2d(self.conv2(x), 2))
-        x = F.relu(F.max_pool2d(self.conv3(x), 2))
+        x = F.relu(F.max_pool2d(self.conv2_bn(self.conv2(x)), 2))
+        x = F.relu(F.max_pool2d(self.conv3_bn(self.conv3(x)), 2))
         x = F.relu(F.max_pool2d(self.conv4(x), 2))
         x = F.relu(F.max_pool2d(self.conv5_drop(self.conv5(x)), 2))
         x = x.view(-1, 3072)
         x = F.relu(self.fc1(x))
-        x = F.dropout(x, training=self.training)
+        x = F.dropout(self.fc1_bn(x), training=self.training)
         x = F.relu(self.fc2(x))
         x = F.dropout(x, training=self.training)
         x = self.output(x)
