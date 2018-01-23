@@ -149,7 +149,7 @@ if args.cuda:
     model.cuda()
 
 # optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
-optimizer = optim.Adam(model.parameters(), lr=0.00001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+optimizer = optim.Adam(model.parameters(), lr=0.002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-4)
 
 pass_weight, fail_weight = 0, 0
 train_ground_truth = np.zeros(len(train_indices))
