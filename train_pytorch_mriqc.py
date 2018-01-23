@@ -129,7 +129,7 @@ class ConvolutionalQCNet(nn.Module):
         self.conv5 = nn.Conv2d(64, 128, kernel_size=3)
         self.conv5_drop = nn.Dropout2d()
         self.fc1 = nn.Linear(3072, 256)
-        self.fc1_bn = nn.BatchNorm(256)
+        self.fc1_bn = nn.BatchNorm1d(256)
         self.fc2 = nn.Linear(256, 64)
         self.output = nn.Linear(64, 2)
 
