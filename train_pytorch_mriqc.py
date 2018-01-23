@@ -92,7 +92,7 @@ test_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', ds030_indices)
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, **kwargs)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, **kwargs)
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.batch_size, **kwargs)
 
 
