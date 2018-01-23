@@ -98,7 +98,8 @@ class Net(nn.Module):
         self.conv5 = nn.Conv2d(64, 128, kernel_size=3)
         self.conv5_drop = nn.Dropout2d()
         self.fc1 = nn.Linear(3072, 256)
-        self.fc2 = nn.Linear(256, 2)
+        self.fc2 = nn.Linear(256, 64)
+        self.output = nn.Linear(64, 2)
 
     def forward(self, x):
         x = F.relu(F.max_pool2d(self.conv1(x), 2))
@@ -109,7 +110,9 @@ class Net(nn.Module):
         x = x.view(-1, 3072)
         x = F.relu(self.fc1(x))
         x = F.dropout(x, training=self.training)
-        x = self.fc2(x)
+        x = F.relu(self.fc2(x))
+        x = F.dropout(x, training=self.training)
+        x = self.output(x)
         return F.log_softmax(x, dim=1)
 
 model = Net()
@@ -117,7 +120,7 @@ if args.cuda:
     model.cuda()
 
 # optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
-optimizer = optim.Adam(model.parameters(), lr=0.0001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+optimizer = optim.Adam(model.parameters(), lr=0.00001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
 pass_weight, fail_weight = 0, 0
 train_ground_truth = np.zeros(len(train_indices))
