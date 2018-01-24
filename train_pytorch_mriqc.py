@@ -26,7 +26,7 @@ parser.add_argument('--batch-size', type=int, default=32, metavar='N',
                     help='input batch size for training (default: 32)')
 parser.add_argument('--test-batch-size', type=int, default=32, metavar='N',
                     help='input batch size for testing (default: 32)')
-parser.add_argument('--epochs', type=int, default=100, metavar='N',
+parser.add_argument('--epochs', type=int, default=1000, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',
                     help='learning rate (default: 0.01)')
@@ -172,6 +172,8 @@ print('Setting class weighting to ' + str(fail_weight) + ' for FAIL class and ' 
 def train(epoch, fold_num=-1):
     model.train()
 
+    train_loss, correct = 0, 0
+
     truth, probabilities = np.zeros((len(train_indices))), np.zeros((len(train_indices), 2))
 
     for batch_idx, (data, target) in enumerate(train_loader):
@@ -194,8 +196,14 @@ def train(epoch, fold_num=-1):
         truth[batch_idx*args.batch_size:(batch_idx+1)*args.batch_size] = target.data.cpu().numpy()
         probabilities[batch_idx*args.batch_size:(batch_idx+1)*args.batch_size] = output.data.cpu().numpy()
 
-    print('Training GT:', truth)
-    print('Predictions:', probabilities)
+        train_loss += loss_val.data[0]                          # sum up batch loss
+        pred = output.data.max(1, keepdim=True)[1]              # get the index of the max log-probability
+        correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+
+    train_loss /= len(train_loader.dataset)
+    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+        train_loss, correct, len(train_loader.dataset),
+        100. * correct / len(train_loader.dataset)))
 
     return truth, probabilities
 
