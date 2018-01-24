@@ -126,24 +126,33 @@ class ConvolutionalQCNet(nn.Module):
         self.conv3 = nn.Conv2d(16, 32, kernel_size=3)
         self.conv3_bn = nn.BatchNorm2d(32)
         self.conv4 = nn.Conv2d(32, 64, kernel_size=3)
+        self.conv4_bn = nn.BatchNorm2d(64)
         self.conv5 = nn.Conv2d(64, 128, kernel_size=3)
-        self.conv5_drop = nn.Dropout2d()
+        self.conv5_bn = nn.BatchNorm2d(128)
+        self.conv5 = nn.Conv2d(128, 256, kernel_size=3)
+        self.conv5_bn = nn.BatchNorm2d(256)
+        self.conv5 = nn.Conv2d(256, 512, kernel_size=3)
+        self.conv5_bn = nn.BatchNorm2d(512)
+
         self.fc1 = nn.Linear(3072, 256)
         self.fc1_bn = nn.BatchNorm1d(256)
         self.fc2 = nn.Linear(256, 64)
+        self.fc1_bn = nn.BatchNorm1d(64)
         self.output = nn.Linear(64, 2)
 
     def forward(self, x):
-        x = F.relu(F.max_pool2d(self.conv1_bn(self.conv1(x)), 2))
-        x = F.relu(F.max_pool2d(self.conv2_bn(self.conv2(x)), 2))
-        x = F.relu(F.max_pool2d(self.conv3_bn(self.conv3(x)), 2))
-        x = F.relu(F.max_pool2d(self.conv4(x), 2))
-        x = F.relu(F.max_pool2d(self.conv5_drop(self.conv5(x)), 2))
+        x = F.relu(F.max_pool2d(F.dropout(self.conv1_bn(self.conv1(x))), 2), training=self.training)
+        x = F.relu(F.max_pool2d(F.dropout(self.conv2_bn(self.conv2(x))), 2), training=self.training)
+        x = F.relu(F.max_pool2d(F.dropout(self.conv3_bn(self.conv3(x))), 2), training=self.training)
+        x = F.relu(F.max_pool2d(F.dropout(self.conv4_bn(self.conv4(x))), 2), training=self.training)
+        x = F.relu(F.max_pool2d(F.dropout(self.conv5_bn(self.conv5(x))), 2), training=self.training)
+        x = F.relu(F.max_pool2d(F.dropout(self.conv6_bn(self.conv6(x))), 2), training=self.training)
+        x = F.relu(F.max_pool2d(F.dropout(self.conv7_bn(self.conv7(x))), 2), training=self.training)
         x = x.view(-1, 3072)
         x = F.relu(self.fc1(x))
         x = F.dropout(self.fc1_bn(x), training=self.training)
         x = F.relu(self.fc2(x))
-        x = F.dropout(x, training=self.training)
+        x = F.dropout(self.fc2_bn(x), training=self.training)
         x = self.output(x)
         return F.log_softmax(x, dim=1)
 
@@ -201,7 +210,7 @@ def train(epoch, fold_num=-1):
         correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
     train_loss /= len(train_loader.dataset)
-    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+    print('\nTrain set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
         train_loss, correct, len(train_loader.dataset),
         100. * correct / len(train_loader.dataset)))
 
