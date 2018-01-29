@@ -5,20 +5,27 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, roc_auc_score
 
 
-def plot_roc(truth, probs, results_dir, epoch_num, fold_num=-1):
+def plot_roc(train_truth, train_probs, val_truth, val_probs, test_truth, test_probs, results_dir, epoch_num, fold_num=-1):
     plt.figure(figsize=(8, 8))
 
     lw = 2
     plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
 
-    roc_auc = roc_auc_score(truth, probs[:, 1], 'weighted')
-    fpr, tpr, _ = roc_curve(truth, probs[:, 1])
+    train_roc_auc = roc_auc_score(train_truth, train_probs[:, 1], 'weighted')
+    val_roc_auc = roc_auc_score(val_truth, val_probs[:, 1], 'weighted')
+    test_roc_auc = roc_auc_score(test_truth, test_probs[:, 1], 'weighted')
 
-    plt.plot(fpr, tpr, color='darkorange', lw=lw, label='ROC (area = %0.2f)' % roc_auc)
+    train_fpr, train_tpr, _ = roc_curve(train_truth, train_probs[:, 1])
+    val_fpr, val_tpr, _ = roc_curve(val_truth, val_probs[:, 1])
+    test_fpr, test_tpr, _ = roc_curve(test_truth, test_probs[:, 1])
+
+    plt.plot(train_fpr, train_tpr, color='darkorange', lw=lw, label='Training ROC (area = %0.2f)' % train_roc_auc)
+    plt.plot(val_fpr, val_tpr, color='orange', lw=lw, label='Training ROC (area = %0.2f)' % val_roc_auc)
+    plt.plot(test_fpr, test_tpr, color='darkred', lw=lw, label='Training ROC (area = %0.2f)' % test_roc_auc)
 
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
-    plt.xlabel('False Positive Rate', fontsize=20)
+    plt.xlabel('True Negative Rate', fontsize=20)
     plt.ylabel('True Positive Rate', fontsize=20)
     # plt.title('Receiver operating characteristic example', fontsize=24)
     plt.legend(loc="lower right", shadow=True, fontsize=20)

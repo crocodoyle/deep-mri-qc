@@ -306,7 +306,9 @@ if __name__ == '__main__':
     # reset training_dataset and create a new validation_dataset
 
     skf = StratifiedKFold(n_splits=10)
-    for train_indices, validation_indices in skf.split(all_train_indices, train_ground_truth):
+    for fold, (train_indices, validation_indices) in enumerate(skf.split(all_train_indices, train_ground_truth)):
+        fold_num = fold + 1
+
         train_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', train_indices, random_slice=True)
         validation_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', train_indices, random_slice=False)
 
@@ -314,22 +316,29 @@ if __name__ == '__main__':
         validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=args.batch_size, shuffle=False, **kwargs)
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
-            train_truth, train_probabilities, validation_truth, validation_probabilities = train(epoch)
+            train_truth, train_probabilities = train(epoch)
             train_predictions = np.argmax(train_probabilities, axis=-1)
 
-            plot_roc(train_truth, train_probabilities, results_dir, epoch)
+            val_truth, val_probabilities = validate()
+            val_predictions = np.argmax(val_probabilities, axis=-1)
 
             test_truth, test_probabilities = test()
             test_predictions = np.argmax(test_probabilities, axis=-1)
 
+            plot_roc(train_truth, train_probabilities, val_truth, val_probabilities, test_truth, test_probabilities, results_dir, epoch, fold_num)
+
             [[train_tp, train_fn], [train_fp, train_tn]] = confusion_matrix(train_truth, train_predictions)
+            [[val_tp, val_fn], [val_fp, val_tn]] = confusion_matrix(val_truth, val_predictions)
             [[test_tp, test_fn], [test_fp, test_tn]] = confusion_matrix(test_truth, test_predictions)
 
             training_sensitivity[epoch_idx] = train_tp / (train_tp + train_fn)
             training_specificity[epoch_idx] = train_tn / (train_tn + train_fp)
 
+            validation_sensitivity[epoch_idx] = val_tp / (val_tp + val_fn)
+            validation_specificity[epoch_idx] = val_tn / (val_tn + val_fp)
+
             test_sensitivity[epoch_idx] = test_tp / (test_tp + test_fn)
             test_specificity[epoch_idx] = test_tn / (test_tn + test_fp)
 
         # example_pass_fails(results_dir)
-        plot_sens_spec(training_sensitivity, training_specificity, None, None, test_sensitivity, test_specificity, results_dir)
+        plot_sens_spec(training_sensitivity, training_specificity, validation_sensitivity, validation_specificity, test_sensitivity, test_specificity, results_dir, fold_num)
