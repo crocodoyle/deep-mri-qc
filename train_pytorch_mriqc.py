@@ -15,6 +15,7 @@ from ml_experiment import setup_experiment
 from visualizations import plot_roc, plot_sens_spec
 
 from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import StratifiedKFold
 
 import matplotlib as mpl
 mpl.use('Agg')
@@ -86,8 +87,9 @@ ibis_indices = pickle.load(open(workdir + 'ibis_indices.pkl', 'rb'))
 ping_indices = pickle.load(open(workdir + 'ping_indices.pkl', 'rb'))
 
 # train_indices = abide_indices + ds030_indices + ibis_indices + ping_indices
-train_indices = abide_indices
-train_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', train_indices, random_slice=True)
+all_train_indices = abide_indices
+
+train_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', all_train_indices, random_slice=True)
 test_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', ds030_indices)
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
@@ -147,31 +149,9 @@ class ConvolutionalQCNet(nn.Module):
         x = self.output(x)
         return F.log_softmax(x, dim=1)
 
-model = ConvolutionalQCNet()
-if args.cuda:
-    model.cuda()
 
-# optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
-optimizer = optim.Adam(model.parameters(), lr=0.002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-4)
-
-pass_weight, fail_weight = 0, 0
-train_ground_truth = np.zeros(len(train_indices))
-
-print('Counting PASS/FAIL images...')
-for batch_idx, (img_data, target) in enumerate(train_loader):
-    train_ground_truth[args.batch_size*batch_idx:args.batch_size*(1+batch_idx)] = target
-
-n_pass = np.sum(train_ground_truth, dtype='int')
-n_fail = len(train_indices) - np.sum(train_ground_truth, dtype='int')
-
-print('Training set has ' + str(n_pass) + ' PASS and ' + str(n_fail) + ' FAIL images')
-fail_weight = n_pass / len(train_indices)
-pass_weight = n_fail / len(train_indices)
-print('Setting class weighting to ' + str(fail_weight) + ' for FAIL class and ' + str(pass_weight) + ' for PASS class')
-
-def train(epoch, fold_num=-1):
+def train(epoch):
     model.train()
-
     train_loss, correct = 0, 0
 
     truth, probabilities = np.zeros((len(train_indices))), np.zeros((len(train_indices), 2))
@@ -201,9 +181,38 @@ def train(epoch, fold_num=-1):
         correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
     train_loss /= len(train_loader.dataset)
-    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+    print('\nTrain set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
         train_loss, correct, len(train_loader.dataset),
         100. * correct / len(train_loader.dataset)))
+
+    return truth, probabilities
+
+def validate():
+    model.eval()
+    validation_loss, correct = 0, 0
+
+    truth, probabilities = np.zeros((len(validation_dataset))), np.zeros((len(validation_dataset), 2))
+
+    for batch_idx, (data, target) in enumerate(validation_loader):
+        if args.cuda:
+            data, target = data.cuda(), target.cuda()
+
+        data, target = Variable(data, volatile=True), Variable(target)
+        output = model(data)
+        loss_function = nn.CrossEntropyLoss()
+
+        validation_loss += loss_function(output, target).data[0]
+        pred = output.data.max(1, keepdim=True)[1]
+        correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+
+        truth[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = target.data.cpu().numpy()
+        probabilities[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = output.data.cpu().numpy()
+
+    validation_loss /= len(test_loader.dataset)
+
+    print('\nValidation set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+        validation_loss, correct, len(test_loader.dataset),
+        100. * correct / len(test_loader.dataset)))
 
     return truth, probabilities
 
@@ -211,7 +220,7 @@ def test():
     model.eval()
     test_loss, correct = 0, 0
 
-    truth, probabilities = np.zeros((len(ds030_indices))), np.zeros((len(ds030_indices), 2))
+    truth, probabilities = np.zeros((len(test_dataset))), np.zeros((len(test_dataset), 2))
 
     for batch_idx, (data, target) in enumerate(test_loader):
         if args.cuda:
@@ -267,27 +276,60 @@ if __name__ == '__main__':
     print('PyTorch implementation of DeepMRIQC.')
 
     results_dir, experiment_number = setup_experiment(workdir)
-    n_train = len(train_indices)
+    n_train = len(all_train_indices)
 
     training_sensitivity, training_specificity, validation_sensitivity, validation_specificity, test_sensitivity, test_specificity = np.zeros(args.epochs), np.zeros(args.epochs), np.zeros(args.epochs), np.zeros(args.epochs), np.zeros(args.epochs), np.zeros(args.epochs)
 
-    for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
-        train_truth, train_probabilities = train(epoch)
-        train_predictions = np.argmax(train_probabilities, axis=-1)
+    model = ConvolutionalQCNet()
+    if args.cuda:
+        model.cuda()
 
-        plot_roc(train_truth, train_probabilities, results_dir, epoch)
+    # optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
+    optimizer = optim.Adam(model.parameters(), lr=0.002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-3)
 
-        test_truth, test_probabilities = test()
-        test_predictions = np.argmax(test_probabilities, axis=-1)
+    pass_weight, fail_weight = 0, 0
+    train_ground_truth = np.zeros(len(all_train_indices))
 
-        [[train_tp, train_fn], [train_fp, train_tn]] = confusion_matrix(train_truth, train_predictions)
-        [[test_tp, test_fn], [test_fp, test_tn]] = confusion_matrix(test_truth, test_predictions)
+    print('Counting PASS/FAIL images...')
+    for batch_idx, (img_data, target) in enumerate(train_loader):
+        train_ground_truth[args.batch_size * batch_idx:args.batch_size * (1 + batch_idx)] = target
 
-        training_sensitivity[epoch_idx] = train_tp / (train_tp + train_fn)
-        training_specificity[epoch_idx] = train_tn / (train_tn + train_fp)
+    n_pass = np.sum(train_ground_truth, dtype='int')
+    n_fail = len(all_train_indices) - np.sum(train_ground_truth, dtype='int')
 
-        test_sensitivity[epoch_idx] = test_tp / (test_tp + test_fn)
-        test_specificity[epoch_idx] = test_tn / (test_tn + test_fp)
+    print('Training set has ' + str(n_pass) + ' PASS and ' + str(n_fail) + ' FAIL images')
+    fail_weight = n_pass / len(all_train_indices)
+    pass_weight = n_fail / len(all_train_indices)
+    print('Setting class weighting to ' + str(fail_weight) + ' for FAIL class and ' + str(
+        pass_weight) + ' for PASS class')
 
-    # example_pass_fails(results_dir)
-    plot_sens_spec(training_sensitivity, training_specificity, None, None, test_sensitivity, test_specificity, results_dir)
+    # reset training_dataset and create a new validation_dataset
+
+    skf = StratifiedKFold(n_splits=10)
+    for train_indices, validation_indices in skf.split(all_train_indices, train_ground_truth):
+        train_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', train_indices, random_slice=True)
+        validation_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', train_indices, random_slice=False)
+
+        train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, **kwargs)
+        validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=args.batch_size, shuffle=False, **kwargs)
+
+        for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
+            train_truth, train_probabilities, validation_truth, validation_probabilities = train(epoch)
+            train_predictions = np.argmax(train_probabilities, axis=-1)
+
+            plot_roc(train_truth, train_probabilities, results_dir, epoch)
+
+            test_truth, test_probabilities = test()
+            test_predictions = np.argmax(test_probabilities, axis=-1)
+
+            [[train_tp, train_fn], [train_fp, train_tn]] = confusion_matrix(train_truth, train_predictions)
+            [[test_tp, test_fn], [test_fp, test_tn]] = confusion_matrix(test_truth, test_predictions)
+
+            training_sensitivity[epoch_idx] = train_tp / (train_tp + train_fn)
+            training_specificity[epoch_idx] = train_tn / (train_tn + train_fp)
+
+            test_sensitivity[epoch_idx] = test_tp / (test_tp + test_fn)
+            test_specificity[epoch_idx] = test_tn / (test_tn + test_fp)
+
+        # example_pass_fails(results_dir)
+        plot_sens_spec(training_sensitivity, training_specificity, None, None, test_sensitivity, test_specificity, results_dir)
