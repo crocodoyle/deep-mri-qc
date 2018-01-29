@@ -30,7 +30,7 @@ def plot_roc(train_truth, train_probs, val_truth, val_probs, test_truth, test_pr
     # plt.title('Receiver operating characteristic example', fontsize=24)
     plt.legend(loc="lower right", shadow=True, fontsize=20)
 
-    plt.savefig(results_dir + '_epoch_' + str(epoch_num) + '_fold_' + fold_num + '_roc.png', bbox_inches='tight')
+    plt.savefig(results_dir + '_epoch_' + str(epoch_num) + '_fold_' + str(fold_num) + '_roc.png', bbox_inches='tight')
     plt.close()
 
 def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_spec, results_dir, fold_num=-1):
