@@ -154,7 +154,7 @@ def train(epoch):
     model.train()
     train_loss, correct = 0, 0
 
-    truth, probabilities = np.zeros((len(train_indices))), np.zeros((len(train_indices), 2))
+    truth, probabilities = np.zeros((len(train_loader.dataset))), np.zeros((len(train_loader.dataset), 2))
 
     for batch_idx, (data, target) in enumerate(train_loader):
         class_weight = torch.FloatTensor([fail_weight, pass_weight])
@@ -181,7 +181,7 @@ def train(epoch):
         correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
     train_loss /= len(train_loader.dataset)
-    print('\nTrain set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+    print('Train set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
         train_loss, correct, len(train_loader.dataset),
         100. * correct / len(train_loader.dataset)))
 
@@ -191,7 +191,7 @@ def validate():
     model.eval()
     validation_loss, correct = 0, 0
 
-    truth, probabilities = np.zeros((len(validation_dataset))), np.zeros((len(validation_dataset), 2))
+    truth, probabilities = np.zeros((len(validation_loader.dataset))), np.zeros((len(validation_loader), 2))
 
     for batch_idx, (data, target) in enumerate(validation_loader):
         if args.cuda:
@@ -210,9 +210,9 @@ def validate():
 
     validation_loss /= len(test_loader.dataset)
 
-    print('\nValidation set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-        validation_loss, correct, len(test_loader.dataset),
-        100. * correct / len(test_loader.dataset)))
+    print('Validation set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
+        validation_loss, correct, len(validation_loader.dataset),
+        100. * correct / len(validation_loader.dataset)))
 
     return truth, probabilities
 
@@ -237,7 +237,7 @@ def test():
         probabilities[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = output.data.cpu().numpy()
 
     test_loss /= len(test_loader.dataset)
-    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+    print('Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
         test_loss, correct, len(test_loader.dataset),
         100. * correct / len(test_loader.dataset)))
 
@@ -315,6 +315,7 @@ if __name__ == '__main__':
         train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, **kwargs)
         validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=args.batch_size, shuffle=False, **kwargs)
 
+        print("Starting fold", str(fold_num))
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             train_truth, train_probabilities = train(epoch)
             train_predictions = np.argmax(train_probabilities, axis=-1)
