@@ -23,9 +23,10 @@ import matplotlib.pyplot as plt
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch DeepMRIQC training.')
-parser.add_argument('--batch-size', type=int, default=16, metavar='N',
+parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training (default: 16)')
-parser.add_argument('--test-batch-size', type=int, default=16, metavar='N',
+parser.add_argument('--val-batch-size', type=int, default=8, metavar='N', help='input batch size for validation (default: 8')
+parser.add_argument('--test-batch-size', type=int, default=64, metavar='N',
                     help='input batch size for testing (default: 16)')
 parser.add_argument('--epochs', type=int, default=100, metavar='N',
                     help='number of epochs to train (default: 10)')
@@ -37,7 +38,7 @@ parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='disables CUDA training')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
-parser.add_argument('--log-interval', type=int, default=10, metavar='N',
+parser.add_argument('--log-interval', type=int, default=20, metavar='N',
                     help='how many batches to wait before logging training status')
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -86,8 +87,8 @@ ds030_indices = pickle.load(open(workdir + 'ds030_indices.pkl', 'rb'))
 ibis_indices = pickle.load(open(workdir + 'ibis_indices.pkl', 'rb'))
 ping_indices = pickle.load(open(workdir + 'ping_indices.pkl', 'rb'))
 
-# train_indices = abide_indices + ds030_indices + ibis_indices + ping_indices
-all_train_indices = abide_indices
+all_train_indices = abide_indices + ds030_indices + ibis_indices + ping_indices
+# all_train_indices = abide_indices
 
 train_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', all_train_indices, random_slice=True)
 test_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', ds030_indices)
@@ -95,7 +96,7 @@ test_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', ds030_indices)
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, **kwargs)
-test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.batch_size, **kwargs)
+test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.test_batch_size, **kwargs)
 
 
 class FullyConnectedQCNet(nn.Module):
@@ -191,7 +192,7 @@ def validate():
     model.eval()
     validation_loss, correct = 0, 0
 
-    truth, probabilities = np.zeros((len(validation_loader.dataset))), np.zeros((len(validation_loader), 2))
+    truth, probabilities = np.zeros((len(validation_loader.dataset))), np.zeros((len(validation_loader.dataset), 2))
 
     for batch_idx, (data, target) in enumerate(validation_loader):
         if args.cuda:
@@ -205,10 +206,11 @@ def validate():
         pred = output.data.max(1, keepdim=True)[1]
         correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
-        truth[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = target.data.cpu().numpy()
-        probabilities[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = output.data.cpu().numpy()
+        # print('val batch shape:', output.data.cpu().numpy().shape)
+        truth[batch_idx * args.val_batch_size:(batch_idx + 1) * args.val_batch_size] = target.data.cpu().numpy()
+        probabilities[batch_idx * args.val_batch_size:(batch_idx + 1) * args.val_batch_size] = output.data.cpu().numpy()
 
-    validation_loss /= len(test_loader.dataset)
+    validation_loss /= len(validation_loader.dataset)
 
     print('Validation set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
         validation_loss, correct, len(validation_loader.dataset),
@@ -220,7 +222,7 @@ def test():
     model.eval()
     test_loss, correct = 0, 0
 
-    truth, probabilities = np.zeros((len(test_dataset))), np.zeros((len(test_dataset), 2))
+    truth, probabilities = np.zeros((len(test_loader.dataset))), np.zeros((len(test_loader.dataset), 2))
 
     for batch_idx, (data, target) in enumerate(test_loader):
         if args.cuda:
@@ -233,8 +235,8 @@ def test():
         pred = output.data.max(1, keepdim=True)[1]              # get the index of the max log-probability
         correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
-        truth[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = target.data.cpu().numpy()
-        probabilities[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = output.data.cpu().numpy()
+        truth[batch_idx * args.test_batch_size:(batch_idx + 1) * args.test_batch_size] = target.data.cpu().numpy()
+        probabilities[batch_idx * args.test_batch_size:(batch_idx + 1) * args.test_batch_size] = output.data.cpu().numpy()
 
     test_loss /= len(test_loader.dataset)
     print('Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
@@ -297,7 +299,7 @@ if __name__ == '__main__':
     n_pass = np.sum(train_ground_truth, dtype='int')
     n_fail = len(all_train_indices) - np.sum(train_ground_truth, dtype='int')
 
-    print('Training set has ' + str(n_pass) + ' PASS and ' + str(n_fail) + ' FAIL images')
+    print('Whole training set has ' + str(n_pass) + ' PASS and ' + str(n_fail) + ' FAIL images')
     fail_weight = n_pass / len(all_train_indices)
     pass_weight = n_fail / len(all_train_indices)
     print('Setting class weighting to ' + str(fail_weight) + ' for FAIL class and ' + str(
@@ -308,14 +310,16 @@ if __name__ == '__main__':
     skf = StratifiedKFold(n_splits=10)
     for fold, (train_indices, validation_indices) in enumerate(skf.split(all_train_indices, train_ground_truth)):
         fold_num = fold + 1
+        print("Starting fold", str(fold_num))
 
         train_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', train_indices, random_slice=True)
         validation_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', train_indices, random_slice=False)
 
         train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, **kwargs)
-        validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=args.batch_size, shuffle=False, **kwargs)
+        validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=args.val_batch_size, shuffle=False, **kwargs)
 
-        print("Starting fold", str(fold_num))
+        print('This fold has', str(len(train_loader.dataset)), 'training images and', str(len(validation_loader.dataset)), 'validation images. There are', str(len(test_loader.dataset)), 'images in the test dataset')
+
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             train_truth, train_probabilities = train(epoch)
             train_predictions = np.argmax(train_probabilities, axis=-1)

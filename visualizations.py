@@ -25,7 +25,7 @@ def plot_roc(train_truth, train_probs, val_truth, val_probs, test_truth, test_pr
 
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
-    plt.xlabel('True Negative Rate', fontsize=20)
+    plt.xlabel('False Positive Rate', fontsize=20)
     plt.ylabel('True Positive Rate', fontsize=20)
     # plt.title('Receiver operating characteristic example', fontsize=24)
     plt.legend(loc="lower right", shadow=True, fontsize=20)
