@@ -306,6 +306,7 @@ def example_pass_fails(results_dir):
             pass
 
 
+model = ConvolutionalQCNet()
 
 if __name__ == '__main__':
     print('PyTorch implementation of DeepMRIQC.')
@@ -315,7 +316,6 @@ if __name__ == '__main__':
 
     training_sensitivity, training_specificity, validation_sensitivity, validation_specificity, test_sensitivity, test_specificity = np.zeros(args.epochs), np.zeros(args.epochs), np.zeros(args.epochs), np.zeros(args.epochs), np.zeros(args.epochs), np.zeros(args.epochs)
 
-    model = ConvolutionalQCNet()
     if args.cuda:
         model.cuda()
 
