@@ -12,7 +12,7 @@ import h5py, pickle, os
 import numpy as np
 
 from ml_experiment import setup_experiment
-from visualizations import plot_roc, plot_sens_spec
+from visualizations import plot_roc, plot_sens_spec, make_roc_gif
 
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import StratifiedKFold
@@ -381,4 +381,6 @@ if __name__ == '__main__':
         example_pass_fails(results_dir)
         plot_sens_spec(training_sensitivity, training_specificity, validation_sensitivity, validation_specificity, test_sensitivity, test_specificity, results_dir, fold_num)
 
+    for fold in range(skf.get_n_splits()):
+        make_roc_gif(results_dir, args.epochs, fold+1)
     print('This experiment was brought to you by the number:', experiment_number)

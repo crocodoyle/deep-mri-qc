@@ -4,6 +4,20 @@ import matplotlib.pyplot as plt
 
 from sklearn.metrics import roc_curve, roc_auc_score
 
+import imageio
+
+
+def make_roc_gif(results_dir, epochs, fold_num=1):
+    images = []
+
+    epoch_range = range(1, epochs+1)
+    for epoch in epoch_range:
+        filename = results_dir + 'ROC_fold_' + str(fold_num) + '_epoch_' + str(epoch) + '.png'
+        img = plt.imread(filename)
+        images.append(img)
+
+    imageio.mimsave(results_dir + 'ROC_fold_' + str(fold_num) + '.gif', images)
+
 
 def plot_roc(train_truth, train_probs, val_truth, val_probs, test_truth, test_probs, results_dir, epoch_num, fold_num=-1):
     plt.figure(figsize=(8, 8))
@@ -27,7 +41,7 @@ def plot_roc(train_truth, train_probs, val_truth, val_probs, test_truth, test_pr
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate', fontsize=20)
     plt.ylabel('True Positive Rate', fontsize=20)
-    # plt.title('Receiver operating characteristic example', fontsize=24)
+    plt.title('ROC Epoch:' + str(epoch_num), fontsize=24)
     plt.legend(loc="lower right", shadow=True, fontsize=20)
 
     plt.savefig(results_dir + 'ROC_fold_' + str(fold_num) + '_epoch_' + str(epoch_num) +  '.png', bbox_inches='tight')
