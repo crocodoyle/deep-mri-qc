@@ -129,24 +129,31 @@ class ConvolutionalQCNet(nn.Module):
         self.conv3 = nn.Conv2d(16, 32, kernel_size=3)
         self.conv3_bn = nn.BatchNorm2d(32)
         self.conv4 = nn.Conv2d(32, 64, kernel_size=3)
+        self.conv4_bn = nn.BatchNorm2d(64)
         self.conv5 = nn.Conv2d(64, 128, kernel_size=3)
-        self.conv5_drop = nn.Dropout2d()
+        self.conv5_bn = nn.BatchNorm2d(128)
+        self.conv6 = nn.Conv2d(128, 128, kernel_size=3)
+        self.conv6_bn = nn.BatchNorm2d(128)
+
         self.fc1 = nn.Linear(3072, 256)
         self.fc1_bn = nn.BatchNorm1d(256)
         self.fc2 = nn.Linear(256, 64)
+        self.fc2_bn = nn.BatchNorm1d(64)
         self.output = nn.Linear(64, 2)
 
     def forward(self, x):
         x = F.relu(F.max_pool2d(self.conv1_bn(self.conv1(x)), 2))
         x = F.relu(F.max_pool2d(self.conv2_bn(self.conv2(x)), 2))
         x = F.relu(F.max_pool2d(self.conv3_bn(self.conv3(x)), 2))
-        x = F.relu(F.max_pool2d(self.conv4(x), 2))
-        x = F.relu(F.max_pool2d(self.conv5_drop(self.conv5(x)), 2))
+        x = F.relu(F.max_pool2d(self.conv4_bn(self.conv4(x)), 2))
+        x = F.relu(F.max_pool2d(self.conv5_bn(self.conv5(x)), 2))
+        x = F.relu(F.max_pool2d(self.conv6_bn(self.conv6(x)), 2))
+        x = F.relu(F.max_pool2d(F.dropout(self.conv5(x), training=self.training), 2))
         x = x.view(-1, 3072)
         x = F.relu(self.fc1(x))
         x = F.dropout(self.fc1_bn(x), training=self.training)
         x = F.relu(self.fc2(x))
-        x = F.dropout(x, training=self.training)
+        x = F.dropout(self.fc2_bn(x), training=self.training)
         x = self.output(x)
         return F.log_softmax(x, dim=1)
 
@@ -274,6 +281,33 @@ def example_pass_fails(results_dir):
         except IndexError as e:
             pass
 
+    for batch_idx, (data, target) in enumerate(test_loader):
+        if args.cuda:
+            data, target = data.cuda(), target.cuda()
+        data, target = Variable(data), Variable(target)
+
+        target_batch = target.data.cpu().numpy()
+        image_batch = data.data.cpu().numpy()
+
+        if batch_idx == 0:
+            print(target_batch.shape, image_batch.shape)
+
+        try:
+            for i in range(args.batch_size):
+                if target_batch[i] == 0:
+                    qc_decision = 'FAIL'
+                else:
+                    qc_decision = 'PASS'
+
+                plt.close()
+                plt.imshow(image_batch[i, 0, :, :], cmap='gray', origin='lower')
+                plt.axis('off')
+                plt.savefig(results_dir + '/imgs/' + qc_decision + '_ds030_batch_' + str(batch_idx) + '_img_' + str(i) + '.png', bbox_inches='tight')
+        except IndexError as e:
+            pass
+
+
+
 if __name__ == '__main__':
     print('PyTorch implementation of DeepMRIQC.')
 
@@ -345,5 +379,7 @@ if __name__ == '__main__':
             test_sensitivity[epoch_idx] = test_tp / (test_tp + test_fn)
             test_specificity[epoch_idx] = test_tn / (test_tn + test_fp)
 
-        # example_pass_fails(results_dir)
+        example_pass_fails(results_dir)
         plot_sens_spec(training_sensitivity, training_specificity, validation_sensitivity, validation_specificity, test_sensitivity, test_specificity, results_dir, fold_num)
+
+    print('This experiment was brought to you by the number:', experiment_number)

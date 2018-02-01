@@ -54,7 +54,7 @@ def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_s
     if not test_spec is None:
         plt.plot(epoch_number, test_spec, color='blue', lw=lw, label='Specificity (test)')
 
-    plt.legend(shadow=True)
+    plt.legend(shadow=True, fontsize=20)
     plt.savefig(results_dir + 'results_fold_' + str(fold_num), bbox_inches='tight')
     plt.close()
 
