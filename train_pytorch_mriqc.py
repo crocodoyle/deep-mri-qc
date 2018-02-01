@@ -135,7 +135,7 @@ class ConvolutionalQCNet(nn.Module):
         self.conv6 = nn.Conv2d(128, 128, kernel_size=3)
         self.conv6_bn = nn.BatchNorm2d(128)
 
-        self.fc1 = nn.Linear(3072, 256)
+        self.fc1 = nn.Linear(16384, 256)
         self.fc1_bn = nn.BatchNorm1d(256)
         self.fc2 = nn.Linear(256, 64)
         self.fc2_bn = nn.BatchNorm1d(64)
@@ -346,7 +346,7 @@ if __name__ == '__main__':
         print("Starting fold", str(fold_num))
 
         train_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', train_indices, random_slice=True)
-        validation_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', train_indices, random_slice=False)
+        validation_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', validation_indices, random_slice=False)
 
         train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, **kwargs)
         validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=args.val_batch_size, shuffle=False, **kwargs)
