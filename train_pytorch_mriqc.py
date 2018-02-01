@@ -148,7 +148,7 @@ class ConvolutionalQCNet(nn.Module):
         x = F.relu(F.max_pool2d(self.conv4_bn(self.conv4(x)), 2))
         x = F.relu(F.max_pool2d(self.conv5_bn(self.conv5(x)), 2))
         x = F.relu(F.max_pool2d(self.conv6_bn(self.conv6(x)), 2))
-        x = x.view(-1, 3072)
+        x = x.view(-1, 16384)
         x = F.relu(self.fc1(x))
         x = F.dropout(self.fc1_bn(x), training=self.training)
         x = F.relu(self.fc2(x))
