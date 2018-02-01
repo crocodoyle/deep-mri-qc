@@ -136,9 +136,9 @@ class ConvolutionalQCNet(nn.Module):
         self.conv6_bn = nn.BatchNorm2d(128)
 
         self.fc1 = nn.Linear(16384, 256)
-        self.fc1_bn = nn.BatchNorm1d(256)
+        # self.fc1_bn = nn.BatchNorm1d(256)
         self.fc2 = nn.Linear(256, 64)
-        self.fc2_bn = nn.BatchNorm1d(64)
+        # self.fc2_bn = nn.BatchNorm1d(64)
         self.output = nn.Linear(64, 2)
 
     def forward(self, x):
@@ -150,9 +150,9 @@ class ConvolutionalQCNet(nn.Module):
         x = F.relu(F.max_pool2d(self.conv6_bn(self.conv6(x)), 2))
         x = x.view(-1, 16384)
         x = F.relu(self.fc1(x))
-        x = F.dropout(self.fc1_bn(x), training=self.training)
+        x = F.dropout(x, training=self.training)
         x = F.relu(self.fc2(x))
-        x = F.dropout(self.fc2_bn(x), training=self.training)
+        x = F.dropout(x, training=self.training)
         x = self.output(x)
         return F.log_softmax(x, dim=1)
 
