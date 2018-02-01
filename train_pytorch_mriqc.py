@@ -135,7 +135,7 @@ class ConvolutionalQCNet(nn.Module):
         self.conv6 = nn.Conv2d(128, 128, kernel_size=3)
         self.conv6_bn = nn.BatchNorm2d(128)
 
-        self.fc1 = nn.Linear(16384, 256)
+        self.fc1 = nn.Linear(256, 256)
         # self.fc1_bn = nn.BatchNorm1d(256)
         self.fc2 = nn.Linear(256, 64)
         # self.fc2_bn = nn.BatchNorm1d(64)
@@ -148,7 +148,7 @@ class ConvolutionalQCNet(nn.Module):
         x = F.relu(F.max_pool2d(self.conv4_bn(self.conv4(x)), 2))
         x = F.relu(F.max_pool2d(self.conv5_bn(self.conv5(x)), 2))
         x = F.relu(F.max_pool2d(self.conv6_bn(self.conv6(x)), 2))
-        x = x.view(x.size(0), 16384)
+        x = x.view(x.size(0), 256)
         x = F.relu(self.fc1(x))
         x = F.dropout(x, training=self.training)
         x = F.relu(self.fc2(x))
