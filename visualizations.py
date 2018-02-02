@@ -55,18 +55,20 @@ def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_s
     lw = 2
 
     if not train_sens is None:
-        plt.plot(epoch_number, train_sens, color='darkgoldenrod', lw=lw//2, label='Sensitivity (train)')
-    if not val_sens is None:
-        plt.plot(epoch_number, val_sens, color='darkorange', lw=lw//2, label='Sensitivity (val)')
-    if not test_sens is None:
-        plt.plot(epoch_number, test_sens, color='orange', lw=lw, label='Sensitivity (test)')
-
+        plt.plot(epoch_number, train_sens, color='darkorange', lw=lw, label='Train Sensitivity')
     if not train_spec is None:
-        plt.plot(epoch_number, train_spec, color='darkblue', lw=lw//2, label='Specificity (train)')
+        plt.plot(epoch_number, train_spec, color='gold', lw=lw, label='Train Specificity')
+
+
+    if not val_sens is None:
+        plt.plot(epoch_number, val_sens, color='darkred', lw=lw, label='Validation Sensitivity')
     if not val_spec is None:
-        plt.plot(epoch_number, val_spec, color='darkslateblue', lw=lw//2, label='Specificity (val)')
+        plt.plot(epoch_number, val_spec, color='salmon', lw=lw, label='Validation Specificity')
+
+    if not test_sens is None:
+        plt.plot(epoch_number, test_sens, color='darkblue', lw=lw, label='Test Sensitivity')
     if not test_spec is None:
-        plt.plot(epoch_number, test_spec, color='blue', lw=lw, label='Specificity (test)')
+        plt.plot(epoch_number, test_spec, color='mediumblue', lw=lw, label='Test Specificity')
 
     plt.legend(shadow=True, fontsize=20)
     plt.savefig(results_dir + 'results_fold_' + str(fold_num), bbox_inches='tight')

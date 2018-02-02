@@ -87,7 +87,7 @@ ds030_indices = pickle.load(open(workdir + 'ds030_indices.pkl', 'rb'))
 ibis_indices = pickle.load(open(workdir + 'ibis_indices.pkl', 'rb'))
 ping_indices = pickle.load(open(workdir + 'ping_indices.pkl', 'rb'))
 
-all_train_indices = abide_indices + ds030_indices + ibis_indices + ping_indices
+all_train_indices = abide_indices + ibis_indices + ping_indices
 # all_train_indices = abide_indices
 
 train_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', all_train_indices, random_slice=True)
@@ -254,7 +254,7 @@ def test():
 def example_pass_fails(results_dir):
     model.eval()
 
-    os.makedirs(results_dir + '/imgs/')
+    os.makedirs(results_dir + '/imgs/', exist_ok=True)
     for batch_idx, (data, target) in enumerate(train_loader):
         if args.cuda:
             data, target = data.cuda(), target.cuda()
@@ -320,7 +320,7 @@ if __name__ == '__main__':
         model.cuda()
 
     # optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
-    optimizer = optim.Adam(model.parameters(), lr=0.002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-3)
+    optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-4)
 
     pass_weight, fail_weight = 0, 0
     train_ground_truth = np.zeros(len(all_train_indices))
@@ -378,8 +378,10 @@ if __name__ == '__main__':
             test_sensitivity[epoch_idx] = test_tp / (test_tp + test_fn)
             test_specificity[epoch_idx] = test_tn / (test_tn + test_fp)
 
-        example_pass_fails(results_dir)
+
         plot_sens_spec(training_sensitivity, training_specificity, validation_sensitivity, validation_specificity, test_sensitivity, test_specificity, results_dir, fold_num)
+
+    example_pass_fails(results_dir)
 
     for fold in range(skf.get_n_splits()):
         make_roc_gif(results_dir, args.epochs, fold+1)
