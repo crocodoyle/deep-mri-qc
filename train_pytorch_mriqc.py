@@ -254,6 +254,11 @@ def test():
 def example_pass_fails(results_dir):
     model.eval()
 
+    train_histogram = np.zeros(256, dtype='float')
+    test_histogram = np.zeros(256, dtype='float')
+
+    bins = np.arange(0.0, 1.0, 0.05)
+
     os.makedirs(results_dir + '/imgs/', exist_ok=True)
     for batch_idx, (data, target) in enumerate(train_loader):
         if args.cuda:
@@ -262,6 +267,9 @@ def example_pass_fails(results_dir):
 
         target_batch = target.data.cpu().numpy()
         image_batch = data.data.cpu().numpy()
+
+        histo = np.histogram(image_batch, bins=bins)
+        train_histogram += histo[1]
 
         if batch_idx == 0:
             print(target_batch.shape, image_batch.shape)
@@ -280,6 +288,7 @@ def example_pass_fails(results_dir):
         except IndexError as e:
             pass
 
+
     for batch_idx, (data, target) in enumerate(test_loader):
         if args.cuda:
             data, target = data.cuda(), target.cuda()
@@ -287,6 +296,9 @@ def example_pass_fails(results_dir):
 
         target_batch = target.data.cpu().numpy()
         image_batch = data.data.cpu().numpy()
+
+        histo = np.histogram(image_batch, bins=bins)
+        test_histogram += histo[1]
 
         if batch_idx == 0:
             print(target_batch.shape, image_batch.shape)
@@ -304,6 +316,15 @@ def example_pass_fails(results_dir):
                 plt.savefig(results_dir + '/imgs/' + qc_decision + '_ds030_batch_' + str(batch_idx) + '_img_' + str(i) + '.png', bbox_inches='tight')
         except IndexError as e:
             pass
+
+    fig, axes = plt.subplots(1, 2, figsize=(8, 3))
+    axes[0].plot(train_histogram[:-1], bins, lw=2, label='Train')
+    axes[1].plot(test_histogram[:-1], bins, lw=2, label='Test')
+    axes[0].set_title('histogram of grey values')
+    axes[0].set_ylabel('# voxels')
+
+    plt.tight_layout()
+    plt.savefig(results_dir + 'histograms.png', bbox_inches='tight')
 
 
 model = ConvolutionalQCNet()
