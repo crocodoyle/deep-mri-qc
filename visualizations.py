@@ -25,17 +25,26 @@ def plot_roc(train_truth, train_probs, val_truth, val_probs, test_truth, test_pr
     lw = 2
     plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
 
-    train_roc_auc = roc_auc_score(train_truth, train_probs[:, 1], 'weighted')
-    val_roc_auc = roc_auc_score(val_truth, val_probs[:, 1], 'weighted')
-    test_roc_auc = roc_auc_score(test_truth, test_probs[:, 1], 'weighted')
+    try:
+        train_roc_auc = roc_auc_score(train_truth, train_probs[:, 1], 'weighted')
+        train_fpr, train_tpr, _ = roc_curve(train_truth, train_probs[:, 1])
+        plt.plot(train_fpr, train_tpr, color='darkorange', lw=lw, label='Train ROC (area = %0.2f)' % train_roc_auc)
+    except:
+        print('Couldnt plot training')
 
-    train_fpr, train_tpr, _ = roc_curve(train_truth, train_probs[:, 1])
-    val_fpr, val_tpr, _ = roc_curve(val_truth, val_probs[:, 1])
-    test_fpr, test_tpr, _ = roc_curve(test_truth, test_probs[:, 1])
+    try:
+        val_roc_auc = roc_auc_score(val_truth, val_probs[:, 1], 'weighted')
+        val_fpr, val_tpr, _ = roc_curve(val_truth, val_probs[:, 1])
+        plt.plot(val_fpr, val_tpr, color='red', lw=lw, label='Val ROC (area = %0.2f)' % val_roc_auc)
+    except:
+        print('Couldnt plot validation')
 
-    plt.plot(train_fpr, train_tpr, color='darkorange', lw=lw, label='Train ROC (area = %0.2f)' % train_roc_auc)
-    plt.plot(val_fpr, val_tpr, color='red', lw=lw, label='Val ROC (area = %0.2f)' % val_roc_auc)
-    plt.plot(test_fpr, test_tpr, color='darkred', lw=lw, label='Test ROC (area = %0.2f)' % test_roc_auc)
+    try:
+        test_roc_auc = roc_auc_score(test_truth, test_probs[:, 1], 'weighted')
+        test_fpr, test_tpr, _ = roc_curve(test_truth, test_probs[:, 1])
+        plt.plot(test_fpr, test_tpr, color='darkred', lw=lw, label='Test ROC (area = %0.2f)' % test_roc_auc)
+    except:
+        print('Couldnt plot test')
 
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
