@@ -4,8 +4,6 @@ import h5py
 import os, csv, time
 import nibabel as nib
 
-# from custom_loss import sensitivity, specificity, true_positives, true_negatives, false_positives, false_negatives
-
 from collections import defaultdict
 
 import pickle as pkl
@@ -14,13 +12,6 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-
-from sklearn.model_selection import StratifiedShuffleSplit, StratifiedKFold
-from sklearn.metrics import confusion_matrix
-
-from vis.visualization import visualize_cam, overlay
-from vis.utils import utils
-from keras import activations
 
 from dltk.core.io.preprocessing import normalise_zero_one, resize_image_with_crop_or_pad
 
