@@ -8,11 +8,11 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 from torch.autograd import Variable
 
-import h5py, pickle, os
+import h5py, pickle, os, time
 import numpy as np
 
 from ml_experiment import setup_experiment
-from visualizations import plot_roc, plot_sens_spec, make_roc_gif
+from visualizations import plot_roc, plot_sens_spec, make_roc_gif, GradCam
 
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import StratifiedKFold
@@ -20,6 +20,7 @@ from sklearn.model_selection import StratifiedKFold
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch DeepMRIQC training.')
@@ -28,8 +29,10 @@ parser.add_argument('--batch-size', type=int, default=64, metavar='N',
 parser.add_argument('--val-batch-size', type=int, default=8, metavar='N', help='input batch size for validation (default: 8')
 parser.add_argument('--test-batch-size', type=int, default=64, metavar='N',
                     help='input batch size for testing (default: 16)')
-parser.add_argument('--epochs', type=int, default=100, metavar='N',
+parser.add_argument('--epochs', type=int, default=20, metavar='N',
                     help='number of epochs to train (default: 10)')
+parser.add_argument('--folds', type=int, default=10, metavar='N',
+                    help='number of folds to cross-validate over (default: 10)')
 parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',
                     help='learning rate (default: 0.01)')
 parser.add_argument('--momentum', type=float, default=0.5, metavar='M',
@@ -251,7 +254,11 @@ def test():
 
     return truth, probabilities
 
-def example_pass_fails(results_dir):
+
+model = ConvolutionalQCNet()
+
+
+def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
     model.eval()
 
     train_histogram = np.zeros(256, dtype='float')
@@ -275,7 +282,7 @@ def example_pass_fails(results_dir):
             print(target_batch.shape, image_batch.shape)
 
         try:
-            for i in range(args.batch_size):
+            for i in range(data.shape[0]):
                 if target_batch[i] == 0:
                     qc_decision = 'FAIL'
                 else:
@@ -287,7 +294,6 @@ def example_pass_fails(results_dir):
                 plt.savefig(results_dir + '/imgs/' + qc_decision + '_batch_' + str(batch_idx) + '_img_' + str(i) + '.png', bbox_inches='tight')
         except IndexError as e:
             pass
-
 
     for batch_idx, (data, target) in enumerate(test_loader):
         if args.cuda:
@@ -304,15 +310,22 @@ def example_pass_fails(results_dir):
             print(target_batch.shape, image_batch.shape)
 
         try:
-            for i in range(args.batch_size):
+            for i in range(data.shape[0]):
                 if target_batch[i] == 0:
                     qc_decision = 'FAIL'
                 else:
                     qc_decision = 'PASS'
 
-                plt.close()
-                plt.imshow(image_batch[i, 0, :, :], cmap='gray', origin='lower')
-                plt.axis('off')
+                mask = grad_cam(data[i, ...], target[i, ...])
+
+                heatmap = np.uint8(cm.jet(mask)[:,:,0,:3]*255)
+                gray = np.uint8(cm.gray(data[i, ...]))
+
+                fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 4.5), tight_layout=True)
+                ax1.imshow(image_batch[i, 0, :, :], cmap='gray', origin='lower')
+                ax2.imshow(gray, origin='lower')
+                ax2.imshow(heatmap, alpha=0.2, origin='lower')
+
                 plt.savefig(results_dir + '/imgs/' + qc_decision + '_ds030_batch_' + str(batch_idx) + '_img_' + str(i) + '.png', bbox_inches='tight')
         except IndexError as e:
             pass
@@ -327,15 +340,20 @@ def example_pass_fails(results_dir):
     plt.savefig(results_dir + 'histograms.png', bbox_inches='tight')
 
 
-model = ConvolutionalQCNet()
-
 if __name__ == '__main__':
     print('PyTorch implementation of DeepMRIQC.')
+    start_time = time.time()
+    print("Convolutional QC Model")
+    print(model)
 
     results_dir, experiment_number = setup_experiment(workdir)
     n_train = len(all_train_indices)
 
-    training_sensitivity, training_specificity, validation_sensitivity, validation_specificity, test_sensitivity, test_specificity = np.zeros(args.epochs), np.zeros(args.epochs), np.zeros(args.epochs), np.zeros(args.epochs), np.zeros(args.epochs), np.zeros(args.epochs)
+    n_folds = args.folds
+    results_shape = (args.folds, args.epochs)
+
+    training_sensitivity, training_specificity, validation_sensitivity, validation_specificity, test_sensitivity, test_specificity, val_aucs = np.zeros(results_shape), np.zeros(results_shape), np.zeros(results_shape), np.zeros(results_shape), np.zeros(results_shape), np.zeros(results_shape), np.zeros(results_shape)
+    best_val_auc = np.zeros(n_folds)
 
     if args.cuda:
         model.cuda()
@@ -362,8 +380,8 @@ if __name__ == '__main__':
     # reset training_dataset and create a new validation_dataset
 
     skf = StratifiedKFold(n_splits=10)
-    for fold, (train_indices, validation_indices) in enumerate(skf.split(all_train_indices, train_ground_truth)):
-        fold_num = fold + 1
+    for fold_idx, (train_indices, validation_indices) in enumerate(skf.split(all_train_indices, train_ground_truth)):
+        fold_num = fold_idx + 1
         print("Starting fold", str(fold_num))
 
         train_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', train_indices, random_slice=True)
@@ -373,6 +391,8 @@ if __name__ == '__main__':
         validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=args.val_batch_size, shuffle=False, **kwargs)
 
         print('This fold has', str(len(train_loader.dataset)), 'training images and', str(len(validation_loader.dataset)), 'validation images. There are', str(len(test_loader.dataset)), 'images in the test dataset')
+
+        val_harmonic_mean = []
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             train_truth, train_probabilities = train(epoch)
@@ -384,26 +404,37 @@ if __name__ == '__main__':
             test_truth, test_probabilities = test()
             test_predictions = np.argmax(test_probabilities, axis=-1)
 
-            plot_roc(train_truth, train_probabilities, val_truth, val_probabilities, test_truth, test_probabilities, results_dir, epoch, fold_num)
+            train_auc, val_auc, test_auc = plot_roc(train_truth, train_probabilities, val_truth, val_probabilities, test_truth, test_probabilities, results_dir, epoch, fold_num)
 
             [[train_tp, train_fn], [train_fp, train_tn]] = confusion_matrix(train_truth, train_predictions)
             [[val_tp, val_fn], [val_fp, val_tn]] = confusion_matrix(val_truth, val_predictions)
             [[test_tp, test_fn], [test_fp, test_tn]] = confusion_matrix(test_truth, test_predictions)
 
-            training_sensitivity[epoch_idx] = train_tp / (train_tp + train_fn)
-            training_specificity[epoch_idx] = train_tn / (train_tn + train_fp)
+            training_sensitivity[fold_idx, epoch_idx] = train_tp / (train_tp + train_fn)
+            training_specificity[fold_idx, epoch_idx] = train_tn / (train_tn + train_fp)
 
-            validation_sensitivity[epoch_idx] = val_tp / (val_tp + val_fn)
-            validation_specificity[epoch_idx] = val_tn / (val_tn + val_fp)
+            validation_sensitivity[fold_idx, epoch_idx] = val_tp / (val_tp + val_fn)
+            validation_specificity[fold_idx, epoch_idx] = val_tn / (val_tn + val_fp)
 
-            test_sensitivity[epoch_idx] = test_tp / (test_tp + test_fn)
-            test_specificity[epoch_idx] = test_tn / (test_tn + test_fp)
+            test_sensitivity[fold_idx, epoch_idx] = test_tp / (test_tp + test_fn)
+            test_specificity[fold_idx, epoch_idx] = test_tn / (test_tn + test_fp)
 
+            val_aucs[fold_idx, epoch_idx] = val_auc
+
+            if val_auc > best_val_auc[fold_idx]:
+                torch.save(model.state_dict(), results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch')
+
+        grad_cam = GradCam(model = model, target_layer_names=['14'], use_cuda=args.cuda)
 
         plot_sens_spec(training_sensitivity, training_specificity, validation_sensitivity, validation_specificity, test_sensitivity, test_specificity, results_dir, fold_num)
 
-    example_pass_fails(results_dir)
+    example_pass_fails(results_dir, grad_cam)
 
     for fold in range(skf.get_n_splits()):
         make_roc_gif(results_dir, args.epochs, fold+1)
+
+    time_elapsed = time.time() - start_time
+    print('Whole experiment took', time_elapsed%3600, 'minutes')
+
     print('This experiment was brought to you by the number:', experiment_number)
+
