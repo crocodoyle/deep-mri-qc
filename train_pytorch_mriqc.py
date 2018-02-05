@@ -264,7 +264,7 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
     train_histogram = np.zeros(256, dtype='float')
     test_histogram = np.zeros(256, dtype='float')
 
-    bins = np.arange(0.0, 1.0, 0.05)
+    bins = np.linspace(0.0, 1.0, 256)
 
     os.makedirs(results_dir + '/imgs/', exist_ok=True)
     for batch_idx, (data, target) in enumerate(train_loader):
@@ -424,7 +424,7 @@ if __name__ == '__main__':
             if val_auc > best_val_auc[fold_idx]:
                 torch.save(model.state_dict(), results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch')
 
-        grad_cam = GradCam(model = model, target_layer_names=['14'], use_cuda=args.cuda)
+        grad_cam = GradCam(model = model, target_layer_names=['output'], use_cuda=args.cuda)
 
         plot_sens_spec(training_sensitivity, training_specificity, validation_sensitivity, validation_specificity, test_sensitivity, test_specificity, results_dir, fold_num)
 
