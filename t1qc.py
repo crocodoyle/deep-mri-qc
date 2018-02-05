@@ -22,7 +22,7 @@ if __name__ == "__main__":
     try:
         img = nib.load(image_file).get_data()
 
-        # img = resize_image_with_crop_or_pad(img, (168, 256, 244), mode='constant')
+        # img = resize_image_with_crop_or_pad(img, (168, 256, 224), mode='constant')
         # img = normalise_zero_one(img)
 
         img = np.subtract(img, np.min(img))
@@ -34,7 +34,7 @@ if __name__ == "__main__":
         (x_size, y_size, z_size) = img.shape
         # print('original image size:', img.shape)
 
-        y_max, z_max = 256, 244
+        y_max, z_max = 256, 224
 
         while y_size < y_max or z_size < z_max:
             img = np.pad(img, 1, 'constant')

@@ -72,7 +72,18 @@ def make_ibis_qc():
                         # print('resizing from', t1_data.shape)
                         t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
-                    f['ibis_t1'][index, ...] = normalise_zero_one(t1_data)
+                    # linear rescaling between 0 and 1
+                    t1_data = np.subtract(t1_data, np.min(t1_data))
+                    t1_data = np.divide(t1_data, np.max(t1_data))
+                    t1_data = np.float32(t1_data)
+
+                    x_max, y_max, z_max = 168, 256, 224
+
+                    while x_size < x_max or y_size < y_max or z_size < z_max:
+                        t1_data = np.pad(t1_data, 1, 'constant')
+                        (x_size, y_size, z_size) = t1_data.shape
+
+                    f['ibis_t1'][index, ...] = t1_data[0:x_max, 0:y_max, 0:z_max]
                     f['filename'][index] = t1_filename.split('/')[-1]
 
                     # plt.imshow(t1_data[96, ...])
