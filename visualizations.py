@@ -121,7 +121,7 @@ class ModelOutputs():
 	3. Gradients from intermediate targeted layers. """
 	def __init__(self, model, target_layers):
 		self.model = model
-		self.feature_extractor = FeatureExtractor(self.model.features, target_layers)
+		self.feature_extractor = FeatureExtractor(self.model.conv_6bn, target_layers)
 
 	def get_gradients(self):
 		return self.feature_extractor.gradients
