@@ -438,7 +438,7 @@ if __name__ == '__main__':
 
         plot_sens_spec(training_sensitivity, training_specificity, validation_sensitivity, validation_specificity, test_sensitivity, test_specificity, results_dir, fold_num)
 
-    example_pass_fails(results_dir, grad_cam)
+    example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam)
 
     for fold in range(skf.get_n_splits()):
         make_roc_gif(results_dir, args.epochs, fold+1)
