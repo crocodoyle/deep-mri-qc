@@ -434,10 +434,11 @@ if __name__ == '__main__':
             if val_auc > best_val_auc[fold_idx]:
                 torch.save(model.state_dict(), results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch')
 
-        grad_cam = GradCam(model = model, target_layer_names=['output'], use_cuda=args.cuda)
+            plot_sens_spec(training_sensitivity, training_specificity, validation_sensitivity, validation_specificity,
+                       test_sensitivity, test_specificity, results_dir, fold_num)
 
-        plot_sens_spec(training_sensitivity, training_specificity, validation_sensitivity, validation_specificity, test_sensitivity, test_specificity, results_dir, fold_num)
 
+    grad_cam = GradCam(model = model, target_layer_names=['output'], use_cuda=args.cuda)
     example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam)
 
     for fold in range(skf.get_n_splits()):
