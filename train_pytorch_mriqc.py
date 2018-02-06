@@ -125,39 +125,51 @@ class FullyConnectedQCNet(nn.Module):
 class ConvolutionalQCNet(nn.Module):
     def __init__(self):
         super(ConvolutionalQCNet, self).__init__()
-        self.conv1 = nn.Conv2d(1, 16, kernel_size=3)
-        self.conv1_bn = nn.BatchNorm2d(16)
-        self.conv2 = nn.Conv2d(16, 16, kernel_size=3)
-        self.conv2_bn = nn.BatchNorm2d(16)
-        self.conv3 = nn.Conv2d(16, 32, kernel_size=3)
-        self.conv3_bn = nn.BatchNorm2d(32)
-        self.conv4 = nn.Conv2d(32, 64, kernel_size=3)
-        self.conv4_bn = nn.BatchNorm2d(64)
-        self.conv5 = nn.Conv2d(64, 128, kernel_size=3)
-        self.conv5_bn = nn.BatchNorm2d(128)
-        self.conv6 = nn.Conv2d(128, 128, kernel_size=3)
-        self.conv6_bn = nn.BatchNorm2d(128)
 
-        self.fc1 = nn.Linear(256, 256)
-        # self.fc1_bn = nn.BatchNorm1d(256)
-        self.fc2 = nn.Linear(256, 64)
-        # self.fc2_bn = nn.BatchNorm1d(64)
-        self.output = nn.Linear(64, 2)
+        self.features = nn.Sequential(
+            nn.Conv2d(1, 16, kernel_size=3),
+            nn.BatchNorm2d(16),
+            nn.MaxPool2D(2),
+            nn.ReLU(),
+            nn.Conv2d(16, 16, kernel_size=3),
+            nn.BatchNorm2d(16),
+            nn.MaxPool2D(2),
+            nn.ReLU(),
+            nn.Conv2d(16, 32, kernel_size=3),
+            nn.BatchNorm2d(32),
+            nn.MaxPool2D(2),
+            nn.ReLU(),
+            nn.Conv2d(32, 64, kernel_size=3),
+            nn.BatchNorm2d(64),
+            nn.MaxPool2D(2),
+            nn.ReLU(),
+            nn.Conv2d(64, 128, kernel_size=3),
+            nn.BatchNorm2d(128),
+            nn.MaxPool2D(2),
+            nn.ReLU(),
+            nn.Conv2d(128, 128, kernel_size=3),
+            nn.BatchNorm2d(128),
+            nn.MaxPool2D(2),
+            nn.ReLU()
+        )
+
+        self.classifier = nn.Sequential(
+            nn.Linear(256, 256),
+            nn.Dropout(),
+            nn.ReLU(),
+            nn.Linear(256, 64),
+            nn.Dropout(),
+            nn.ReLU(),
+            nn.Linear(64, 2)
+        )
+        self.output = nn.LogSoftmax()
 
     def forward(self, x):
-        x = F.relu(F.max_pool2d(self.conv1_bn(self.conv1(x)), 2))
-        x = F.relu(F.max_pool2d(self.conv2_bn(self.conv2(x)), 2))
-        x = F.relu(F.max_pool2d(self.conv3_bn(self.conv3(x)), 2))
-        x = F.relu(F.max_pool2d(self.conv4_bn(self.conv4(x)), 2))
-        x = F.relu(F.max_pool2d(self.conv5_bn(self.conv5(x)), 2))
-        x = F.relu(F.max_pool2d(self.conv6_bn(self.conv6(x)), 2))
-        x = x.view(x.size(0), 256)
-        x = F.relu(self.fc1(x))
-        x = F.dropout(x, training=self.training)
-        x = F.relu(self.fc2(x))
-        x = F.dropout(x, training=self.training)
+        x = self.features(x)
+        x = x.view(x.size(0), -1)
+        x = self.classifier(x)
         x = self.output(x)
-        return F.log_softmax(x, dim=1)
+        return x
 
 
 def train(epoch):
@@ -254,9 +266,7 @@ def test():
 
     return truth, probabilities
 
-
 model = ConvolutionalQCNet()
-
 
 def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
     model.eval()
@@ -434,7 +444,7 @@ if __name__ == '__main__':
         make_roc_gif(results_dir, args.epochs, fold+1)
 
     time_elapsed = time.time() - start_time
-    print('Whole experiment took', time_elapsed%3600, 'minutes')
+    print('Whole experiment took', time_elapsed%(3600*60), 'hours')
 
     print('This experiment was brought to you by the number:', experiment_number)
 
