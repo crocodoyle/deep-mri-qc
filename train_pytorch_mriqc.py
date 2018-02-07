@@ -326,7 +326,7 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
                 else:
                     qc_decision = 'PASS'
 
-                mask = grad_cam(data[i, ...], target[i, ...])
+                mask = grad_cam(data[i, ...][np.newaxis, ...], target[i, ...][np.newaxis, ...])
 
                 heatmap = np.uint8(cm.jet(mask)[:,:,0,:3]*255)
                 gray = np.uint8(cm.gray(data[i, ...]))
