@@ -218,7 +218,7 @@ def make_abide_subject(line, subject_index, input_path, f):
             t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
         f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
-        f['dataset'][subject_index] = 'ABIDE'
+        f['dataset'][subject_index] = line[1]
 
         # plt.imshow(t1_data[96, ...])
         # plt.axis('off')
