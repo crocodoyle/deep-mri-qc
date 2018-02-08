@@ -341,8 +341,8 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
             pass
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3))
-    axes[0].plot(train_histogram[:-1], bins, lw=2, label='Train')
-    axes[1].plot(test_histogram[:-1], bins, lw=2, label='Test')
+    axes[0].plot(train_histogram, bins, lw=2, label='Train')
+    axes[1].plot(test_histogram, bins, lw=2, label='Test')
     axes[0].set_title('histogram of grey values')
     axes[0].set_ylabel('# voxels')
 
