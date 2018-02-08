@@ -83,7 +83,7 @@ def make_ping_subject(line, subject_index, input_path, f):
             t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
         # f['comment'][subject_index] = comment
 
-        f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
+        f['MRI'][subject_index, ...] = normalise_zero_one(np.float16(t1_data))
         f['dataset'][subject_index] = 'PING'
 
         # plt.imshow(t1_data[96, ...])
@@ -145,7 +145,7 @@ def make_ibis_subject(line, subject_index, input_path, f):
             # print('resizing from', t1_data.shape)
             t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
-        f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
+        f['MRI'][subject_index, ...] = normalise_zero_one(np.float16(t1_data))
         f['dataset'][subject_index] = 'IBIS'
 
 
@@ -217,7 +217,7 @@ def make_abide_subject(line, subject_index, input_path, f):
         if not t1_data.shape == target_size:
             t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
-        f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
+        f['MRI'][subject_index, ...] = normalise_zero_one(np.float16(t1_data))
         f['dataset'][subject_index] = line[1]
 
         # plt.imshow(t1_data[96, ...])
@@ -269,7 +269,7 @@ def make_ds030_subject(line, subject_index, input_path, f):
                 print('resizing from', t1_data.shape)
                 t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
-            f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
+            f['MRI'][subject_index, ...] = normalise_zero_one(np.float16(t1_data))
 
             one_hot = [0, 0]
 
@@ -520,7 +520,7 @@ if __name__ == "__main__":
     # total_subjects = 1113 + 282
 
     with h5py.File(output_file, 'w') as f:
-        f.create_dataset('MRI', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float32')
+        f.create_dataset('MRI', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float16')
         # f.create_dataset('MRI', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float32')
         f.create_dataset('qc_label', (total_subjects, 2), dtype='float32')
         dt = h5py.special_dtype(vlen=bytes)
