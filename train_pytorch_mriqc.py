@@ -326,17 +326,17 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
                 else:
                     qc_decision = 'PASS'
 
-                mask = grad_cam(data[i, ...][np.newaxis, ...], target[i, ...][np.newaxis, ...])
-
-                heatmap = np.uint8(cm.jet(mask)[:,:,0,:3]*255)
-                gray = np.uint8(cm.gray(data[i, ...]))
-
-                fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 4.5), tight_layout=True)
-                ax1.imshow(image_batch[i, 0, :, :], cmap='gray', origin='lower')
-                ax2.imshow(gray, origin='lower')
-                ax2.imshow(heatmap, alpha=0.2, origin='lower')
-
-                plt.savefig(results_dir + '/imgs/' + qc_decision + '_ds030_batch_' + str(batch_idx) + '_img_' + str(i) + '.png', bbox_inches='tight')
+                # mask = grad_cam(data[i, ...][np.newaxis, ...], target[i, ...][np.newaxis, ...])
+                #
+                # heatmap = np.uint8(cm.jet(mask)[:,:,0,:3]*255)
+                # gray = np.uint8(cm.gray(data[i, ...]))
+                #
+                # fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 4.5), tight_layout=True)
+                # ax1.imshow(image_batch[i, 0, :, :], cmap='gray', origin='lower')
+                # ax2.imshow(gray, origin='lower')
+                # ax2.imshow(heatmap, alpha=0.2, origin='lower')
+                #
+                # plt.savefig(results_dir + '/imgs/' + qc_decision + '_ds030_batch_' + str(batch_idx) + '_img_' + str(i) + '.png', bbox_inches='tight')
         except IndexError as e:
             pass
 
