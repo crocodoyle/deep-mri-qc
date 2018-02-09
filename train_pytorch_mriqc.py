@@ -407,6 +407,9 @@ if __name__ == '__main__':
     for fold_idx, (train_indices, validation_indices) in enumerate(skf.split(all_train_indices, train_ground_truth)):
         fold_num = fold_idx + 1
         print("Starting fold", str(fold_num))
+        model = ConvolutionalQCNet()
+        if args.cuda:
+            model.cuda()
 
         train_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', train_indices, random_slice=True)
         validation_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', validation_indices, random_slice=False)
