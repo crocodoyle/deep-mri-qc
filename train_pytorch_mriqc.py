@@ -105,21 +105,35 @@ test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.test_bat
 class FullyConnectedQCNet(nn.Module):
     def __init__(self):
         super(FullyConnectedQCNet, self).__init__()
-        self.fc1 = nn.Linear(1, 32)
-        self.fc2 = nn.Linear(32, 64)
-        self.fc3 = nn.Linear(64, 128)
-        self.fc4 = nn.Linear(128, 64)
-        self.fc5 = nn.Linear(64, 32)
-        self.output = nn.Linear(2)
+
+        self.features = nn.Sequential(
+            nn.Linear(1, 32),
+            nn.BatchNorm1d(32),
+            nn.ReLU(),
+            nn.Linear(32, 64),
+            nn.BatchNorm1d(64),
+            nn.ReLU(),
+            nn.Linear(64, 128),
+            nn.BatchNorm1d(128),
+            nn.ReLU(),
+            nn.Linear(128, 256),
+            nn.BatchNorm1d(256),
+            nn.ReLU()
+        )
+
+        self.classifier = nn.Sequential(
+            nn.Linear(128, 256),
+            nn.Dropout(),
+            nn.Linear(2)
+        )
+
+        self.output = nn.LogSoftmax()
 
     def forward(self, x):
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
-        x = F.relu(self.fc4(x))
-        x = F.relu(self.fc5(x))
+        x = self.features(x)
+        x = self.classifier(x)
         x = self.output(x)
-        return F.log_softmax(x, dim=1)
+        return x
 
 
 class ConvolutionalQCNet(nn.Module):
