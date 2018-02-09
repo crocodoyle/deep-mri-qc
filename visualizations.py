@@ -17,7 +17,7 @@ def make_roc_gif(results_dir, epochs, fold_num=1):
 
     epoch_range = range(1, epochs+1)
     for epoch in epoch_range:
-        filename = results_dir + 'ROC_fold_' + str(fold_num) + '_epoch_' + str(epoch) + '.png'
+        filename = results_dir + 'ROC_fold_' + str(fold_num) + '_epoch_' + str(epoch).zfill(2) + '.png'
         img = plt.imread(filename)
         images.append(img)
 
@@ -61,7 +61,7 @@ def plot_roc(train_truth, train_probs, val_truth, val_probs, test_truth, test_pr
     plt.title('ROC Epoch:' + str(epoch_num), fontsize=24)
     plt.legend(loc="lower right", shadow=True, fontsize=20)
 
-    plt.savefig(results_dir + 'ROC_fold_' + str(fold_num) + '_epoch_' + str(epoch_num) +  '.png', bbox_inches='tight')
+    plt.savefig(results_dir + 'ROC_fold_' + str(fold_num) + '_epoch_' + str(epoch_num).zfill(2) +  '.png', bbox_inches='tight')
     plt.close()
 
     return train_roc_auc, val_roc_auc, test_roc_auc
