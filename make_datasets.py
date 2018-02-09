@@ -14,17 +14,18 @@ from multiprocessing import Pool, Process
 from nipype.interfaces.ants import Registration
 
 
+data_dir = '/data1/users/adoyle/'
 output_dir = '/data1/users/adoyle/deepqc/'
-output_file = '/data1/users/adoyle/deepqc/deepqc-all-sets.hdf5'
+
+output_file = output_dir + 'deepqc-all-sets.hdf5'
 cores = 12
 
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 
-exemplar_file = '/data1/data/PING/p0086_20100316_193008_2_mri.mnc'
-
-atlas = '/data1/users/adoyle/mni_icbm152_t1_tal_nlin_asym_09a.mnc'
+exemplar_file = data_dir + '/PING/p0086_20100316_193008_2_mri.mnc'
+atlas = data_dir + '/mni_icbm152_t1_tal_nlin_asym_09a.mnc'
 
 target_size = (192, 256, 192)
 
@@ -525,22 +526,22 @@ if __name__ == "__main__":
         f.create_dataset('dataset', (total_subjects,), dtype=dt)
 
         print('Starting PING...')
-        ping_indices = make_ping('/data1/data/PING/', f, 't1_qc.csv', 0)
+        ping_indices = make_ping(data_dir + '/PING/', f, 't1_qc.csv', 0)
         print('Last PING index:', sorted(ping_indices)[-1])
         print('Starting ABIDE...')
-        abide_indices = make_abide('/data1/data/deep_abide/', f, 't1_qc.csv', sorted(ping_indices)[-1] + 1)
+        abide_indices = make_abide(data_dir + '/deep_abide/', f, 't1_qc.csv', sorted(ping_indices)[-1] + 1)
         print('Last ABIDE index:', sorted(abide_indices)[-1])
         print('Starting IBIS...')
-        ibis_indices = make_ibis('/data1/data/IBIS/', f, 'ibis_t1_qc.csv', sorted(abide_indices)[-1] + 1)
+        ibis_indices = make_ibis(data_dir + '/IBIS/', f, 'ibis_t1_qc.csv', sorted(abide_indices)[-1] + 1)
         print('Last IBIS index:', sorted(ibis_indices)[-1])
         print('Starting ds030...')
-        ds030_indices = make_ds030('/data1/data/ds030/', f, 'ds030_DB.csv', sorted(ibis_indices)[-1] + 1)
+        ds030_indices = make_ds030(data_dir + '/ds030/', f, 'ds030_DB.csv', sorted(ibis_indices)[-1] + 1)
         print('Last ds030 index:', sorted(ds030_indices)[-1])
 
-        pickle.dump(ping_indices, open('/data1/data/deepqc/ping_indices.pkl', 'wb'))
-        pickle.dump(ibis_indices, open('/data1/data/deepqc/ibis_indices.pkl', 'wb'))
-        pickle.dump(abide_indices, open('/data1/data/deepqc/abide_indices.pkl', 'wb'))
-        pickle.dump(ds030_indices, open('/data1/data/deepqc/ds030_indices.pkl', 'wb'))
+        pickle.dump(ping_indices, open(output_dir + 'ping_indices.pkl', 'wb'))
+        pickle.dump(ibis_indices, open(output_dir + 'ibis_indices.pkl', 'wb'))
+        pickle.dump(abide_indices, open(output_dir + 'abide_indices.pkl', 'wb'))
+        pickle.dump(ds030_indices, open(output_dir + 'ds030_indices.pkl', 'wb'))
 
 
 
