@@ -29,6 +29,55 @@ atlas = data_dir + '/mni_icbm152_t1_tal_nlin_asym_09a.mnc'
 
 target_size = (192, 256, 192)
 
+def normalise_zero_one(image):
+    """Image normalisation. Normalises image to fit [0, 1] range."""
+
+    image = image.astype(np.float32)
+    ret = (image - np.min(image))
+    ret /= (np.max(image) + 0.000001)
+    return ret
+
+# taken from DLTK
+def resize_image_with_crop_or_pad(image, img_size=(64, 64, 64), **kwargs):
+    """Image resizing. Resizes image by cropping or padding dimension
+     to fit specified size.
+    Args:
+        image (np.ndarray): image to be resized
+        img_size (list or tuple): new image size
+        kwargs (): additional arguments to be passed to np.pad
+    Returns:
+        np.ndarray: resized image
+    """
+
+    assert isinstance(image, (np.ndarray, np.generic))
+    assert (image.ndim - 1 == len(img_size) or image.ndim == len(img_size)), \
+        'Example size doesnt fit image size'
+
+    # Get the image dimensionality
+    rank = len(img_size)
+
+    # Create placeholders for the new shape
+    from_indices = [[0, image.shape[dim]] for dim in range(rank)]
+    to_padding = [[0, 0] for dim in range(rank)]
+
+    slicer = [slice(None)] * rank
+
+    # For each dimensions find whether it is supposed to be cropped or padded
+    for i in range(rank):
+        if image.shape[i] < img_size[i]:
+            to_padding[i][0] = (img_size[i] - image.shape[i]) // 2
+            to_padding[i][1] = img_size[i] - image.shape[i] - to_padding[i][0]
+        else:
+            from_indices[i][0] = int(np.floor((image.shape[i] - img_size[i]) / 2.))
+            from_indices[i][1] = from_indices[i][0] + img_size[i]
+
+        # Create slicer object to crop or leave each dimension
+        slicer[i] = slice(from_indices[i][0], from_indices[i][1])
+
+    # Pad the cropped image to extend the missing dimension
+    return np.pad(image[slicer], to_padding, **kwargs)
+
+
 def make_ping(input_path, f, label_file, subject_index):
     with open(os.path.join(input_path, label_file)) as label_file:
         qc_reader = csv.reader(label_file)
@@ -545,50 +594,3 @@ if __name__ == "__main__":
 
 
 
-def normalise_zero_one(image):
-    """Image normalisation. Normalises image to fit [0, 1] range."""
-
-    image = image.astype(np.float32)
-    ret = (image - np.min(image))
-    ret /= (np.max(image) + 0.000001)
-    return ret
-
-# taken from DLTK
-def resize_image_with_crop_or_pad(image, img_size=(64, 64, 64), **kwargs):
-    """Image resizing. Resizes image by cropping or padding dimension
-     to fit specified size.
-    Args:
-        image (np.ndarray): image to be resized
-        img_size (list or tuple): new image size
-        kwargs (): additional arguments to be passed to np.pad
-    Returns:
-        np.ndarray: resized image
-    """
-
-    assert isinstance(image, (np.ndarray, np.generic))
-    assert (image.ndim - 1 == len(img_size) or image.ndim == len(img_size)), \
-        'Example size doesnt fit image size'
-
-    # Get the image dimensionality
-    rank = len(img_size)
-
-    # Create placeholders for the new shape
-    from_indices = [[0, image.shape[dim]] for dim in range(rank)]
-    to_padding = [[0, 0] for dim in range(rank)]
-
-    slicer = [slice(None)] * rank
-
-    # For each dimensions find whether it is supposed to be cropped or padded
-    for i in range(rank):
-        if image.shape[i] < img_size[i]:
-            to_padding[i][0] = (img_size[i] - image.shape[i]) // 2
-            to_padding[i][1] = img_size[i] - image.shape[i] - to_padding[i][0]
-        else:
-            from_indices[i][0] = int(np.floor((image.shape[i] - img_size[i]) / 2.))
-            from_indices[i][1] = from_indices[i][0] + img_size[i]
-
-        # Create slicer object to crop or leave each dimension
-        slicer[i] = slice(from_indices[i][0], from_indices[i][1])
-
-    # Pad the cropped image to extend the missing dimension
-    return np.pad(image[slicer], to_padding, **kwargs)
