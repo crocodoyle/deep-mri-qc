@@ -14,8 +14,8 @@ from multiprocessing import Pool, Process
 from nipype.interfaces.ants import Registration
 
 
-output_dir = '/data1/data/deepqc/'
-output_file = '/data1/data/deepqc/deepqc-all-sets.hdf5'
+output_dir = '/data1/users/adoyle/deepqc/'
+output_file = '/data1/users/adoyle/deepqc/deepqc-all-sets.hdf5'
 cores = 12
 
 import matplotlib as mpl
@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 
 exemplar_file = '/data1/data/PING/p0086_20100316_193008_2_mri.mnc'
 
-atlas = '/data1/data/mni_icbm152_t1_tal_nlin_asym_09a.mnc'
+atlas = '/data1/users/adoyle/mni_icbm152_t1_tal_nlin_asym_09a.mnc'
 
 target_size = (192, 256, 192)
 
