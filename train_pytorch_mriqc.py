@@ -29,7 +29,7 @@ parser.add_argument('--batch-size', type=int, default=64, metavar='N',
 parser.add_argument('--val-batch-size', type=int, default=8, metavar='N', help='input batch size for validation (default: 8')
 parser.add_argument('--test-batch-size', type=int, default=64, metavar='N',
                     help='input batch size for testing (default: 16)')
-parser.add_argument('--epochs', type=int, default=50, metavar='N',
+parser.add_argument('--epochs', type=int, default=10, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--folds', type=int, default=10, metavar='N',
                     help='number of folds to cross-validate over (default: 10)')
@@ -285,8 +285,8 @@ model = ConvolutionalQCNet()
 def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
     model.eval()
 
-    train_histogram = np.zeros(256, dtype='float')
-    test_histogram = np.zeros(256, dtype='float')
+    train_histogram = np.zeros(255, dtype='float')
+    test_histogram = np.zeros(255, dtype='float')
 
     bins = np.linspace(0.0, 1.0, 256)
 
