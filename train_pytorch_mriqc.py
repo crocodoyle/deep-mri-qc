@@ -285,10 +285,10 @@ model = ConvolutionalQCNet()
 def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
     model.eval()
 
-    train_histogram = np.zeros(255, dtype='float')
-    test_histogram = np.zeros(255, dtype='float')
+    train_histogram = np.zeros(256, dtype='float')
+    test_histogram = np.zeros(256, dtype='float')
 
-    bins = np.linspace(0.0, 1.0, 256)
+    bins = np.linspace(0.0, 1.0, 257)
 
     os.makedirs(results_dir + '/imgs/', exist_ok=True)
     for batch_idx, (data, target) in enumerate(train_loader):
@@ -300,7 +300,7 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
         image_batch = data.data.cpu().numpy()
 
         histo = np.histogram(image_batch, bins=bins)
-        train_histogram += histo[0]
+        train_histogram += histo[0] / len(train_loader.dataset)
 
         if batch_idx == 0:
             print(target_batch.shape, image_batch.shape)
@@ -328,7 +328,7 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
         image_batch = data.data.cpu().numpy()
 
         histo = np.histogram(image_batch, bins=bins)
-        test_histogram += histo[0]
+        test_histogram += histo[0] / len(test_loader.dataset)
 
         if batch_idx == 0:
             print(target_batch.shape, image_batch.shape)
@@ -355,8 +355,8 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
             pass
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3))
-    axes[0].plot(train_histogram, bins, lw=2, label='Train')
-    axes[1].plot(test_histogram, bins, lw=2, label='Test')
+    axes[0].plot(train_histogram, bins[:-1], lw=2, label='Train')
+    axes[1].plot(test_histogram, bins[:-1], lw=2, label='Test')
     axes[0].set_title('histogram of grey values')
     axes[0].set_ylabel('# voxels')
 
