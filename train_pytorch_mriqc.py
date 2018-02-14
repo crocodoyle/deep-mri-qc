@@ -53,8 +53,6 @@ if args.cuda:
 # workdir = '/data1/users/adoyle/'
 workdir = '/home/users/adoyle/deepqc/'
 
-sites = ['IBIS', 'PING', 'PITT', 'OLIN', 'OHSU', 'SDSU', 'TRINITY', 'UM', 'USM', 'YALE', 'CMU', 'LEUVEN', 'KKI', 'NYU', 'STANFORD', 'UCLA', 'MAX_MUN', 'CALTECH', 'SBL', 'ds030']
-
 class QCDataset(Dataset):
     def __init__(self, hdf5_file_path, all_indices, random_slice=False, augmentation_type=None):
         f = h5py.File(hdf5_file_path)
@@ -290,7 +288,10 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
 
     histograms = {}
 
-    for site in sites:
+    mri_sites = ['IBIS', 'PING', 'PITT', 'OLIN', 'OHSU', 'SDSU', 'TRINITY', 'UM', 'USM', 'YALE', 'CMU', 'LEUVEN', 'KKI',
+             'NYU', 'STANFORD', 'UCLA', 'MAX_MUN', 'CALTECH', 'SBL', 'ds030']
+
+    for site in mri_sites:
         histograms[site] = np.zeros(256, dtype='float32')
 
     bins = np.linspace(0.0, 1.0, 257)
@@ -362,7 +363,7 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
             pass
 
     fig, axes = plt.subplots(1, 1, figsize=(8, 8))
-    for site in sites:
+    for site in mri_sites:
         histograms[site] = np.divide(histograms[site], np.sum(histograms[site]))
 
         if site == 'ds030':
