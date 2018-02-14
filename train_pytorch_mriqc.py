@@ -53,12 +53,14 @@ if args.cuda:
 # workdir = '/data1/users/adoyle/'
 workdir = '/home/users/adoyle/deepqc/'
 
+sites = ['IBIS', 'PING', 'PITT', 'OLIN', 'OHSU', 'SDSU', 'TRINITY', 'UM', 'USM', 'YALE', 'CMU', 'LEUVEN', 'KKI', 'NYU', 'STANFORD', 'UCLA', 'MAX_MUN', 'CALTECH', 'SBL', 'ds030']
 
 class QCDataset(Dataset):
     def __init__(self, hdf5_file_path, all_indices, random_slice=False, augmentation_type=None):
         f = h5py.File(hdf5_file_path)
         self.images = f['MRI']
         self.labels = f['qc_label']
+        self.site = f['dataset']
 
         self.n_subjects = len(all_indices)
         self.indices = np.zeros((self.n_subjects))
@@ -78,8 +80,9 @@ class QCDataset(Dataset):
 
         image = self.images[good_index, ...][np.newaxis, :, :, 192//2 + slice_modifier]
         label = np.argmax(self.labels[good_index, ...])
+        site = self.site[good_index]
 
-        return image, label
+        return image, label, site
 
     def __len__(self):
         return self.n_subjects
@@ -192,7 +195,7 @@ def train(epoch):
 
     truth, probabilities = np.zeros((len(train_loader.dataset))), np.zeros((len(train_loader.dataset), 2))
 
-    for batch_idx, (data, target) in enumerate(train_loader):
+    for batch_idx, (data, target, sites) in enumerate(train_loader):
         class_weight = torch.FloatTensor([fail_weight, pass_weight])
         if args.cuda:
             data, target, class_weight = data.cuda(), target.cuda(), class_weight.cuda()
@@ -229,7 +232,7 @@ def validate():
 
     truth, probabilities = np.zeros((len(validation_loader.dataset))), np.zeros((len(validation_loader.dataset), 2))
 
-    for batch_idx, (data, target) in enumerate(validation_loader):
+    for batch_idx, (data, target, sites) in enumerate(validation_loader):
         if args.cuda:
             data, target = data.cuda(), target.cuda()
 
@@ -259,7 +262,7 @@ def test():
 
     truth, probabilities = np.zeros((len(test_loader.dataset))), np.zeros((len(test_loader.dataset), 2))
 
-    for batch_idx, (data, target) in enumerate(test_loader):
+    for batch_idx, (data, target, sites) in enumerate(test_loader):
         if args.cuda:
             data, target = data.cuda(), target.cuda()
         data, target = Variable(data, volatile=True), Variable(target)
@@ -285,13 +288,15 @@ model = ConvolutionalQCNet()
 def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
     model.eval()
 
-    train_histogram = np.zeros(256, dtype='float')
-    test_histogram = np.zeros(256, dtype='float')
+    histograms = {}
+
+    for site in sites:
+        histograms[site] = np.zeros(256, dtype='float32')
 
     bins = np.linspace(0.0, 1.0, 257)
 
     os.makedirs(results_dir + '/imgs/', exist_ok=True)
-    for batch_idx, (data, target) in enumerate(train_loader):
+    for batch_idx, (data, target, sites) in enumerate(train_loader):
         if args.cuda:
             data, target = data.cuda(), target.cuda()
         data, target = Variable(data), Variable(target)
@@ -299,8 +304,9 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
         target_batch = target.data.cpu().numpy()
         image_batch = data.data.cpu().numpy()
 
-        histo = np.histogram(image_batch, bins=bins)
-        train_histogram += histo[0] / len(train_loader.dataset)
+        for img, site in zip(image_batch, sites):
+            histo = np.histogram(img, bins=bins)
+            histograms[site] += histo[0]
 
         if batch_idx == 0:
             print(target_batch.shape, image_batch.shape)
@@ -319,7 +325,7 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
         except IndexError as e:
             pass
 
-    for batch_idx, (data, target) in enumerate(test_loader):
+    for batch_idx, (data, target, sites) in enumerate(test_loader):
         if args.cuda:
             data, target = data.cuda(), target.cuda()
         data, target = Variable(data), Variable(target)
@@ -327,8 +333,9 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
         target_batch = target.data.cpu().numpy()
         image_batch = data.data.cpu().numpy()
 
-        histo = np.histogram(image_batch, bins=bins)
-        test_histogram += histo[0] / len(test_loader.dataset)
+        for img, site in zip(image_batch, sites):
+            histo = np.histogram(image_batch, bins=bins)
+            histograms[site] += histo[0]
 
         if batch_idx == 0:
             print(target_batch.shape, image_batch.shape)
@@ -354,12 +361,20 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
         except IndexError as e:
             pass
 
-    fig, axes = plt.subplots(1, 2, figsize=(8, 3))
-    axes[0].plot(bins[:-1], train_histogram, lw=2, label='Train')
-    axes[1].plot(bins[:-1], test_histogram, lw=2, label='Test')
+    fig, axes = plt.subplots(1, 1, figsize=(8, 8))
+    for site in sites:
+        histograms[site] = np.divide(histograms[site], np.sum(histograms[site]))
+
+        if site == 'ds030':
+            lw = 4
+        else:
+            lw = 2
+        axes[0].plot(bins[:-1], histograms[site], lw=lw, label=site)
+
     axes[0].set_title('histogram of grey values')
     axes[0].set_ylabel('# voxels')
 
+    plt.legend(shadow=True)
     plt.tight_layout()
     plt.savefig(results_dir + 'histograms.png', bbox_inches='tight')
 
@@ -389,7 +404,7 @@ if __name__ == '__main__':
     train_ground_truth = np.zeros(len(all_train_indices))
 
     print('Counting PASS/FAIL images...')
-    for batch_idx, (img_data, target) in enumerate(train_loader):
+    for batch_idx, (img_data, target, sites) in enumerate(train_loader):
         train_ground_truth[args.batch_size * batch_idx:args.batch_size * (1 + batch_idx)] = target
 
     n_pass = np.sum(train_ground_truth, dtype='int')
