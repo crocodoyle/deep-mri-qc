@@ -78,7 +78,7 @@ class QCDataset(Dataset):
 
         image = self.images[good_index, ...][np.newaxis, :, :, 192//2 + slice_modifier]
         label = np.argmax(self.labels[good_index, ...])
-        site = self.site[good_index]
+        site = self.site[good_index].decode('UTF-8')
 
         return image, label, site
 
