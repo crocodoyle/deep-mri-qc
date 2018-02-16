@@ -52,6 +52,7 @@ if args.cuda:
 
 # workdir = '/data1/users/adoyle/'
 workdir = '/home/users/adoyle/deepqc/'
+input_filename = 'deepqc-allsites.hdf5'
 
 class QCDataset(Dataset):
     def __init__(self, hdf5_file_path, all_indices, random_slice=False, augmentation_type=None):
@@ -94,8 +95,8 @@ ping_indices = pickle.load(open(workdir + 'ping_indices.pkl', 'rb'))
 all_train_indices = abide_indices + ibis_indices + ping_indices
 # all_train_indices = abide_indices
 
-train_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', all_train_indices, random_slice=True)
-test_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', ds030_indices)
+train_dataset = QCDataset(workdir + input_filename, all_train_indices, random_slice=True)
+test_dataset = QCDataset(workdir + input_filename, ds030_indices)
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
@@ -427,8 +428,8 @@ if __name__ == '__main__':
         if args.cuda:
             model.cuda()
 
-        train_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', train_indices, random_slice=True)
-        validation_dataset = QCDataset(workdir + 'deepqc-all-sets.hdf5', validation_indices, random_slice=False)
+        train_dataset = QCDataset(workdir + input_filename, train_indices, random_slice=True)
+        validation_dataset = QCDataset(workdir + input_filename, validation_indices, random_slice=False)
 
         train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, **kwargs)
         validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=args.val_batch_size, shuffle=False, **kwargs)
