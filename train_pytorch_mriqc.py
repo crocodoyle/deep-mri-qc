@@ -15,7 +15,7 @@ from ml_experiment import setup_experiment
 from visualizations import plot_roc, plot_sens_spec, make_roc_gif, GradCam
 
 from sklearn.metrics import confusion_matrix
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, LeaveOneGroupOut
 
 import matplotlib as mpl
 mpl.use('Agg')
@@ -404,10 +404,13 @@ if __name__ == '__main__':
 
     pass_weight, fail_weight = 0, 0
     train_ground_truth = np.zeros(len(all_train_indices))
+    groups = []
 
     print('Counting PASS/FAIL images...')
     for batch_idx, (img_data, target, sites) in enumerate(train_loader):
         train_ground_truth[args.batch_size * batch_idx:args.batch_size * (1 + batch_idx)] = target
+        for site in sites:
+            groups.append(site)
 
     n_pass = np.sum(train_ground_truth, dtype='int')
     n_fail = len(all_train_indices) - np.sum(train_ground_truth, dtype='int')
@@ -421,7 +424,8 @@ if __name__ == '__main__':
     # reset training_dataset and create a new validation_dataset
 
     skf = StratifiedKFold(n_splits=10)
-    for fold_idx, (train_indices, validation_indices) in enumerate(skf.split(all_train_indices, train_ground_truth)):
+    logo = LeaveOneGroupOut()
+    for fold_idx, (train_indices, validation_indices) in enumerate(logo.split(all_train_indices, groups)):
         fold_num = fold_idx + 1
         print("Starting fold", str(fold_num))
         model = ConvolutionalQCNet()
@@ -479,7 +483,7 @@ if __name__ == '__main__':
         make_roc_gif(results_dir, args.epochs, fold+1)
 
     time_elapsed = time.time() - start_time
-    print('Whole experiment took', time_elapsed%(3600*60), 'hours')
+    print('Whole experiment took', time_elapsed/216000, 'hours')
 
     print('This experiment was brought to you by the number:', experiment_number)
 
