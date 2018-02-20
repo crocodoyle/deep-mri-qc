@@ -32,7 +32,7 @@ target_size = (192, 256, 192)
 def normalise_zero_one(image):
     """Image normalisation. Normalises image to fit [0, 1] range."""
 
-    image = image.astype(np.float32)
+    image = image.astype(np.float16)
     ret = (image - np.min(image))
     ret /= (np.max(image) + 0.000001)
     return ret

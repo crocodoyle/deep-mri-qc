@@ -169,7 +169,11 @@ def rename_abide(input_path, output_path):
 def pass_fail_graph():
 
     workdir = '/home/users/adoyle/deepqc/'
-    data_file = 'deepqc-all-sets.hdf5'
+    data_file = 'deepqc-allsites.hdf5'
+
+    mri_sites = ['IBIS', 'PING', 'PITT', 'OLIN', 'OHSU', 'SDSU', 'TRINITY', 'UM', 'USM', 'YALE', 'CMU', 'LEUVEN', 'KKI',
+             'NYU', 'STANFORD', 'UCLA', 'MAX_MUN', 'CALTECH', 'SBL', 'ds030']
+
 
     abide_indices = pickle.load(open(workdir + 'abide_indices.pkl', 'rb'))
     ds030_indices = pickle.load(open(workdir + 'ds030_indices.pkl', 'rb'))
@@ -178,32 +182,47 @@ def pass_fail_graph():
 
     f = h5py.File(workdir + data_file)
     labels = f['qc_label']
+    sites = f['dataset']
 
-    pass_fail = {}
-    pass_fail['ABIDE'] = 0
-    pass_fail['ds030'] = 0
-    pass_fail['IBIS'] = 0
-    pass_fail['PING'] = 0
+    passes = {}
+    totals = {}
+    for site in mri_sites:
+        passes[site] = 0
+        totals[site] = 0
 
-    for index in abide_indices:
-        pass_fail['ABIDE'] += np.argmax(labels[index, ...])
+    for site in mri_sites:
+        for index in abide_indices:
+            if site in sites[index].decode('UTF-8'):
+                print(site, labels[index, ...])
+
+                passes[site] += np.argmax(labels[index, ...])
+                totals[site] += 1
 
     for index in ds030_indices:
-        pass_fail['ds030'] += np.argmax(labels[index, ...])
+        passes['ds030'] += np.argmax(labels[index, ...])
+        totals['ds030'] += 1
 
     for index in ibis_indices:
-        pass_fail['IBIS'] += np.argmax(labels[index, ...])
+        passes['IBIS'] += np.argmax(labels[index, ...])
+        totals['IBIS'] += 1
 
     for index in ping_indices:
-        pass_fail['PING'] += np.argmax(labels[index, ...])
+        passes['PING'] += np.argmax(labels[index, ...])
+        totals['PING'] += 1
 
-    print(pass_fail)
-    pass_plot = [pass_fail['IBIS'], pass_fail['PING'], pass_fail['ABIDE'], pass_fail['ds030']]
-    fail_plot = [len(ibis_indices) - pass_fail['IBIS'], len(ping_indices) - pass_fail['PING'], len(abide_indices) - pass_fail['ABIDE'], len(ds030_indices) - pass_fail['ds030']]
+    print(passes)
+    # pass_plot = [pass_fail['IBIS'], pass_fail['PING'], pass_fail['ABIDE'], pass_fail['ds030']]
+    # fail_plot = [len(ibis_indices) - pass_fail['IBIS'], len(ping_indices) - pass_fail['PING'], len(abide_indices) - pass_fail['ABIDE'], len(ds030_indices) - pass_fail['ds030']]
 
-    datasets = ['IBIS', 'PING', 'ABIDE', 'ds030']
+    pass_plot, fail_plot = [], []
 
-    ind = np.arange(len(datasets))
+    for mri_site in passes:
+        pass_plot.append(passes[mri_site])
+        fail_plot.append(totals[mri_site] - passes[mri_site])
+
+    # datasets = ['IBIS', 'PING', 'ABIDE', 'ds030']
+
+    ind = np.arange(len(mri_sites))
     width = 0.35
 
     fig, ax = plt.subplots()
@@ -215,7 +234,7 @@ def pass_fail_graph():
     ax.set_xlabel('Dataset')
     ax.set_ylabel('Subjects')
     ax.set_xticks(ind + width / 4)
-    ax.set_xticklabels(datasets)
+    ax.set_xticklabels(mri_sites)
     for item in ([ax.title, ax.xaxis.label, ax.yaxis.label]):
         item.set_fontsize(24)
 
@@ -271,9 +290,9 @@ def age_range_graph():
 
 
 if __name__ == '__main__':
-    age_range_graph()
+    # age_range_graph()
     pass_fail_graph()
-    dataset_examples()
+    # dataset_examples()
 
     # plot_nonlinearities('E:/')
 
