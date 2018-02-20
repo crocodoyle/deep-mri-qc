@@ -307,6 +307,7 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
         image_batch = data.data.cpu().numpy()
 
         for img, site in zip(image_batch, sites):
+            print(site)
             histo = np.histogram(img, bins=bins)
             histograms[site] += histo[0]
 
@@ -410,6 +411,7 @@ if __name__ == '__main__':
     for batch_idx, (img_data, target, sites) in enumerate(train_loader):
         train_ground_truth[args.batch_size * batch_idx:args.batch_size * (1 + batch_idx)] = target
         for site in sites:
+            print(site)
             groups.append(site)
 
     n_pass = np.sum(train_ground_truth, dtype='int')
