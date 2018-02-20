@@ -81,7 +81,7 @@ class QCDataset(Dataset):
         label = np.argmax(self.labels[good_index, ...])
         site = self.site[good_index].decode('UTF-8')
 
-        return image, label, site
+        return np.float32(image), label, site
 
     def __len__(self):
         return self.n_subjects

@@ -225,12 +225,13 @@ def pass_fail_graph():
     ind = np.arange(len(mri_sites))
     width = 0.35
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(10,4))
     ax.grid(zorder=0)
 
     ax.bar(ind, pass_plot, width, color='darkgreen', label='PASS', zorder=3)
     ax.bar(ind+width/2, fail_plot, width, color='darkred', label='FAIL', zorder=3)
 
+    ax.set_ylim([0, 250])
     ax.set_xlabel('Dataset')
     ax.set_ylabel('Subjects')
     ax.set_xticks(ind + width / 4)
@@ -239,11 +240,14 @@ def pass_fail_graph():
         item.set_fontsize(24)
 
     for item in (ax.get_xticklabels() + ax.get_yticklabels()):
-        item.set_fontsize(20)
+        item.set_fontsize(16)
 
-    plt.legend(shadow=True, fontsize=20)
-    plt.tight_layout()
-    plt.savefig(workdir + 'datasets-qc-pass-fail.png')
+    for tick in ax.get_xticklabels():
+        tick.set_rotation(90)
+
+    plt.legend(shadow=True, fontsize=20, loc='center left', bbox_to_anchor=(1, 0.5))
+    # plt.tight_layout()
+    plt.savefig(workdir + 'datasets-qc-pass-fail.png', bbox_inches='tight')
     plt.close()
 
 def age_range_graph():
