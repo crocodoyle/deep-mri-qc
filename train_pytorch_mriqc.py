@@ -425,9 +425,12 @@ if __name__ == '__main__':
 
     # reset training_dataset and create a new validation_dataset
 
+
+    # logo = LeaveOneGroupOut()
+    # for fold_idx, (train_indices, validation_indices) in enumerate(logo.split(all_train_indices, train_ground_truth, groups=groups)):
+
     skf = StratifiedKFold(n_splits=10)
-    logo = LeaveOneGroupOut()
-    for fold_idx, (train_indices, validation_indices) in enumerate(logo.split(all_train_indices, train_ground_truth, groups=groups)):
+    for fold_idx, (train_indices, validation_indices) in enumerate(skf.split(all_train_indices, train_ground_truth)):
         fold_num = fold_idx + 1
         print("Starting fold", str(fold_num))
         model = ConvolutionalQCNet()
