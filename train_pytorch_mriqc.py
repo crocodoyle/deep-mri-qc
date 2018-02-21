@@ -456,26 +456,32 @@ if __name__ == '__main__':
 
             train_auc, val_auc, test_auc = plot_roc(train_truth, train_probabilities, val_truth, val_probabilities, test_truth, test_probabilities, results_dir, epoch, fold_num)
 
-            [[train_tp, train_fn], [train_fp, train_tn]] = confusion_matrix(train_truth, train_predictions)
-            [[val_tp, val_fn], [val_fp, val_tn]] = confusion_matrix(val_truth, val_predictions)
-            [[test_tp, test_fn], [test_fp, test_tn]] = confusion_matrix(test_truth, test_predictions)
+            try:
+                [[train_tp, train_fn], [train_fp, train_tn]] = confusion_matrix(train_truth, train_predictions)
+                [[val_tp, val_fn], [val_fp, val_tn]] = confusion_matrix(val_truth, val_predictions)
+                [[test_tp, test_fn], [test_fp, test_tn]] = confusion_matrix(test_truth, test_predictions)
 
-            training_sensitivity[fold_idx, epoch_idx] = train_tp / (train_tp + train_fn)
-            training_specificity[fold_idx, epoch_idx] = train_tn / (train_tn + train_fp)
+                training_sensitivity[fold_idx, epoch_idx] = train_tp / (train_tp + train_fn)
+                training_specificity[fold_idx, epoch_idx] = train_tn / (train_tn + train_fp)
 
-            validation_sensitivity[fold_idx, epoch_idx] = val_tp / (val_tp + val_fn)
-            validation_specificity[fold_idx, epoch_idx] = val_tn / (val_tn + val_fp)
+                validation_sensitivity[fold_idx, epoch_idx] = val_tp / (val_tp + val_fn)
+                validation_specificity[fold_idx, epoch_idx] = val_tn / (val_tn + val_fp)
 
-            test_sensitivity[fold_idx, epoch_idx] = test_tp / (test_tp + test_fn)
-            test_specificity[fold_idx, epoch_idx] = test_tn / (test_tn + test_fp)
+                test_sensitivity[fold_idx, epoch_idx] = test_tp / (test_tp + test_fn)
+                test_specificity[fold_idx, epoch_idx] = test_tn / (test_tn + test_fp)
 
-            val_aucs[fold_idx, epoch_idx] = val_auc
+                val_aucs[fold_idx, epoch_idx] = val_auc
+            except:
+                print('ERROR could not calculate confusion matrix properly, probably only one class predicted/present in ground truth.')
 
             if val_auc > best_val_auc[fold_idx]:
                 torch.save(model.state_dict(), results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch')
 
-            plot_sens_spec(training_sensitivity, training_specificity, validation_sensitivity, validation_specificity,
+            try:
+                plot_sens_spec(training_sensitivity, training_specificity, validation_sensitivity, validation_specificity,
                        test_sensitivity, test_specificity, results_dir, fold_num)
+            except:
+                print('ERROR could not save sensitivity/specificity plot for epoch', epoch)
 
 
     grad_cam = GradCam(model = model, target_layer_names=['output'], use_cuda=args.cuda)
