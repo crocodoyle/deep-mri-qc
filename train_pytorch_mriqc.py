@@ -380,8 +380,8 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
             lw = 2
         axes[0].plot(bins[:-1], histograms[site], lw=lw, label=site)
 
-    axes[0].set_title('histogram of grey values')
-    axes[0].set_ylabel('# voxels')
+    axes.set_title('histogram of grey values')
+    axes.set_ylabel('# voxels')
 
     plt.legend(shadow=True)
     plt.tight_layout()
