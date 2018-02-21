@@ -308,8 +308,11 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
 
         for img, site in zip(image_batch, sites):
             print(site)
-            histo = np.histogram(img, bins=bins)
-            histograms[site] += histo[0]
+            try:
+                histo = np.histogram(img, bins=bins)
+                histograms[site] += histo[0]
+            except KeyError:
+                print('Site missing')
 
         if batch_idx == 0:
             print(target_batch.shape, image_batch.shape)
@@ -337,8 +340,11 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
         image_batch = data.data.cpu().numpy()
 
         for img, site in zip(image_batch, sites):
-            histo = np.histogram(image_batch, bins=bins)
-            histograms[site] += histo[0]
+            try:
+                histo = np.histogram(image_batch, bins=bins)
+                histograms[site] += histo[0]
+            except KeyError:
+                print('Site missing')
 
         if batch_idx == 0:
             print(target_batch.shape, image_batch.shape)
