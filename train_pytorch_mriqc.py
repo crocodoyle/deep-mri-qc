@@ -373,7 +373,7 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
     fig, axes = plt.subplots(len(mri_sites), 1, sharex=True, figsize=(6, 12))
     for i, site in enumerate(mri_sites):
         histograms[site] = np.divide(histograms[site], np.sum(histograms[site]))
-        axes[i].plot(bins[:-1], histograms[site], lw=2, label=site)
+        axes[i].semilogx(bins[:-1], histograms[site], lw=2, label=site)
 
         axes[i].set_ylim([0, 0.1])
         axes[i].set_xlim([0, 1])
