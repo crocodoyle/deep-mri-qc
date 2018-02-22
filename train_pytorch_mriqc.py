@@ -29,7 +29,7 @@ parser.add_argument('--batch-size', type=int, default=64, metavar='N',
 parser.add_argument('--val-batch-size', type=int, default=8, metavar='N', help='input batch size for validation (default: 8')
 parser.add_argument('--test-batch-size', type=int, default=64, metavar='N',
                     help='input batch size for testing (default: 16)')
-parser.add_argument('--epochs', type=int, default=20, metavar='N',
+parser.add_argument('--epochs', type=int, default=25, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--folds', type=int, default=10, metavar='N',
                     help='number of folds to cross-validate over (default: 10)')
@@ -370,20 +370,17 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
         except IndexError as e:
             pass
 
-    fig, axes = plt.subplots(1, 1, figsize=(8, 8))
-    for site in mri_sites:
+    fig, axes = plt.subplots(len(mri_sites), 1, sharex=True, figsize=(6, 12))
+    for i, site in enumerate(mri_sites):
         histograms[site] = np.divide(histograms[site], np.sum(histograms[site]))
+        axes[i].plot(bins[:-1], histograms[site], lw=2, label=site)
 
-        if site == 'ds030':
-            lw = 4
-        else:
-            lw = 2
-        axes.plot(bins[:-1], histograms[site], lw=lw, label=site)
+        axes[i].set_ylim([0, 0.1])
+        axes[i].set_xlim([0, 1])
+        axes[i].set_ylabel(site)
 
-    axes.set_title('histogram of grey values')
-    axes.set_ylabel('# voxels')
 
-    plt.legend(shadow=True)
+    plt.set_title('histogram of grey values')
     plt.tight_layout()
     plt.savefig(results_dir + 'histograms.png', bbox_inches='tight')
 
