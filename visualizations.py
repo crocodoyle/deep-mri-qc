@@ -58,10 +58,10 @@ def plot_roc(train_truth, train_probs, val_truth, val_probs, test_truth, test_pr
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate', fontsize=20)
     plt.ylabel('True Positive Rate', fontsize=20)
-    plt.title('ROC Epoch:' + str(epoch_num), fontsize=24)
+    plt.title('ROC Epoch:' + str(epoch_num).zfill(3), fontsize=24)
     plt.legend(loc="lower right", shadow=True, fontsize=20)
 
-    plt.savefig(results_dir + 'ROC_fold_' + str(fold_num) + '_epoch_' + str(epoch_num).zfill(2) +  '.png', bbox_inches='tight')
+    plt.savefig(results_dir + 'ROC_fold_' + str(fold_num) + '_epoch_' + str(epoch_num).zfill(2) + '.png', bbox_inches='tight')
     plt.close()
 
     return train_roc_auc, val_roc_auc, test_roc_auc
@@ -74,19 +74,21 @@ def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_s
     lw = 2
 
     if not train_sens is None:
-        plt.plot(epoch_number, train_sens, color='darkorange', lw=lw, label='Train Sensitivity')
+        plt.plot(epoch_number, train_sens, color='darkorange', linestyle=':', lw=lw, label='Train Sensitivity')
     if not train_spec is None:
-        plt.plot(epoch_number, train_spec, color='gold', lw=lw, label='Train Specificity')
+        plt.plot(epoch_number, train_spec, color='gold', linestyle=':', lw=lw, label='Train Specificity')
 
     if not val_sens is None:
-        plt.plot(epoch_number, val_sens, color='darkred', lw=lw, label='Validation Sensitivity')
+        plt.plot(epoch_number, val_sens, color='darkred', linestyle='--', lw=lw, label='Validation Sensitivity')
     if not val_spec is None:
-        plt.plot(epoch_number, val_spec, color='salmon', lw=lw, label='Validation Specificity')
+        plt.plot(epoch_number, val_spec, color='salmon', linestyle='--', lw=lw, label='Validation Specificity')
 
     if not test_sens is None:
         plt.plot(epoch_number, test_sens, color='darkblue', lw=lw, label='Test Sensitivity')
     if not test_spec is None:
         plt.plot(epoch_number, test_spec, color='mediumblue', lw=lw, label='Test Specificity')
+
+
 
     plt.legend(shadow=True, fontsize=20)
     plt.savefig(results_dir + 'results_fold_' + str(fold_num), bbox_inches='tight')

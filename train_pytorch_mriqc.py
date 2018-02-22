@@ -483,11 +483,11 @@ if __name__ == '__main__':
             if val_auc > best_val_auc[fold_idx]:
                 torch.save(model.state_dict(), results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch')
 
-            try:
-                plot_sens_spec(training_sensitivity, training_specificity, validation_sensitivity, validation_specificity,
-                       test_sensitivity, test_specificity, results_dir, fold_num)
-            except:
-                print('ERROR could not save sensitivity/specificity plot for epoch', epoch)
+        try:
+            plot_sens_spec(training_sensitivity[fold_idx, :], training_specificity[fold_idx, :], validation_sensitivity[fold_idx, :], validation_specificity[fold_idx, :],
+                   test_sensitivity[fold_idx, :], test_specificity[fold_idx, :], results_dir, fold_num)
+        except:
+            print('ERROR could not save sensitivity/specificity plot for epoch', epoch)
 
 
     grad_cam = GradCam(model = model, target_layer_names=['output'], use_cuda=args.cuda)
