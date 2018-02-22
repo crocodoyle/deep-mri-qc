@@ -373,14 +373,14 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
     fig, axes = plt.subplots(len(mri_sites), 1, sharex=True, figsize=(6, 12))
     for i, site in enumerate(mri_sites):
         histograms[site] = np.divide(histograms[site], np.sum(histograms[site]))
-        axes[i].semilogx(bins[:-1], histograms[site], lw=2, label=site)
+        axes[i].semilogx(bins[:-1], histograms[site], lw=2, label=site, nonposx='clip')
 
-        axes[i].set_ylim([0, 0.1])
+        axes[i].set_ylim([0, 0.2])
         axes[i].set_xlim([0, 1])
         axes[i].set_ylabel(site)
 
 
-    plt.set_title('histogram of grey values')
+    plt.title('histogram of grey values', fontsize='24')
     plt.tight_layout()
     plt.savefig(results_dir + 'histograms.png', bbox_inches='tight')
 
