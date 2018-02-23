@@ -7,6 +7,7 @@ from sklearn.neighbors import KDTree
 
 import nibabel as nib
 from nibabel.processing import resample_from_to
+from skimage.exposure import equalize_hist
 
 
 from multiprocessing import Pool, Process
@@ -25,7 +26,9 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 exemplar_file = data_dir + '/PING/p0086_20100316_193008_2_mri.mnc'
+
 atlas = data_dir + '/mni_icbm152_t1_tal_nlin_asym_09a.mnc'
+atlas_mask = data_dir + '/mni_icbm152_t1_tal_nlin_asym_09a_mask.mnc'
 
 target_size = (192, 256, 192)
 
@@ -94,9 +97,12 @@ def make_ping(input_path, f, label_file, subject_index):
         # pool = Pool(cores)
         # index_list = pool.starmap(make_ping_subject, zip(lines, indices, input_paths))
 
+        mask = nib.load(atlas_mask).get_data()
+        big_mask = resize_image_with_crop_or_pad(mask, target_size)
+
         index_list = []
         for line, index, input_path in zip(lines, indices, input_paths):
-            returned_index = make_ping_subject(line, index, input_path, f)
+            returned_index = make_ping_subject(line, index, input_path, f, big_mask)
             index_list.append(returned_index)
 
         good_indices = [x for x in index_list if x > 0] # get rid of subjects who didn't have all info
@@ -104,7 +110,7 @@ def make_ping(input_path, f, label_file, subject_index):
     return good_indices
 
 
-def make_ping_subject(line, subject_index, input_path, f):
+def make_ping_subject(line, subject_index, input_path, f, mask):
     try:
         t1_filename = line[0][:-4] + '.mnc'
 
@@ -126,11 +132,12 @@ def make_ping_subject(line, subject_index, input_path, f):
 
         if not t1_data.shape == target_size:
             # print('resizing from', t1_data.shape)
-
             t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
         # f['comment'][subject_index] = comment
 
-        f['MRI'][subject_index, ...] = normalise_zero_one(np.float16(t1_data))
+        equalize_hist(t1_data, mask=mask)
+
+        f['MRI'][subject_index, ...] = np.float16(normalise_zero_one(t1_data))
         f['dataset'][subject_index] = 'PING'
 
         # plt.imshow(t1_data[96, ...])
@@ -159,9 +166,12 @@ def make_ibis(input_path, f, label_file, subject_index):
         # pool = Pool(cores)
         # index_list = pool.starmap(make_ibis_subject, zip(lines, indices, input_paths))
 
+        mask = nib.load(atlas_mask).get_data()
+        big_mask = resize_image_with_crop_or_pad(mask, target_size)
+
         index_list = []
         for line, index, input_path in zip(lines, indices, input_paths):
-            returned_index = make_ibis_subject(line, index, input_path, f)
+            returned_index = make_ibis_subject(line, index, input_path, f, big_mask)
             index_list.append(returned_index)
 
         good_indices = [x for x in index_list if x > 0] # get rid of subjects who didn't have all info
@@ -169,7 +179,7 @@ def make_ibis(input_path, f, label_file, subject_index):
     return good_indices
 
 
-def make_ibis_subject(line, subject_index, input_path, f):
+def make_ibis_subject(line, subject_index, input_path, f, mask):
     try:
         t1_filename = line[0][0:-4] + '.mnc'
 
@@ -192,9 +202,10 @@ def make_ibis_subject(line, subject_index, input_path, f):
             # print('resizing from', t1_data.shape)
             t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
-        f['MRI'][subject_index, ...] = normalise_zero_one(np.float16(t1_data))
-        f['dataset'][subject_index] = 'IBIS'
+        equalize_hist(t1_data, mask=mask)
 
+        f['MRI'][subject_index, ...] = np.float16(normalise_zero_one(t1_data))
+        f['dataset'][subject_index] = 'IBIS'
 
         # plt.imshow(t1_data[96, ...])
         # plt.axis('off')
@@ -222,16 +233,19 @@ def make_abide(input_path, f, label_file, subject_index):
         # pool = Pool(cores)
         # index_list = pool.starmap(make_abide_subject, zip(lines, indices, input_paths))
 
+        mask = nib.load(atlas_mask).get_data()
+        big_mask = resize_image_with_crop_or_pad(mask, target_size)
+
         index_list = []
         for line, index, input_path in zip(lines, indices, input_paths):
-            returned_index = make_abide_subject(line, index, input_path, f)
+            returned_index = make_abide_subject(line, index, input_path, f , big_mask)
             index_list.append(returned_index)
 
         good_indices = [x for x in index_list if x > 0] # get rid of subjects who didn't have all info
 
     return good_indices
 
-def make_abide_subject(line, subject_index, input_path, f):
+def make_abide_subject(line, subject_index, input_path, f, mask):
     try:
         t1_filename = line[0] + '.mnc'
 
@@ -257,6 +271,10 @@ def make_abide_subject(line, subject_index, input_path, f):
 
         one_hot = np.multiply(one_hot, 1 / total_labels)
 
+        if one_hot == [0.5, 0.5]:
+            print('Excluding ' + line[0] + ' because QC inconsistent')
+            return -1
+
         f['qc_label'][subject_index, :] = one_hot
         # print(t1_filename, one_hot)
         t1_data = nib.load(input_path + '/resampled/' + t1_filename).get_data()
@@ -264,7 +282,9 @@ def make_abide_subject(line, subject_index, input_path, f):
         if not t1_data.shape == target_size:
             t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
-        f['MRI'][subject_index, ...] = normalise_zero_one(np.float16(t1_data))
+        equalize_hist(t1_data, mask=mask)
+
+        f['MRI'][subject_index, ...] = np.float16(normalise_zero_one(t1_data))
         f['dataset'][subject_index] = line[1]
 
         # plt.imshow(t1_data[96, ...])
@@ -289,10 +309,13 @@ def make_ds030(input_path, f, label_file, subject_index):
         # pool = Pool(cores)
         # index_list = pool.starmap(make_ds030_subject, zip(lines, indices, input_paths))
 
+        mask = nib.load(atlas_mask).get_data()
+        big_mask = resize_image_with_crop_or_pad(mask, target_size)
+
         index_list = []
         for line, index, input_path in zip(lines, indices, input_paths):
             # print('starting subject:', line)
-            returned_index = make_ds030_subject(line, index, input_path, f)
+            returned_index = make_ds030_subject(line, index, input_path, f, big_mask)
             index_list.append(returned_index)
 
         good_indices = [x for x in index_list if x > 0]
@@ -300,7 +323,7 @@ def make_ds030(input_path, f, label_file, subject_index):
     return good_indices
 
 
-def make_ds030_subject(line, subject_index, input_path, f):
+def make_ds030_subject(line, subject_index, input_path, f, mask):
     try:
         t1_filename = line[0] + '.nii.gz'
         label = line[8]
@@ -316,7 +339,9 @@ def make_ds030_subject(line, subject_index, input_path, f):
                 print('resizing from', t1_data.shape)
                 t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
-            f['MRI'][subject_index, ...] = normalise_zero_one(np.float16(t1_data))
+            equalize_hist(t1_data, mask=mask)
+
+            f['MRI'][subject_index, ...] = np.float16(normalise_zero_one(t1_data))
 
             one_hot = [0, 0]
 
@@ -569,9 +594,9 @@ if __name__ == "__main__":
     with h5py.File(output_file, 'w') as f:
         f.create_dataset('MRI', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float16')
         # f.create_dataset('MRI', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float32')
-        f.create_dataset('qc_label', (total_subjects, 2), dtype='float32')
+        f.create_dataset('qc_label', (total_subjects, 2), dtype='uint8')
         dt = h5py.special_dtype(vlen=bytes)
-        f.create_dataset('qc_comment', (total_subjects,), dtype=dt)
+        # f.create_dataset('qc_comment', (total_subjects,), dtype=dt)
         f.create_dataset('dataset', (total_subjects,), dtype=dt)
 
         print('Starting PING...')
