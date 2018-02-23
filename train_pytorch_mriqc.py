@@ -182,6 +182,7 @@ class ConvolutionalQCNet(nn.Module):
             nn.ReLU(),
             nn.Linear(64, 2)
         )
+
         self.output = nn.LogSoftmax(dim=-1)
 
     def forward(self, x):
@@ -311,7 +312,7 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
         image_batch = data.data.cpu().numpy()
 
         for img, site in zip(image_batch, sites):
-            print(site)
+            # print(site)
             try:
                 histo = np.histogram(img, bins=bins)
                 histograms[site] += histo[0]
@@ -422,7 +423,7 @@ if __name__ == '__main__':
     for batch_idx, (img_data, target, sites) in enumerate(train_loader):
         train_ground_truth[args.batch_size * batch_idx:args.batch_size * (1 + batch_idx)] = target
         for site in sites:
-            print(site)
+            # print(site)
             groups.append(site)
 
     n_pass = np.sum(train_ground_truth, dtype='int')
@@ -433,9 +434,6 @@ if __name__ == '__main__':
     pass_weight = n_fail / len(all_train_indices)
     print('Setting class weighting to ' + str(fail_weight) + ' for FAIL class and ' + str(
         pass_weight) + ' for PASS class')
-
-    # reset training_dataset and create a new validation_dataset
-
 
     # logo = LeaveOneGroupOut()
     # for fold_idx, (train_indices, validation_indices) in enumerate(logo.split(all_train_indices, train_ground_truth, groups=groups)):
@@ -455,8 +453,6 @@ if __name__ == '__main__':
         validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=args.val_batch_size, shuffle=False, **kwargs)
 
         print('This fold has', str(len(train_loader.dataset)), 'training images and', str(len(validation_loader.dataset)), 'validation images. There are', str(len(test_loader.dataset)), 'images in the test dataset')
-
-        val_harmonic_mean = []
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             train_truth, train_probabilities = train(epoch)
