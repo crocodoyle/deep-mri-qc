@@ -98,7 +98,7 @@ def make_ping(input_path, f, label_file, subject_index):
         # index_list = pool.starmap(make_ping_subject, zip(lines, indices, input_paths))
 
         mask = nib.load(atlas_mask).get_data()
-        big_mask = resize_image_with_crop_or_pad(mask, target_size)
+        big_mask = resize_image_with_crop_or_pad(mask, target_size, mode='constant')
 
         index_list = []
         for line, index, input_path in zip(lines, indices, input_paths):
@@ -167,7 +167,7 @@ def make_ibis(input_path, f, label_file, subject_index):
         # index_list = pool.starmap(make_ibis_subject, zip(lines, indices, input_paths))
 
         mask = nib.load(atlas_mask).get_data()
-        big_mask = resize_image_with_crop_or_pad(mask, target_size)
+        big_mask = resize_image_with_crop_or_pad(mask, target_size, mode='constant')
 
         index_list = []
         for line, index, input_path in zip(lines, indices, input_paths):
@@ -234,7 +234,7 @@ def make_abide(input_path, f, label_file, subject_index):
         # index_list = pool.starmap(make_abide_subject, zip(lines, indices, input_paths))
 
         mask = nib.load(atlas_mask).get_data()
-        big_mask = resize_image_with_crop_or_pad(mask, target_size)
+        big_mask = resize_image_with_crop_or_pad(mask, target_size, mode='constant')
 
         index_list = []
         for line, index, input_path in zip(lines, indices, input_paths):
@@ -310,7 +310,7 @@ def make_ds030(input_path, f, label_file, subject_index):
         # index_list = pool.starmap(make_ds030_subject, zip(lines, indices, input_paths))
 
         mask = nib.load(atlas_mask).get_data()
-        big_mask = resize_image_with_crop_or_pad(mask, target_size)
+        big_mask = resize_image_with_crop_or_pad(mask, target_size, mode='constant')
 
         index_list = []
         for line, index, input_path in zip(lines, indices, input_paths):
