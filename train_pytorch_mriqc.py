@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+import torchvision
 
 from torch.utils.data import Dataset, DataLoader
 from torch.autograd import Variable
@@ -145,34 +146,33 @@ class ConvolutionalQCNet(nn.Module):
         self.features = nn.Sequential(
             nn.Conv2d(1, 16, kernel_size=3),
             nn.BatchNorm2d(16),
-            nn.MaxPool2d(2),
             nn.ReLU(),
+            nn.MaxPool2d(2),
             nn.Conv2d(16, 16, kernel_size=3),
             nn.BatchNorm2d(16),
-            nn.MaxPool2d(2),
             nn.ReLU(),
+            nn.MaxPool2d(2),
             nn.Conv2d(16, 32, kernel_size=3),
             nn.BatchNorm2d(32),
-            nn.MaxPool2d(2),
             nn.ReLU(),
+            nn.MaxPool2d(2),
             nn.Conv2d(32, 64, kernel_size=3),
             nn.BatchNorm2d(64),
-            nn.MaxPool2d(2),
             nn.ReLU(),
+            nn.MaxPool2d(2),
             nn.Conv2d(64, 128, kernel_size=3),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(128, 128, kernel_size=3),
+            nn.ReLU(),
             nn.Dropout(),
             nn.BatchNorm2d(128),
-            nn.MaxPool2d(2),
-            nn.ReLU(),
-            # nn.Conv2d(128, 128, kernel_size=3),
-            # nn.Dropout(),
-            # nn.BatchNorm2d(128),
-            # nn.MaxPool2d(2),
-            # nn.ReLU()
+            nn.MaxPool2d(2)
         )
 
         self.classifier = nn.Sequential(
-            nn.Linear(128, 256),
+            nn.Linear(256, 256),
             nn.Dropout(),
             nn.BatchNorm1d(256),
             nn.ReLU(),
