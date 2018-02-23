@@ -374,7 +374,7 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
         except IndexError as e:
             pass
 
-    fig, axes = plt.subplots(len(mri_sites), 1, sharex=True, figsize=(6, 12))
+    fig, axes = plt.subplots(len(mri_sites), 1, sharex=True, figsize=(4, 24))
     for i, site in enumerate(mri_sites):
         print(site, histograms[site])
         try:
@@ -383,7 +383,7 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
 
             axes[i].set_ylim([0, 0.2])
             axes[i].set_xlim([0, 1])
-            axes[i].set_ylabel(site)
+            axes[i].set_ylabel(site, fontsize=16)
         except:
             print('Problem normalizing histogram for', site)
 
