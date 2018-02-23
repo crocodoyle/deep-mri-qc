@@ -171,14 +171,16 @@ class ConvolutionalQCNet(nn.Module):
 
         self.classifier = nn.Sequential(
             nn.Linear(256, 256),
+            nn.BatchNorm1d(256),
             nn.Dropout(),
             nn.ReLU(),
             nn.Linear(256, 64),
+            nn.BatchNorm1d(64),
             nn.Dropout(),
             nn.ReLU(),
             nn.Linear(64, 2)
         )
-        self.output = nn.LogSoftmax()
+        self.output = nn.LogSoftmax(dim=-1)
 
     def forward(self, x):
         x = self.features(x)
@@ -373,7 +375,7 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
     fig, axes = plt.subplots(len(mri_sites), 1, sharex=True, figsize=(6, 12))
     for i, site in enumerate(mri_sites):
         histograms[site] = np.divide(histograms[site], np.sum(histograms[site]))
-        axes[i].semilogx(bins[:-1], histograms[site], lw=2, label=site, nonposx='clip')
+        axes[i].plot(bins[:-1], histograms[site], lw=2, label=site)
 
         axes[i].set_ylim([0, 0.2])
         axes[i].set_xlim([0, 1])
@@ -432,7 +434,7 @@ if __name__ == '__main__':
     # logo = LeaveOneGroupOut()
     # for fold_idx, (train_indices, validation_indices) in enumerate(logo.split(all_train_indices, train_ground_truth, groups=groups)):
 
-    skf = StratifiedKFold(n_splits=10)
+    skf = StratifiedKFold(n_splits=3)
     for fold_idx, (train_indices, validation_indices) in enumerate(skf.split(all_train_indices, train_ground_truth)):
         fold_num = fold_idx + 1
         print("Starting fold", str(fold_num))
