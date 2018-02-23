@@ -164,15 +164,15 @@ class ConvolutionalQCNet(nn.Module):
             nn.BatchNorm2d(128),
             nn.MaxPool2d(2),
             nn.ReLU(),
-            nn.Conv2d(128, 128, kernel_size=3),
-            nn.Dropout(),
-            nn.BatchNorm2d(128),
-            nn.MaxPool2d(2),
-            nn.ReLU()
+            # nn.Conv2d(128, 128, kernel_size=3),
+            # nn.Dropout(),
+            # nn.BatchNorm2d(128),
+            # nn.MaxPool2d(2),
+            # nn.ReLU()
         )
 
         self.classifier = nn.Sequential(
-            nn.Linear(256, 256),
+            nn.Linear(128, 256),
             nn.Dropout(),
             nn.BatchNorm1d(256),
             nn.ReLU(),
