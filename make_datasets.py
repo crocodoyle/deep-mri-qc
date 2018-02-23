@@ -271,9 +271,10 @@ def make_abide_subject(line, subject_index, input_path, f, mask):
 
         one_hot = np.multiply(one_hot, 1 / total_labels)
 
-        if one_hot == [0.5, 0.5]:
-            print('Excluding ' + line[0] + ' because QC inconsistent')
-            return -1
+        for one in one_hot:
+            if one > 0.1 and one < 0.9:
+                print('Excluding ' + line[0] + ' because QC inconsistent')
+                return -1
 
         f['qc_label'][subject_index, :] = one_hot
         # print(t1_filename, one_hot)
