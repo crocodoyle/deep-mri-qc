@@ -161,13 +161,11 @@ class ConvolutionalQCNet(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d(2),
             nn.Conv2d(64, 128, kernel_size=3),
-            nn.BatchNorm2d(128),
             nn.ReLU(),
             nn.MaxPool2d(2),
             nn.Conv2d(128, 128, kernel_size=3),
             nn.ReLU(),
             nn.Dropout(),
-            nn.BatchNorm2d(128),
             nn.MaxPool2d(2)
         )
 
@@ -413,7 +411,7 @@ if __name__ == '__main__':
         model.cuda()
 
     # optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
-    optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-4)
+    optimizer = optim.Adam(model.parameters(), lr=0.002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-4)
 
     pass_weight, fail_weight = 0, 0
     train_ground_truth = np.zeros(len(all_train_indices))
