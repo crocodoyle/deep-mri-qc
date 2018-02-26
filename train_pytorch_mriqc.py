@@ -53,7 +53,7 @@ if args.cuda:
 
 # workdir = '/data1/users/adoyle/'
 workdir = '/home/users/adoyle/deepqc/'
-input_filename = 'deepqc-allsites.hdf5'
+input_filename = 'deepqc-allsites-normalized.hdf5'
 
 class QCDataset(Dataset):
     def __init__(self, hdf5_file_path, all_indices, random_slice=False, augmentation_type=None):
@@ -416,7 +416,7 @@ if __name__ == '__main__':
         model.cuda()
 
     # optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
-    optimizer = optim.Adam(model.parameters(), lr=0.002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-4)
+    optimizer = optim.Adam(model.parameters(), lr=0.002, betas=(0.9, 0.999), eps=1e-08)
 
     pass_weight, fail_weight = 0, 0
     train_ground_truth = np.zeros(len(all_train_indices))
