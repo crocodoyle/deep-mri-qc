@@ -171,7 +171,7 @@ class ConvolutionalQCNet(nn.Module):
         )
 
         self.classifier = nn.Sequential(
-            nn.Linear(512, 256),
+            nn.Linear(3072, 256),
             nn.Dropout(),
             # nn.BatchNorm1d(256),
             nn.ReLU(),
@@ -187,7 +187,7 @@ class ConvolutionalQCNet(nn.Module):
     def forward(self, x):
         x = self.features(x)
         x = x.view(x.size(0), -1)
-        print(x)
+        # print(x)
         x = self.classifier(x)
         x = self.output(x)
         return x
@@ -346,7 +346,7 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
 
         for img, site in zip(image_batch, sites):
             try:
-                histo = np.histogram(image_batch, bins=bins)
+                histo = np.histogram(img, bins=bins)
                 histograms[site] += histo[0]
             except KeyError:
                 print('Site missing')
@@ -377,19 +377,22 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
 
     fig, axes = plt.subplots(len(mri_sites), 1, sharex=True, figsize=(4, 24))
     for i, site in enumerate(mri_sites):
-        print(site, histograms[site])
+        # print(site, histograms[site])
         try:
             histograms[site] = np.divide(histograms[site], np.sum(histograms[site]))
             axes[i].plot(bins[:-1], histograms[site], lw=2, label=site)
 
-            axes[i].set_ylim([0, 0.2])
+            # axes[i].set_ylim([0, 0.2])
             axes[i].set_xlim([0, 1])
+
             axes[i].set_ylabel(site, fontsize=16)
+            axes[i].set_xscale('log')
+            axes[i].set_yscale('log')
         except:
             print('Problem normalizing histogram for', site)
 
 
-    plt.title('histogram of grey values', fontsize='24')
+    # plt.title('histogram of grey values', fontsize='24')
     plt.tight_layout()
     plt.savefig(results_dir + 'histograms.png', bbox_inches='tight')
 
