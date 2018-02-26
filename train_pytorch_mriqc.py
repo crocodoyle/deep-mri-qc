@@ -416,7 +416,6 @@ if __name__ == '__main__':
         model.cuda()
 
     # optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
-    optimizer = optim.Adam(model.parameters(), lr=0.002, betas=(0.9, 0.999), eps=1e-08)
 
     pass_weight, fail_weight = 0, 0
     train_ground_truth = np.zeros(len(all_train_indices))
@@ -456,6 +455,8 @@ if __name__ == '__main__':
         validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=args.val_batch_size, shuffle=False, **kwargs)
 
         print('This fold has', str(len(train_loader.dataset)), 'training images and', str(len(validation_loader.dataset)), 'validation images. There are', str(len(test_loader.dataset)), 'images in the test dataset')
+
+        optimizer = optim.Adam(model.parameters(), lr=0.002, betas=(0.9, 0.999), eps=1e-08)
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             train_truth, train_probabilities = train(epoch)
