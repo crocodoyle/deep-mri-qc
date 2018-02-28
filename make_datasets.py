@@ -141,7 +141,7 @@ def count_ds030(input_path, label_file):
         for line in list(qc_reader):
             try:
                 t1_filename = line[0] + '.nii.gz'
-                t1_data = nib.load(input_path + '/resampled/' + t1_filename)
+                t1_data = nib.load(input_path + t1_filename)
                 num_subjects += 1
             except:
                 print('missing', t1_filename)
@@ -221,7 +221,7 @@ def make_ibis(input_path, f, label_file, subject_index):
         mask = nib.load(atlas_mask).get_data()
         big_mask = resize_image_with_crop_or_pad(mask, target_size, mode='constant')
 
-        index = suject_index
+        index = subject_index
         for line, input_path in zip(lines, input_paths):
             returned_index = make_ibis_subject(line, index, input_path, f, big_mask)
             if not returned_index == -1:
@@ -280,7 +280,7 @@ def make_abide(input_path, f, label_file, subject_index):
         mask = nib.load(atlas_mask).get_data()
         big_mask = resize_image_with_crop_or_pad(mask, target_size, mode='constant')
 
-        index = 0
+        index = subject_index
         for line, input_path in zip(lines, input_paths):
             returned_index = make_abide_subject(line, index, input_path, f , big_mask)
             if not returned_index == -1:
@@ -352,7 +352,7 @@ def make_ds030(input_path, f, label_file, subject_index):
         mask = nib.load(atlas_mask).get_data()
         big_mask = resize_image_with_crop_or_pad(mask, target_size, mode='constant')
 
-        index = 0
+        index = subject_index
         for line, input_path in zip(lines, input_paths):
             # print('starting subject:', line)
             returned_index = make_ds030_subject(line, index, input_path, f, big_mask)
