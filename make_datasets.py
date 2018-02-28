@@ -32,6 +32,7 @@ atlas_mask = data_dir + '/mni_icbm152_t1_tal_nlin_asym_09a_mask.mnc'
 
 target_size = (192, 256, 192)
 
+# taken from DLTK
 def normalise_zero_one(image):
     """Image normalisation. Normalises image to fit [0, 1] range."""
 
@@ -81,33 +82,91 @@ def resize_image_with_crop_or_pad(image, img_size=(64, 64, 64), **kwargs):
     return np.pad(image[slicer], to_padding, **kwargs)
 
 
+def count_ping(input_path, label_file):
+    with open(os.path.join(input_path, label_file)) as label_file:
+        qc_reader = csv.reader(label_file)
+        qc_reader.__next__()
+
+        num_subjects = 0
+        for line in list(qc_reader):
+            try:
+                t1_filename = line[0][:-4] + '.mnc'
+                t1_data = nib.load(input_path + '/resampled/' + t1_filename)
+                num_subjects += 1
+            except:
+                print('missing', t1_filename)
+
+    return num_subjects
+
+def count_ibis(input_path, label_file):
+    with open(os.path.join(input_path, label_file)) as label_file:
+        qc_reader = csv.reader(label_file)
+        qc_reader.__next__()
+
+        num_subjects = 0
+        for line in list(qc_reader):
+            try:
+                t1_filename = line[0][0:-4] + '.mnc'
+                t1_data = nib.load(input_path + '/resampled/' + t1_filename)
+                num_subjects += 1
+            except:
+                print('missing', t1_filename)
+
+    return num_subjects
+
+def count_abide(input_path, label_file):
+
+    with open(os.path.join(input_path, label_file)) as label_file:
+        qc_reader = csv.reader(label_file)
+        qc_reader.__next__()
+
+        num_subjects = 0
+        for line in list(qc_reader):
+            try:
+                t1_filename = line[0] + '.mnc'
+                t1_data = nib.load(input_path + '/resampled/' + t1_filename)
+                num_subjects += 1
+            except:
+                print('missing', t1_filename)
+
+    return num_subjects
+
+
+def count_ds030(input_path, label_file):
+    with open(os.path.join(input_path, label_file)) as label_file:
+        qc_reader = csv.reader(label_file)
+        qc_reader.__next__()
+
+        num_subjects = 0
+        for line in list(qc_reader):
+            try:
+                t1_filename = line[0] + '.nii.gz'
+                t1_data = nib.load(input_path + '/resampled/' + t1_filename)
+                num_subjects += 1
+            except:
+                print('missing', t1_filename)
+
+    return num_subjects
+
+
 def make_ping(input_path, f, label_file, subject_index):
     with open(os.path.join(input_path, label_file)) as label_file:
         qc_reader = csv.reader(label_file)
         qc_reader.__next__()
 
         lines = list(qc_reader)
-        indices = range(subject_index, len(lines))
         input_paths = [input_path] * len(lines)
-
-        # print('lines', len(lines))
-        # print('indices', len(indices))
-        # print('input_paths', len(input_paths))
-
-        # pool = Pool(cores)
-        # index_list = pool.starmap(make_ping_subject, zip(lines, indices, input_paths))
 
         mask = nib.load(atlas_mask).get_data()
         big_mask = resize_image_with_crop_or_pad(mask, target_size, mode='constant')
 
-        index_list = []
-        for line, index, input_path in zip(lines, indices, input_paths):
+        index = subject_index
+        for line, input_path in zip(lines, input_paths):
             returned_index = make_ping_subject(line, index, input_path, f, big_mask)
-            index_list.append(returned_index)
+            if not returned_index == -1:
+                index += 1
 
-        good_indices = [x for x in index_list if x > 0] # get rid of subjects who didn't have all info
-
-    return good_indices
+    return index
 
 
 def make_ping_subject(line, subject_index, input_path, f, mask):
@@ -135,10 +194,11 @@ def make_ping_subject(line, subject_index, input_path, f, mask):
             t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
         # f['comment'][subject_index] = comment
 
-        equalize_hist(t1_data, mask=mask)
+        t1_data = equalize_hist(t1_data, mask=mask)
 
         f['MRI'][subject_index, ...] = np.float16(normalise_zero_one(t1_data))
         f['dataset'][subject_index] = 'PING'
+        f['filename'][subject_index] = t1_filename
 
         # plt.imshow(t1_data[96, ...])
         # plt.axis('off')
@@ -156,27 +216,18 @@ def make_ibis(input_path, f, label_file, subject_index):
         qc_reader = csv.reader(label_file)
 
         lines = list(qc_reader)
-        indices = range(subject_index, subject_index + len(lines))
         input_paths = [input_path] * len(lines)
-
-        # print('lines', len(lines))
-        # print('indices', len(indices))
-        # print('input_paths', len(input_paths))
-
-        # pool = Pool(cores)
-        # index_list = pool.starmap(make_ibis_subject, zip(lines, indices, input_paths))
 
         mask = nib.load(atlas_mask).get_data()
         big_mask = resize_image_with_crop_or_pad(mask, target_size, mode='constant')
 
-        index_list = []
-        for line, index, input_path in zip(lines, indices, input_paths):
+        index = suject_index
+        for line, input_path in zip(lines, input_paths):
             returned_index = make_ibis_subject(line, index, input_path, f, big_mask)
-            index_list.append(returned_index)
+            if not returned_index == -1:
+                index += 1
 
-        good_indices = [x for x in index_list if x > 0] # get rid of subjects who didn't have all info
-
-    return good_indices
+    return index
 
 
 def make_ibis_subject(line, subject_index, input_path, f, mask):
@@ -202,10 +253,11 @@ def make_ibis_subject(line, subject_index, input_path, f, mask):
             # print('resizing from', t1_data.shape)
             t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
-        equalize_hist(t1_data, mask=mask)
+        t1_data = equalize_hist(t1_data, mask=mask)
 
         f['MRI'][subject_index, ...] = np.float16(normalise_zero_one(t1_data))
         f['dataset'][subject_index] = 'IBIS'
+        f['filename'][subject_index] = t1_filename
 
         # plt.imshow(t1_data[96, ...])
         # plt.axis('off')
@@ -223,27 +275,18 @@ def make_abide(input_path, f, label_file, subject_index):
         qc_reader.__next__()
 
         lines = list(qc_reader)
-        indices = range(subject_index, subject_index + len(lines))
         input_paths = [input_path] * len(lines)
-
-        # print('lines', len(lines))
-        # print('indices', len(indices))
-        # print('input_paths', len(input_paths))
-
-        # pool = Pool(cores)
-        # index_list = pool.starmap(make_abide_subject, zip(lines, indices, input_paths))
 
         mask = nib.load(atlas_mask).get_data()
         big_mask = resize_image_with_crop_or_pad(mask, target_size, mode='constant')
 
-        index_list = []
-        for line, index, input_path in zip(lines, indices, input_paths):
+        index = 0
+        for line, input_path in zip(lines, input_paths):
             returned_index = make_abide_subject(line, index, input_path, f , big_mask)
-            index_list.append(returned_index)
+            if not returned_index == -1:
+                index += 1
 
-        good_indices = [x for x in index_list if x > 0] # get rid of subjects who didn't have all info
-
-    return good_indices
+    return index
 
 def make_abide_subject(line, subject_index, input_path, f, mask):
     try:
@@ -283,10 +326,11 @@ def make_abide_subject(line, subject_index, input_path, f, mask):
         if not t1_data.shape == target_size:
             t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
-        equalize_hist(t1_data, mask=mask)
+        t1_data = equalize_hist(t1_data, mask=mask)
 
         f['MRI'][subject_index, ...] = np.float16(normalise_zero_one(t1_data))
         f['dataset'][subject_index] = line[1]
+        f['filename'][subject_index] = t1_filename
 
         # plt.imshow(t1_data[96, ...])
         # plt.axis('off')
@@ -295,7 +339,6 @@ def make_abide_subject(line, subject_index, input_path, f, mask):
         return subject_index
     except Exception as e:
         print('Error:', e)
-
         return -1
 
 
@@ -304,24 +347,19 @@ def make_ds030(input_path, f, label_file, subject_index):
         qc_reader = csv.reader(label_file)
 
         lines = list(qc_reader)[1:]
-        indices = range(subject_index, subject_index + len(lines))
         input_paths = [input_path] * len(lines)
-
-        # pool = Pool(cores)
-        # index_list = pool.starmap(make_ds030_subject, zip(lines, indices, input_paths))
 
         mask = nib.load(atlas_mask).get_data()
         big_mask = resize_image_with_crop_or_pad(mask, target_size, mode='constant')
 
-        index_list = []
-        for line, index, input_path in zip(lines, indices, input_paths):
+        index = 0
+        for line, input_path in zip(lines, input_paths):
             # print('starting subject:', line)
             returned_index = make_ds030_subject(line, index, input_path, f, big_mask)
-            index_list.append(returned_index)
+            if not returned_index == -1:
+                index += 1
 
-        good_indices = [x for x in index_list if x > 0]
-
-    return good_indices
+    return index
 
 
 def make_ds030_subject(line, subject_index, input_path, f, mask):
@@ -340,7 +378,7 @@ def make_ds030_subject(line, subject_index, input_path, f, mask):
                 print('resizing from', t1_data.shape)
                 t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
-            equalize_hist(t1_data, mask=mask)
+            t1_data = equalize_hist(t1_data, mask=mask)
 
             f['MRI'][subject_index, ...] = np.float16(normalise_zero_one(t1_data))
 
@@ -357,6 +395,7 @@ def make_ds030_subject(line, subject_index, input_path, f, mask):
 
             f['qc_label'][subject_index, :] = one_hot
             f['dataset'][subject_index] = 'ds030'
+            f['filename'][subject_index] = t1_filename
 
             # plt.imshow(t1_data[96, ...])
             # plt.axis('off')
@@ -364,7 +403,6 @@ def make_ds030_subject(line, subject_index, input_path, f, mask):
 
     except Exception as e:
         print('Error:', e)
-
         return -1
 
     return subject_index
@@ -584,34 +622,43 @@ if __name__ == "__main__":
     #     except:
     #         print filename
 
-    #PING: 1154
-    #IBIS: 468
-    #ABIDE: 1113
-    #ds030: 282
+    n_abide = count_abide(data_dir + '/deep_abide/', 't1_qc.csv')
+    n_ibis = count_ibis(data_dir + '/IBIS/', 'ibis_t1_qc.csv')
+    n_ping = count_ping(data_dir + '/PING/', 't1_qc.csv')
+    n_ds030 = count_ds030(data_dir + '/ds030/', 'ds030_DB.csv')
 
-    total_subjects = 1154 + 468 + 1113 + 282
-    # total_subjects = 1113 + 282
+    print('Subjects with QC labels:')
+    print('ABIDE:', n_abide)
+    print('IBIS:', n_ibis)
+    print('PING:', n_ping)
+    print('ds030:', n_ds030)
+
+
+    total_subjects = n_abide + n_ibis + n_ping + n_ds030
 
     with h5py.File(output_file, 'w') as f:
         f.create_dataset('MRI', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float16')
-        # f.create_dataset('MRI', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float32')
         f.create_dataset('qc_label', (total_subjects, 2), dtype='uint8')
         dt = h5py.special_dtype(vlen=bytes)
-        # f.create_dataset('qc_comment', (total_subjects,), dtype=dt)
+        f.create_dataset('filename', (total_subjects,), dtype=dt)
         f.create_dataset('dataset', (total_subjects,), dtype=dt)
 
         print('Starting PING...')
-        ping_indices = make_ping(data_dir + '/PING/', f, 't1_qc.csv', 0)
-        print('Last PING index:', sorted(ping_indices)[-1])
+        next_index = make_ping(data_dir + '/PING/', f, 't1_qc.csv', 0)
+        ping_indices = range(0, next_index)
+        print('Last PING index:', next_index - 1)
         print('Starting ABIDE...')
-        abide_indices = make_abide(data_dir + '/deep_abide/', f, 't1_qc.csv', sorted(ping_indices)[-1] + 1)
-        print('Last ABIDE index:', sorted(abide_indices)[-1])
+        next_index = make_abide(data_dir + '/deep_abide/', f, 't1_qc.csv', next_index)
+        abide_indices = range(ping_indices[-1] + 1, next_index)
+        print('Last ABIDE index:', next_index - 1)
         print('Starting IBIS...')
-        ibis_indices = make_ibis(data_dir + '/IBIS/', f, 'ibis_t1_qc.csv', sorted(abide_indices)[-1] + 1)
-        print('Last IBIS index:', sorted(ibis_indices)[-1])
+        next_index = make_ibis(data_dir + '/IBIS/', f, 'ibis_t1_qc.csv', next_index)
+        ibis_indices = range(abide_indices[-1] + 1, next_index)
+        print('Last IBIS index:', next_index - 1)
         print('Starting ds030...')
-        ds030_indices = make_ds030(data_dir + '/ds030/', f, 'ds030_DB.csv', sorted(ibis_indices)[-1] + 1)
-        print('Last ds030 index:', sorted(ds030_indices)[-1])
+        next_index = make_ds030(data_dir + '/ds030/', f, 'ds030_DB.csv', next_index)
+        ds030_indices = range(ibis_indices[-1] + 1, next_index)
+        print('Last ds030 index:', next_index - 1)
 
         pickle.dump(ping_indices, open(output_dir + 'ping_indices.pkl', 'wb'))
         pickle.dump(ibis_indices, open(output_dir + 'ibis_indices.pkl', 'wb'))
