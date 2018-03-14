@@ -9,7 +9,6 @@ import nibabel as nib
 from nibabel.processing import resample_from_to
 from skimage.exposure import equalize_hist
 
-
 from multiprocessing import Pool, Process
 
 from nipype.interfaces.ants import Registration
@@ -597,6 +596,45 @@ def register_ants(moving_image, atlas, output_image):
 
     reg.run()
 
+def check_datasets():
+    mri_sites = ['IBIS', 'PING', 'PITT', 'OLIN', 'OHSU', 'SDSU', 'TRINITY', 'UM', 'USM', 'YALE', 'CMU', 'LEUVEN', 'KKI',
+             'NYU', 'STANFORD', 'UCLA', 'MAX_MUN', 'CALTECH', 'SBL', 'ds030']
+
+    histograms = {}
+
+    for site in mri_sites:
+        histograms[site] = np.zeros(256, dtype='float32')
+
+    bins = np.linspace(0.0, 1.0, 257)
+
+    images = f['MRI']
+    datasets = f['dataset']
+    filenames = f['filename']
+
+    for i, (img, dataset, filename) in enumerate(zip(images, datasets, filenames)):
+        try:
+            histo = np.histogram(img, bins=bins)
+            histograms[site] += histo[0]
+        except:
+            print('Error for', filename, 'in dataset', dataset)
+
+    fig, axes = plt.subplots(len(mri_sites), 1, sharex=True, figsize=(4, 24))
+
+    for i, site in enumerate(mri_sites):
+        try:
+            histograms[site] = np.divide(histograms[site], np.sum(histograms[site]))
+            axes[i].plot(bins[:-1], histograms[site], lw=2, label=site)
+
+            axes[i].set_xlim([0, 1])
+
+            axes[i].set_ylabel(site, fontsize=16)
+            axes[i].set_xscale('log')
+            axes[i].set_yscale('log')
+        except:
+            print('Problem normalizing histogram for', site)
+
+    plt.tight_layout()
+    plt.savefig(output_dir + 'dataset_histograms.png', bbox_inches='tight')
 
 if __name__ == "__main__":
     os.environ["LD_LIBRARY_PATH"] = "/home/users/adoyle/quarantines/Linux-x86_64/lib"
@@ -666,4 +704,4 @@ if __name__ == "__main__":
         pickle.dump(ds030_indices, open(output_dir + 'ds030_indices.pkl', 'wb'))
 
 
-
+        check_datasets()
