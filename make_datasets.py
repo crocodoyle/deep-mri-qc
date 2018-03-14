@@ -615,6 +615,7 @@ def check_datasets():
         try:
             histo = np.histogram(img, bins=bins)
             histograms[site] += histo[0]
+            print(filename, dataset, np.mean(histo[0]), np.var(histo[0]))
         except:
             print('Error for', filename, 'in dataset', dataset)
 
@@ -625,7 +626,7 @@ def check_datasets():
             histograms[site] = np.divide(histograms[site], np.sum(histograms[site]))
             axes[i].plot(bins[:-1], histograms[site], lw=2, label=site)
 
-            axes[i].set_xlim([0, 1])
+            # axes[i].set_xlim([0, 1])
 
             axes[i].set_ylabel(site, fontsize=16)
             axes[i].set_xscale('log')
