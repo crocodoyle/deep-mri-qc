@@ -612,9 +612,13 @@ def check_datasets():
     filenames = f['filename']
 
     for i, (img, dataset, filename) in enumerate(zip(images, datasets, filenames)):
+        dataset = dataset[2:-1]
+        filename = filename[2:-1]
+        img = np.asarray(img, dtype='float32')
+
         try:
             histo = np.histogram(img, bins=bins)
-            histograms[site] += histo[0]
+            histograms[dataset] += histo[0]
             print(filename, dataset, np.mean(histo[0]), np.var(histo[0]))
         except:
             print('Error for', filename, 'in dataset', dataset)

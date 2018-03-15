@@ -304,15 +304,11 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
 
     os.makedirs(results_dir + '/imgs/', exist_ok=True)
     for batch_idx, (data, target, sites) in enumerate(train_loader):
-        if args.cuda:
-            data, target = data.cuda(), target.cuda()
-        data, target = Variable(data), Variable(target)
-
         target_batch = target.data.cpu().numpy()
         image_batch = data.data.cpu().numpy()
 
         for img, site in zip(image_batch, sites):
-            # print(site)
+
             try:
                 histo = np.histogram(img, bins=bins)
                 histograms[site] += histo[0]
@@ -338,10 +334,6 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
             print('Couldnt save one file')
 
     for batch_idx, (data, target, sites) in enumerate(test_loader):
-        if args.cuda:
-            data, target = data.cuda(), target.cuda()
-        data, target = Variable(data), Variable(target)
-
         target_batch = target.data.cpu().numpy()
         image_batch = data.data.cpu().numpy()
 
