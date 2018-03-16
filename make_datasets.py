@@ -209,7 +209,7 @@ def make_ping_subject(line, subject_index, input_path, f, mask):
 
         t1_data = equalize_hist(t1_data, mask=mask)
 
-        f['MRI'][subject_index, ...] = np.float16(normalise_zero_one(t1_data))
+        f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
         f['dataset'][subject_index] = 'PING'
         f['filename'][subject_index] = t1_filename
 
@@ -268,7 +268,7 @@ def make_ibis_subject(line, subject_index, input_path, f, mask):
 
         t1_data = equalize_hist(t1_data, mask=mask)
 
-        f['MRI'][subject_index, ...] = np.float16(normalise_zero_one(t1_data))
+        f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
         f['dataset'][subject_index] = 'IBIS'
         f['filename'][subject_index] = t1_filename
 
@@ -341,7 +341,7 @@ def make_abide_subject(line, subject_index, input_path, f, mask):
 
         t1_data = equalize_hist(t1_data, mask=mask)
 
-        f['MRI'][subject_index, ...] = np.float16(normalise_zero_one(t1_data))
+        f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
         f['dataset'][subject_index] = line[1]
         f['filename'][subject_index] = t1_filename
 
@@ -393,7 +393,7 @@ def make_ds030_subject(line, subject_index, input_path, f, mask):
 
             t1_data = equalize_hist(t1_data, mask=mask)
 
-            f['MRI'][subject_index, ...] = np.float16(normalise_zero_one(t1_data))
+            f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
 
             one_hot = [0, 0]
 
@@ -694,7 +694,7 @@ if __name__ == "__main__":
     total_subjects = n_abide + n_ibis + n_ping + n_ds030
 
     with h5py.File(output_file, 'w') as f:
-        f.create_dataset('MRI', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float16')
+        f.create_dataset('MRI', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float32')
         f.create_dataset('qc_label', (total_subjects, 2), dtype='uint8')
         dt = h5py.special_dtype(vlen=bytes)
         f.create_dataset('filename', (total_subjects,), dtype=dt)
