@@ -89,6 +89,9 @@ def count_ping(input_path, label_file):
         num_subjects = 0
         for line in list(qc_reader):
             try:
+                label = line[1]
+                if len(label) < 1:
+                    raise Exception()
                 t1_filename = line[0][:-4] + '.mnc'
                 t1_data = nib.load(input_path + '/resampled/' + t1_filename)
                 num_subjects += 1
@@ -105,6 +108,9 @@ def count_ibis(input_path, label_file):
         num_subjects = 0
         for line in list(qc_reader):
             try:
+                label = line[1]
+                if len(label) < 1:
+                    raise Exception()
                 t1_filename = line[0][0:-4] + '.mnc'
                 t1_data = nib.load(input_path + '/resampled/' + t1_filename)
                 num_subjects += 1
@@ -122,6 +128,11 @@ def count_abide(input_path, label_file):
         num_subjects = 0
         for line in list(qc_reader):
             try:
+                label1 = line[2]
+                label2 = line[3]
+
+                if len(label1) + len(label2) < 1:
+                    raise Exception()
                 t1_filename = line[0] + '.mnc'
                 t1_data = nib.load(input_path + '/resampled/' + t1_filename)
                 num_subjects += 1
@@ -139,6 +150,9 @@ def count_ds030(input_path, label_file):
         num_subjects = 0
         for line in list(qc_reader):
             try:
+                label = line[8]
+                if len(label) < 1:
+                    raise Exception()
                 t1_filename = line[0] + '.nii.gz'
                 t1_data = nib.load(input_path + t1_filename)
                 num_subjects += 1
