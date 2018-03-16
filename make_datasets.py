@@ -612,8 +612,8 @@ def check_datasets():
     filenames = f['filename']
 
     for i, (img, dataset, filename) in enumerate(zip(images, datasets, filenames)):
-        dataset = dataset[2:-1]
-        filename = filename[2:-1]
+        dataset = dataset.decode('UTF-8')
+        filename = filename.decode('UTF-8')
         img = np.asarray(img, dtype='float32')
 
         try:
