@@ -89,6 +89,9 @@ def count_ping(input_path, label_file):
         num_subjects = 0
         for line in list(qc_reader):
             try:
+                label = line[1]
+                if len(label) < 1:
+                    raise Exception()
                 t1_filename = line[0][:-4] + '.mnc'
                 t1_data = nib.load(input_path + '/resampled/' + t1_filename)
                 num_subjects += 1
@@ -105,6 +108,9 @@ def count_ibis(input_path, label_file):
         num_subjects = 0
         for line in list(qc_reader):
             try:
+                label = line[1]
+                if len(label) < 1:
+                    raise Exception()
                 t1_filename = line[0][0:-4] + '.mnc'
                 t1_data = nib.load(input_path + '/resampled/' + t1_filename)
                 num_subjects += 1
@@ -122,6 +128,11 @@ def count_abide(input_path, label_file):
         num_subjects = 0
         for line in list(qc_reader):
             try:
+                label1 = line[2]
+                label2 = line[3]
+
+                if len(label1) + len(label2) < 1:
+                    raise Exception()
                 t1_filename = line[0] + '.mnc'
                 t1_data = nib.load(input_path + '/resampled/' + t1_filename)
                 num_subjects += 1
@@ -139,6 +150,9 @@ def count_ds030(input_path, label_file):
         num_subjects = 0
         for line in list(qc_reader):
             try:
+                label = line[8]
+                if len(label) < 1:
+                    raise Exception()
                 t1_filename = line[0] + '.nii.gz'
                 t1_data = nib.load(input_path + t1_filename)
                 num_subjects += 1
@@ -195,7 +209,7 @@ def make_ping_subject(line, subject_index, input_path, f, mask):
 
         t1_data = equalize_hist(t1_data, mask=mask)
 
-        f['MRI'][subject_index, ...] = np.float16(normalise_zero_one(t1_data))
+        f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
         f['dataset'][subject_index] = 'PING'
         f['filename'][subject_index] = t1_filename
 
@@ -254,7 +268,7 @@ def make_ibis_subject(line, subject_index, input_path, f, mask):
 
         t1_data = equalize_hist(t1_data, mask=mask)
 
-        f['MRI'][subject_index, ...] = np.float16(normalise_zero_one(t1_data))
+        f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
         f['dataset'][subject_index] = 'IBIS'
         f['filename'][subject_index] = t1_filename
 
@@ -327,7 +341,7 @@ def make_abide_subject(line, subject_index, input_path, f, mask):
 
         t1_data = equalize_hist(t1_data, mask=mask)
 
-        f['MRI'][subject_index, ...] = np.float16(normalise_zero_one(t1_data))
+        f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
         f['dataset'][subject_index] = line[1]
         f['filename'][subject_index] = t1_filename
 
@@ -379,7 +393,7 @@ def make_ds030_subject(line, subject_index, input_path, f, mask):
 
             t1_data = equalize_hist(t1_data, mask=mask)
 
-            f['MRI'][subject_index, ...] = np.float16(normalise_zero_one(t1_data))
+            f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
 
             one_hot = [0, 0]
 
@@ -612,9 +626,13 @@ def check_datasets():
     filenames = f['filename']
 
     for i, (img, dataset, filename) in enumerate(zip(images, datasets, filenames)):
+        dataset = dataset.decode('UTF-8')
+        filename = filename.decode('UTF-8')
+        img = np.asarray(img, dtype='float32')
+
         try:
             histo = np.histogram(img, bins=bins)
-            histograms[site] += histo[0]
+            histograms[dataset] += histo[0]
             print(filename, dataset, np.mean(histo[0]), np.var(histo[0]))
         except:
             print('Error for', filename, 'in dataset', dataset)
@@ -676,7 +694,7 @@ if __name__ == "__main__":
     total_subjects = n_abide + n_ibis + n_ping + n_ds030
 
     with h5py.File(output_file, 'w') as f:
-        f.create_dataset('MRI', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float16')
+        f.create_dataset('MRI', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float32')
         f.create_dataset('qc_label', (total_subjects, 2), dtype='uint8')
         dt = h5py.special_dtype(vlen=bytes)
         f.create_dataset('filename', (total_subjects,), dtype=dt)
