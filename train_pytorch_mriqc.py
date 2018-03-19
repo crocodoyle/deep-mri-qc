@@ -53,7 +53,7 @@ if args.cuda:
 
 # workdir = '/data1/users/adoyle/'
 workdir = '/home/users/adoyle/deepqc/'
-input_filename = 'deepqc-allsites-normalized.hdf5'
+input_filename = 'deepqc-all-sets.hdf5'
 
 class QCDataset(Dataset):
     def __init__(self, hdf5_file_path, all_indices, random_slice=False, augmentation_type=None):
