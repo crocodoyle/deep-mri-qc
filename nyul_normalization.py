@@ -80,8 +80,9 @@ if __name__ == '__main__':
     orig = nib.load(data_dir + '/deep_abide/resampled/50002.mnc').get_data()
     atlas = nib.load(data_dir + 'mni_icbm152_t1_tal_nlin_asym_09a.mnc')
 
-    target = nib.load(data_dir + '/ds030/sub-10225.nii.gz').get_data()
+    target = nib.load(data_dir + '/ds030/sub-10225.nii.gz')
     target = resample_from_to(target, atlas)
+    target = target.get_data()
 
     mask = nib.load(data_dir + 'mni_icbm152_t1_tal_nlin_asym_09a_mask.mnc').get_data()
 
