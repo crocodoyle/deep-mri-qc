@@ -12,7 +12,7 @@ def normalize(image, mask, target_image, target_mask):
     n_landmarks = 10
 
     valid_orig_image = image[~mask]
-    valid_taget_image = target_image[~target_mask]
+    valid_target_image = target_image[~target_mask]
 
     valid_orig_flat = []
     for x in range(img_shape[0]):
@@ -33,13 +33,12 @@ def normalize(image, mask, target_image, target_mask):
 
     print('landmarks:', orig_landmarks)
 
-    p2_target, p98_target = np.percentile(valid_taget_image, (2, 98))
+    p2_target, p98_target = np.percentile(valid_target_image, (2, 98))
     target_landmarks = np.arange(p2_target, p98_target, (p98_target - p2_target)/n_landmarks)
 
-    hist_target = np.histogram(valid_taget_image, bins=256)
+    hist_target = np.histogram(valid_target_image, bins=256)
 
     ax2.bar(hist_target[1][:-1], hist_target[0])
-
 
     rescaled_image = np.copy(image)
     rescaled = []
@@ -71,6 +70,7 @@ def normalize(image, mask, target_image, target_mask):
     hist_rescaled = np.histogram(rescaled, bins=256)
     ax3.bar(hist_rescaled[1][:-1], hist_rescaled[0])
 
+    plt.tight_layout()
     plt.savefig(data_dir + 'histograms.png')
 
 
@@ -93,16 +93,15 @@ if __name__ == '__main__':
 
     mask = nib.load(data_dir + 'mni_icbm152_t1_tal_nlin_asym_09a_mask.mnc').get_data()
 
-    from make_datasets import resize_image_with_crop_or_pad
+    from make_datasets import resize_image_with_crop_or_pad, normalise_zero_one
 
-    orig = resize_image_with_crop_or_pad(orig, target_size, mode='constant')
-    target = resize_image_with_crop_or_pad(target, target_size, mode='constant')
+    orig = normalise_zero_one(resize_image_with_crop_or_pad(orig, target_size, mode='constant'))
+    target = normalise_zero_one(resize_image_with_crop_or_pad(target, target_size, mode='constant'))
 
     mask = np.asarray(resize_image_with_crop_or_pad(mask, target_size, mode='constant'), dtype='bool')
     target_mask = np.copy(mask)
 
     returned_image = normalize(orig, mask, target, target_mask)
-
 
     fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4)
 
