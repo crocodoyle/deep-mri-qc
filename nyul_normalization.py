@@ -36,7 +36,7 @@ def normalize(image, mask, target_image, target_mask):
     p2_target, p98_target = np.percentile(valid_taget_image, (2, 98))
     target_landmarks = np.arange(p2_target, p98_target, (p98_target - p2_target)/n_landmarks)
 
-    hist_target = np.histogram(valid_taget_image)
+    hist_target = np.histogram(valid_taget_image, bins=256)
 
     ax2.bar(hist_target[0], hist_target[1][:-1])
 
@@ -66,6 +66,10 @@ def normalize(image, mask, target_image, target_mask):
                         if pixel >= low_orig and pixel < high_orig:
                             rescaled_image[x, y, z] = b_transform + pixel*a_transform
                             rescaled.append(b_transform + pixel*a_transform)
+
+
+    hist_rescaled = np.histogram(rescaled, bins=256)
+    ax3.bar(hist_rescaled[0], bins=hist_rescaled[1][:-1])
 
     plt.savefig(data_dir + 'histograms.png')
 
