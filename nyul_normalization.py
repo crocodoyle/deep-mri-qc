@@ -24,7 +24,7 @@ def normalize(image, mask, target_image, target_mask):
     hist_original = np.histogram(valid_orig_flat, bins=256)
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True)
 
-    ax1.bar(hist_original[0], hist_original[1][:-1])
+    ax1.bar(hist_original[1][:-1], hist_original[0])
     plt.title('original histogram')
     plt.savefig(data_dir + 'orig_hist.png')
 
@@ -38,7 +38,7 @@ def normalize(image, mask, target_image, target_mask):
 
     hist_target = np.histogram(valid_taget_image, bins=256)
 
-    ax2.bar(hist_target[0], hist_target[1][:-1])
+    ax2.bar(hist_target[1][:-1], hist_target[0])
 
 
     rescaled_image = np.copy(image)
@@ -69,7 +69,7 @@ def normalize(image, mask, target_image, target_mask):
 
 
     hist_rescaled = np.histogram(rescaled, bins=256)
-    ax3.bar(hist_rescaled[0], bins=hist_rescaled[1][:-1])
+    ax3.bar(hist_rescaled[1][:-1], hist_rescaled[0])
 
     plt.savefig(data_dir + 'histograms.png')
 
