@@ -77,7 +77,7 @@ if __name__ == '__main__':
     target_size = (192, 256, 192)
 
     orig = nib.load(data_dir + '50002.mnc').get_data()
-    target = nib.load(data_dir + 'ds030.nii.gz').get_data()
+    target = nib.load(data_dir + '/ds030/sub-10225.nii.gz').get_data()
 
     mask = nib.load(data_dir + 'mni_icbm152_t1_tal_nlin_asym_09a_mask.mnc').get_data()
 
