@@ -3,7 +3,6 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 
-
 data_dir = '/data1/users/adoyle/'
 
 def normalize(image, mask, target_image, target_mask):
@@ -87,8 +86,9 @@ if __name__ == '__main__':
 
     orig = resize_image_with_crop_or_pad(orig, target_size, mode='constant')
     target = resize_image_with_crop_or_pad(target, target_size, mode='constant')
-    mask = resize_image_with_crop_or_pad(mask, target_size, mode='constant')
-    target_mask = mask
+
+    mask = np.asarray(resize_image_with_crop_or_pad(mask, target_size, mode='constant'), dtype='bool')
+    target_mask = np.copy(mask)
 
     returned_image = normalize(orig, mask, target, target_mask)
 
