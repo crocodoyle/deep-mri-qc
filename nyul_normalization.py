@@ -103,6 +103,8 @@ if __name__ == '__main__':
 
     returned_image = normalize(orig, mask, target, target_mask)
 
+    print('shapes:', orig.shape, target.shape, mask.shape, returned_image.shape)
+
     fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4)
 
     ax1.imshow(orig[96, :, :])
