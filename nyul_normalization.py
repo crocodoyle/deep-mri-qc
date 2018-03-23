@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 
@@ -83,9 +85,9 @@ if __name__ == '__main__':
 
     from make_datasets import resize_image_with_crop_or_pad
 
-    orig = resize_image_with_crop_or_pad(orig, target_size)
-    target = resize_image_with_crop_or_pad(target, target_size)
-    mask = resize_image_with_crop_or_pad(mask, target_size)
+    orig = resize_image_with_crop_or_pad(orig, target_size, mode='constant')
+    target = resize_image_with_crop_or_pad(target, target_size, mode='constant')
+    mask = resize_image_with_crop_or_pad(mask, target_size, mode='constant')
     target_mask = mask
 
     returned_image = normalize(orig, mask, target, target_mask)
