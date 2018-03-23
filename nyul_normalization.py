@@ -73,12 +73,15 @@ def normalize(image, mask, target_image, target_mask):
 if __name__ == '__main__':
 
     import nibabel as nib
-
+    from nibabel.processing import resample_from_to
 
     target_size = (192, 256, 192)
 
-    orig = nib.load(data_dir + '50002.mnc').get_data()
+    orig = nib.load(data_dir + '/deep_abide/resampled/50002.mnc').get_data()
+    atlas = nib.load(data_dir + 'mni_icbm152_t1_tal_nlin_asym_09a.mnc')
+
     target = nib.load(data_dir + '/ds030/sub-10225.nii.gz').get_data()
+    target = resample_from_to(target, atlas)
 
     mask = nib.load(data_dir + 'mni_icbm152_t1_tal_nlin_asym_09a_mask.mnc').get_data()
 
