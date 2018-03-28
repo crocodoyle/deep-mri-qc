@@ -93,11 +93,13 @@ ds030_indices = pickle.load(open(workdir + 'ds030_indices.pkl', 'rb'))
 ibis_indices = pickle.load(open(workdir + 'ibis_indices.pkl', 'rb'))
 ping_indices = pickle.load(open(workdir + 'ping_indices.pkl', 'rb'))
 
-all_train_indices = list(abide_indices) + list(ibis_indices) + list(ping_indices)
+# all_train_indices = list(abide_indices) + list(ibis_indices) + list(ping_indices)
 # all_train_indices = abide_indices
 
+all_train_indices = list(ibis_indices)
+
 train_dataset = QCDataset(workdir + input_filename, all_train_indices, random_slice=True)
-test_dataset = QCDataset(workdir + input_filename, ds030_indices)
+test_dataset = QCDataset(workdir + input_filename, all_train_indices)
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
