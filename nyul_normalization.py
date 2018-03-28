@@ -28,13 +28,16 @@ def normalize(image, mask, target_image, target_mask):
     plt.title('original histogram')
     plt.savefig(data_dir + 'orig_hist.png')
 
-    p2_orig, p98_orig = np.percentile(valid_orig_image, (2, 98))
-    orig_landmarks = np.arange(p2_orig, p98_orig, (p98_orig - p2_orig)/n_landmarks)
+    orig_tails = np.percentile(valid_orig_image, (2, 98))
 
-    print('landmarks:', orig_landmarks)
+    deciles = np.arange(2, 98, (98-2)/n_landmarks)
+    orig_landmarks = np.percentile(valid_orig_image, tuple(deciles))
 
-    p2_target, p98_target = np.percentile(valid_target_image, (2, 98))
-    target_landmarks = np.arange(p2_target, p98_target, (p98_target - p2_target)/n_landmarks)
+    print('original deciles:', deciles )
+    print('original landmarks:', orig_landmarks)
+
+    target_tails = np.percentile(valid_target_image, (2, 98))
+    target_landmarks = np.percentile(valid_target_image, tuple(deciles))
 
     hist_target = np.histogram(valid_target_image, bins=256)
 
@@ -72,7 +75,6 @@ def normalize(image, mask, target_image, target_mask):
 
     plt.tight_layout()
     plt.savefig(data_dir + 'histograms.png')
-
 
     return rescaled_image
 
