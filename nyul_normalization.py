@@ -30,7 +30,7 @@ def normalize(image, mask, target_image, target_mask):
 
     orig_tails = np.percentile(valid_orig_image, (2, 98))
 
-    deciles = np.arange(2, 98, (98-2)/n_landmarks)
+    deciles = np.linspace(2, 98, n_landmarks, endpoint=True)
     orig_landmarks = np.percentile(valid_orig_image, tuple(deciles))
 
     print('original deciles:', deciles )
