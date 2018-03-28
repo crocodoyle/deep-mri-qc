@@ -11,21 +11,21 @@ def normalize(image, mask, target_image, target_mask):
 
     n_landmarks = 10
 
-    valid_orig_image = image[~mask]
-    valid_target_image = target_image[~target_mask]
+    valid_orig_image = image[mask]
+    valid_target_image = target_image[target_mask]
 
     valid_orig_flat = []
     for x in range(img_shape[0]):
         for y in range(img_shape[1]):
             for z in range(img_shape[2]):
-                if mask[x, y, z] == 0:
+                if mask[x, y, z] == 1:
                     valid_orig_flat.append(image[x, y, z])
 
     hist_original = np.histogram(valid_orig_flat, bins=256)
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True)
 
     ax1.bar(hist_original[1][:-1], hist_original[0])
-    plt.title('original histogram')
+    ax1.set_title('original histogram')
     plt.savefig(data_dir + 'orig_hist.png')
 
     orig_tails = np.percentile(valid_orig_image, (2, 98))
@@ -42,6 +42,7 @@ def normalize(image, mask, target_image, target_mask):
     hist_target = np.histogram(valid_target_image, bins=256)
 
     ax2.bar(hist_target[1][:-1], hist_target[0])
+    ax2.set_title('target histogram')
 
     rescaled_image = np.copy(image)
     rescaled = []
@@ -62,7 +63,7 @@ def normalize(image, mask, target_image, target_mask):
         for x in range(img_shape[0]):
             for y in range(img_shape[1]):
                 for z in range(img_shape[2]):
-                    if mask[x, y, z] == 0:
+                    if mask[x, y, z] == 1:
                         pixel = image[x, y, z]
 
                         if pixel >= low_orig and pixel < high_orig:
@@ -72,6 +73,7 @@ def normalize(image, mask, target_image, target_mask):
 
     hist_rescaled = np.histogram(rescaled, bins=256)
     ax3.bar(hist_rescaled[1][:-1], hist_rescaled[0])
+    ax3.set_title('result histogram')
 
     plt.tight_layout()
     plt.savefig(data_dir + 'histograms.png')
