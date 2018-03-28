@@ -2,9 +2,8 @@ from __future__ import print_function
 import argparse
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
-import torchvision
+import torch.onnx
 
 from torch.utils.data import Dataset, DataLoader
 from torch.autograd import Variable
@@ -146,20 +145,22 @@ class ConvolutionalQCNet(nn.Module):
         super(ConvolutionalQCNet, self).__init__()
 
         self.features = nn.Sequential(
-            nn.Conv2d(1, 16, kernel_size=3),
-            nn.BatchNorm2d(16),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(16, 16, kernel_size=3),
-            nn.BatchNorm2d(16),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(16, 32, kernel_size=3),
+            nn.Conv2d(1, 32, kernel_size=3),
             nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(32, 32, kernel_size=3),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(32, 32, kernel_size=3),
+            nn.BatchNorm2d(32),
+            nn.Dropout(),
             nn.ReLU(),
             nn.MaxPool2d(2),
             nn.Conv2d(32, 64, kernel_size=3),
             # nn.BatchNorm2d(64),
+            nn.Dropout(),
             nn.ReLU(),
             nn.MaxPool2d(2),
             nn.Conv2d(64, 128, kernel_size=3),
@@ -410,7 +411,7 @@ if __name__ == '__main__':
     results_shape = (args.folds, args.epochs)
 
     training_sensitivity, training_specificity, validation_sensitivity, validation_specificity, test_sensitivity, test_specificity, val_aucs = np.zeros(results_shape), np.zeros(results_shape), np.zeros(results_shape), np.zeros(results_shape), np.zeros(results_shape), np.zeros(results_shape), np.zeros(results_shape)
-    best_val_auc = np.zeros(n_folds)
+    best_auc_score = np.zeros(n_folds)
 
     if args.cuda:
         model.cuda()
@@ -488,7 +489,8 @@ if __name__ == '__main__':
             except:
                 print('ERROR could not calculate confusion matrix properly, probably only one class predicted/present in ground truth.')
 
-            if val_auc > best_val_auc[fold_idx]:
+            if val_auc + train_auc > best_auc_score[fold_idx]:
+                best_auc_score[fold_idx] = val_auc + train_auc
                 torch.save(model.state_dict(), results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch')
 
         try:
@@ -499,7 +501,19 @@ if __name__ == '__main__':
 
 
     grad_cam = GradCam(model = model, target_layer_names=['output'], use_cuda=args.cuda)
-    example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam)
+    # example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam)
+
+
+
+    dummy_input = Variable(torch.randn(1, 192, 256))
+
+    input_names = ["coronal_slice"]
+    output_names = ["pass_fail"]
+
+    model.load_state_dict(results_dir + 'qc_torch_fold_1.tch')
+    model.eval()
+
+    torch.onnx.export(model, dummy_input, "ibis_qc_net_v1.proto", verbose=True, input_names=input_names, output_names=output_names)
 
     for fold in range(skf.get_n_splits()):
         make_roc_gif(results_dir, args.epochs, fold+1)
