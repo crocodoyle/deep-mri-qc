@@ -29,7 +29,7 @@ parser.add_argument('--batch-size', type=int, default=64, metavar='N',
 parser.add_argument('--val-batch-size', type=int, default=8, metavar='N', help='input batch size for validation (default: 8')
 parser.add_argument('--test-batch-size', type=int, default=64, metavar='N',
                     help='input batch size for testing (default: 64)')
-parser.add_argument('--epochs', type=int, default=100, metavar='N',
+parser.add_argument('--epochs', type=int, default=20, metavar='N',
                     help='number of epochs to train (default: 100)')
 parser.add_argument('--folds', type=int, default=10, metavar='N',
                     help='number of folds to cross-validate over (default: 10)')
@@ -457,7 +457,7 @@ if __name__ == '__main__':
 
         print('This fold has', str(len(train_loader.dataset)), 'training images and', str(len(validation_loader.dataset)), 'validation images. There are', str(len(test_loader.dataset)), 'images in the test dataset')
 
-        optimizer = optim.Adam(model.parameters(), lr=0.002, betas=(0.9, 0.999), eps=1e-08)
+        optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             train_truth, train_probabilities = train(epoch)
@@ -503,14 +503,12 @@ if __name__ == '__main__':
     grad_cam = GradCam(model = model, target_layer_names=['output'], use_cuda=args.cuda)
     # example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam)
 
-
-
     dummy_input = Variable(torch.randn(1, 192, 256))
 
     input_names = ["coronal_slice"]
     output_names = ["pass_fail"]
 
-    model.load_state_dict(results_dir + 'qc_torch_fold_1.tch')
+    model = torch.load(results_dir + 'qc_torch_fold_1.tch')
     model.eval()
 
     torch.onnx.export(model, dummy_input, "ibis_qc_net_v1.proto", verbose=True, input_names=input_names, output_names=output_names)
