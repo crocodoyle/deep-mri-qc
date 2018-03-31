@@ -508,7 +508,8 @@ if __name__ == '__main__':
     input_names = ["coronal_slice"]
     output_names = ["pass_fail"]
 
-    model = torch.load(results_dir + 'qc_torch_fold_1.tch')
+    model = ConvolutionalQCNet()
+    model.load_state_dict(torch.load(results_dir + 'qc_torch_fold_1.tch'))
     model.eval()
 
     torch.onnx.export(model, dummy_input, "ibis_qc_net_v1.proto", verbose=True, input_names=input_names, output_names=output_names)
