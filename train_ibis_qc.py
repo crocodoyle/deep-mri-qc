@@ -89,7 +89,7 @@ class QCDataset(Dataset):
 
 
 class FullyConnectedQCNet(nn.Module):
-    def __init__(self):
+    def __init__(self, input_shape=(1, image_shape[1], image_shape[2])):
         super(FullyConnectedQCNet, self).__init__()
 
         self.features = nn.Sequential(
@@ -107,13 +107,19 @@ class FullyConnectedQCNet(nn.Module):
             nn.ReLU()
         )
 
+        self.flat_features = self.get_flat_features(input_shape, self.features)
+
         self.classifier = nn.Sequential(
-            nn.Linear(128, 256),
+            nn.Linear(self.flat_features, 256),
             nn.Dropout(),
             nn.Linear(2)
         )
 
         self.output = nn.LogSoftmax()
+
+    def get_flat_features(self, image_shape, features):
+        f = features(Variable(torch.ones(1,*image_shape)))
+        return int(np.prod(f.size()[1:]))
 
     def forward(self, x):
         x = self.features(x)
