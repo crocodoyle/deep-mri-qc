@@ -79,7 +79,7 @@ class QCDataset(Dataset):
         else:
             slice_modifier = 0
 
-        image = self.images[index:index+1, ...][:, image_shape[0] // 2 + slice_modifier, :, :, :]
+        image = self.images[index:index+1, ...][:, image_shape[0] // 2 + slice_modifier, :, :, 0]
         label = self.labels[index:index+1]
 
         print('image shape:', image.shape)
