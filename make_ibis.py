@@ -15,11 +15,9 @@ import matplotlib.cm as cm
 
 from make_datasets import normalise_zero_one, resize_image_with_crop_or_pad
 
-workdir = '/home/users/adoyle/deepqc/IBIS/'
+data_dir = '/data1/users/adoyle/IBIS/'
 
-datadir = '/data1/users/adoyle/IBIS/'
-
-label_file = datadir + 't1_ibis_QC_labels.csv'
+label_file = data_dir + 't1_ibis_QC_labels.csv'
 
 target_size = (160, 256, 224)
 
@@ -41,14 +39,14 @@ def make_ibis_qc():
             data_point['qc_label'] = line[4]
 
             try:
-                t1 = nib.load(datadir + data_point['t1_filename'])
+                t1 = nib.load(data_dir + data_point['t1_filename'])
                 data_points.append(data_point)
             except:
                 print('Missing', data_point['t1_filename'])
 
     total_subjects = len(data_points)
 
-    with h5py.File(workdir + 'IBIS_QC.hdf5', 'w') as f:
+    with h5py.File(data_dir + 'IBIS_QC.hdf5', 'w') as f:
         f.create_dataset('MRI', (total_subjects, target_size[0], target_size[1], target_size[2], 1), dtype='float32')
         f.create_dataset('qc_label', (total_subjects, 2), dtype='float32')
         dt = h5py.special_dtype(vlen=bytes)
@@ -61,13 +59,13 @@ def make_ibis_qc():
                 pass_fail = 0
 
             f['qc_label'][i] = pass_fail
-            t1_data = nib.load(datadir + data_point['t1_filename']).get_data()
+            t1_data = nib.load(data_dir + data_point['t1_filename']).get_data()
 
             if not t1_data.shape == target_size:
                 # print('resizing from', t1_data.shape)
                 t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
-            f['ibis_t1'][i, ...] = np.reshape(normalise_zero_one(t1_data), (target_size) + (1,))
+            f['MRI'][i, ...] = np.reshape(normalise_zero_one(t1_data), (target_size) + (1,))
             f['filename'][i] = data_point['t1_filename']
 
 if __name__ == '__main__':
