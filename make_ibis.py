@@ -69,3 +69,8 @@ def make_ibis_qc():
 
             f['ibis_t1'][i, ...] = np.reshape(normalise_zero_one(t1_data), (target_size) + (1,))
             f['filename'][i] = data_point['t1_filename']
+
+if __name__ == '__main__':
+    print('Creating IBIS HDF5 file for quality control training')
+    make_ibis_qc()
+    print('Done!')
