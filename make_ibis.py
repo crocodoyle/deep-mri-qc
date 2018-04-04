@@ -21,7 +21,7 @@ datadir = '/data1/users/adoyle/IBIS/'
 
 label_file = datadir + 't1_ibis_QC_labels.csv'
 
-target_size = (168, 256, 224)
+target_size = (160, 256, 224)
 
 
 def make_ibis_qc():
