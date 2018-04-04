@@ -184,7 +184,7 @@ def train(epoch):
 
     truth, probabilities = np.zeros((len(train_loader.dataset))), np.zeros((len(train_loader.dataset), 2))
 
-    for batch_idx, (data, target, sites) in enumerate(train_loader):
+    for batch_idx, (data, target) in enumerate(train_loader):
         class_weight = torch.FloatTensor([fail_weight, pass_weight])
         if args.cuda:
             data, target, class_weight = data.cuda(), target.cuda(), class_weight.cuda()
@@ -223,7 +223,7 @@ def validate():
 
     truth, probabilities = np.zeros((len(validation_loader.dataset))), np.zeros((len(validation_loader.dataset), 2))
 
-    for batch_idx, (data, target, sites) in enumerate(validation_loader):
+    for batch_idx, (data, target) in enumerate(validation_loader):
         if args.cuda:
             data, target = data.cuda(), target.cuda()
 
@@ -254,7 +254,7 @@ def test():
 
     truth, probabilities = np.zeros((len(test_loader.dataset))), np.zeros((len(test_loader.dataset), 2))
 
-    for batch_idx, (data, target, sites) in enumerate(test_loader):
+    for batch_idx, (data, target) in enumerate(test_loader):
         if args.cuda:
             data, target = data.cuda(), target.cuda()
         data, target = Variable(data, volatile=True), Variable(target)
@@ -283,29 +283,23 @@ model = ConvolutionalQCNet()
 def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
     model.eval()
 
-    histograms = {}
-
-    mri_sites = ['IBIS', 'PING', 'PITT', 'OLIN', 'OHSU', 'SDSU', 'TRINITY', 'UM', 'USM', 'YALE', 'CMU', 'LEUVEN', 'KKI',
-                 'NYU', 'STANFORD', 'UCLA', 'MAX_MUN', 'CALTECH', 'SBL', 'ds030']
-
-    for site in mri_sites:
-        histograms[site] = np.zeros(256, dtype='float32')
+    histogram = np.zeros((256))
 
     bins = np.linspace(0.0, 1.0, 257)
 
     os.makedirs(results_dir + '/imgs/', exist_ok=True)
-    for batch_idx, (data, target, sites) in enumerate(train_loader):
+    for batch_idx, (data, target) in enumerate(train_loader):
 
         data, target = Variable(data, volatile=True), Variable(target)
 
         target_batch = target.data.cpu().numpy()
         image_batch = data.data.cpu().numpy()
 
-        for img, site in zip(image_batch, sites):
+        for img in image_batch, sites:
 
             try:
                 histo = np.histogram(img, bins=bins)
-                histograms[site] += histo[0]
+                histogram += histo[0]
             except KeyError:
                 print('Site missing')
 
@@ -328,16 +322,16 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
         except IndexError as e:
             print('Couldnt save one file')
 
-    for batch_idx, (data, target, sites) in enumerate(test_loader):
+    for batch_idx, (data, target) in enumerate(test_loader):
         data, target = Variable(data, volatile=True), Variable(target)
 
         target_batch = target.data.cpu().numpy()
         image_batch = data.data.cpu().numpy()
 
-        for img, site in zip(image_batch, sites):
+        for img in image_batch:
             try:
                 histo = np.histogram(img, bins=bins)
-                histograms[site] += histo[0]
+                histogram += histo[0]
             except KeyError:
                 print('Site missing')
 
@@ -365,23 +359,10 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
         except IndexError as e:
             pass
 
-    fig, axes = plt.subplots(len(mri_sites), 1, sharex=True, figsize=(4, 24))
-    for i, site in enumerate(mri_sites):
-        # print(site, histograms[site])
-        try:
-            histograms[site] = np.divide(histograms[site], np.sum(histograms[site]))
-            axes[i].plot(bins[:-1], histograms[site], lw=2, label=site)
+    plt.figure()
+    plt.plot(bins[:-1], histogram, lw=2)
 
-            # axes[i].set_ylim([0, 0.2])
-            axes[i].set_xlim([0, 1])
-
-            axes[i].set_ylabel(site, fontsize=16)
-            axes[i].set_xscale('log')
-            axes[i].set_yscale('log')
-        except:
-            print('Problem normalizing histogram for', site)
-
-    # plt.title('histogram of grey values', fontsize='24')
+    plt.title('histogram of grey values', fontsize='24')
     plt.tight_layout()
     plt.savefig(results_dir + 'histograms.png', bbox_inches='tight')
 
