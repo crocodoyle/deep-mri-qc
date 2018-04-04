@@ -79,10 +79,10 @@ class QCDataset(Dataset):
         else:
             slice_modifier = 0
 
-        image = self.images[index, ...][image_shape[0] // 2 + slice_modifier, :, :, :]
+        image = self.images[index, ...][image_shape[0] // 2 + slice_modifier, :, :, 0]
         label = self.labels[index]
 
-        return image, label
+        return image[np.newaxis, ...], label
 
     def __len__(self):
         return self.n_subjects
