@@ -80,7 +80,7 @@ class QCDataset(Dataset):
             slice_modifier = 0
 
         image = self.images[index, ...][np.newaxis, image_shape[0] // 2 + slice_modifier, ...]
-        label = self.labels[index])
+        label = self.labels[index]
 
         return image, label
 
