@@ -125,8 +125,11 @@ class FullyConnectedQCNet(nn.Module):
         return int(np.prod(f.size()[1:]))
 
     def forward(self, x):
+        print('input shape:', x.shape)
         x = self.features(x)
+        print('features shape:', x.shape)
         x = self.classifier(x)
+        print('classifier shape:', x.shape)
         x = self.output(x)
         return x
 
