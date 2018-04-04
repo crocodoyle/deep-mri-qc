@@ -52,8 +52,8 @@ torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
 
-# workdir = '/data1/users/adoyle/'
-workdir = '/home/users/adoyle/deepqc/'
+workdir = '/data1/users/adoyle/'
+# workdir = '/home/users/adoyle/deepqc/'
 input_filename = 'IBIS_QC.hdf5'
 
 image_shape = (160, 256, 224)
@@ -397,6 +397,7 @@ if __name__ == '__main__':
     results_dir, experiment_number = setup_experiment(workdir)
 
     f = h5py.File(workdir + input_filename, 'r')
+    print('HDF5 file has:', f.keys())
     ibis_indices = list(range(f['MRI'].shape[0]))
 
     ground_truth = np.asarray(f['qc_label'], dtype='uint8')
