@@ -79,7 +79,7 @@ class QCDataset(Dataset):
         else:
             slice_modifier = 0
 
-        image = self.images[index:index+1, ...][:, image_shape[0] // 2 + slice_modifier, :, :, 0]
+        image = self.images[index:index+1, ...][image_shape[0] // 2 + slice_modifier, :, :, :]
         label = self.labels[index:index+1]
 
         return image, label
@@ -89,7 +89,7 @@ class QCDataset(Dataset):
 
 
 class FullyConnectedQCNet(nn.Module):
-    def __init__(self, input_shape=(1, image_shape[1], image_shape[2])):
+    def __init__(self, input_shape=(image_shape[1], image_shape[2], 1)):
         super(FullyConnectedQCNet, self).__init__()
 
         self.features = nn.Sequential(
