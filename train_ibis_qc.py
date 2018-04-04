@@ -396,7 +396,7 @@ if __name__ == '__main__':
 
     results_dir, experiment_number = setup_experiment(workdir)
 
-    f = h5py.File(workdir + input_filename)
+    f = h5py.File(workdir + input_filename, 'r')
     ibis_indices = list(range(f['MRI'].shape[0]))
 
     ground_truth = np.asarray(f['qc_label'], dtype='uint8')
