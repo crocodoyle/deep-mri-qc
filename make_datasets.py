@@ -29,7 +29,10 @@ exemplar_file = data_dir + '/PING/p0086_20100316_193008_2_mri.mnc'
 atlas = data_dir + '/mni_icbm152_t1_tal_nlin_asym_09a.mnc'
 atlas_mask = data_dir + '/mni_icbm152_t1_tal_nlin_asym_09a_mask.mnc'
 
-target_size = (192, 256, 192)
+mri_sites = ['IBIS', 'PING', 'PITT', 'OLIN', 'OHSU', 'SDSU', 'TRINITY', 'UM', 'USM', 'YALE', 'CMU', 'LEUVEN', 'KKI',
+             'NYU', 'STANFORD', 'UCLA', 'MAX_MUN', 'CALTECH', 'SBL', 'ds030']
+
+target_size = ()
 
 # taken from DLTK
 def normalise_zero_one(image):
@@ -611,8 +614,6 @@ def register_ants(moving_image, atlas, output_image):
     reg.run()
 
 def check_datasets():
-    mri_sites = ['IBIS', 'PING', 'PITT', 'OLIN', 'OHSU', 'SDSU', 'TRINITY', 'UM', 'USM', 'YALE', 'CMU', 'LEUVEN', 'KKI',
-             'NYU', 'STANFORD', 'UCLA', 'MAX_MUN', 'CALTECH', 'SBL', 'ds030']
 
     histograms = {}
 
@@ -690,7 +691,6 @@ if __name__ == "__main__":
     print('PING:', n_ping)
     print('ds030:', n_ds030)
 
-
     total_subjects = n_abide + n_ibis + n_ping + n_ds030
 
     with h5py.File(output_file, 'w') as f:
@@ -721,6 +721,5 @@ if __name__ == "__main__":
         pickle.dump(ibis_indices, open(output_dir + 'ibis_indices.pkl', 'wb'))
         pickle.dump(abide_indices, open(output_dir + 'abide_indices.pkl', 'wb'))
         pickle.dump(ds030_indices, open(output_dir + 'ds030_indices.pkl', 'wb'))
-
 
         check_datasets()
