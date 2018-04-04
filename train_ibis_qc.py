@@ -508,7 +508,7 @@ if __name__ == '__main__':
     model.load_state_dict(torch.load(results_dir + 'qc_torch_fold_1.tch'))
     model.eval()
 
-    torch.onnx.export(model, dummy_input, results_dir + "ibis_qc_net_v1.proto", verbose=True)
+    torch.onnx.export(model, dummy_input, results_dir + "ibis_qc_net_v1.onnx", verbose=True)
 
     for fold in range(skf.get_n_splits()):
         make_roc_gif(results_dir, args.epochs, fold + 1)
