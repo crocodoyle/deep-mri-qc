@@ -82,9 +82,6 @@ class QCDataset(Dataset):
         image = self.images[index:index+1, ...][:, image_shape[0] // 2 + slice_modifier, :, :, 0]
         label = self.labels[index:index+1]
 
-        print('image shape:', image.shape)
-        print('label shape:', label.shape)
-
         return image, label
 
     def __len__(self):
@@ -171,6 +168,11 @@ class ConvolutionalQCNet(nn.Module):
         )
 
         self.output = nn.LogSoftmax(dim=-1)
+
+        print('ConvolutionalQC structure:')
+        print(self.features)
+        print(self.classifier)
+        print(self.output)
 
     def forward(self, x):
         x = self.features(x)
