@@ -74,15 +74,13 @@ class QCDataset(Dataset):
             self.indices[i] = index
 
     def __getitem__(self, index):
-        good_index = self.indices[index]
-
         if self.random_slice:
             slice_modifier = np.random.randint(-10, 10)
         else:
             slice_modifier = 0
 
-        image = self.images[good_index, ...][np.newaxis, image_shape[0] // 2 + slice_modifier, ...]
-        label = np.argmax(self.labels[good_index, ...])
+        image = self.images[index, ...][np.newaxis, image_shape[0] // 2 + slice_modifier, ...]
+        label = self.labels[index])
 
         return image, label
 
@@ -418,7 +416,7 @@ if __name__ == '__main__':
 
     # optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
-    n_pass = np.sum(f['qc_label'])
+    n_pass = np.sum(f['qc_label'][:, ])
     n_fail = len(ibis_indices) - n_pass
 
     print('Whole training set has ' + str(n_pass) + ' PASS and ' + str(n_fail) + ' FAIL images')
