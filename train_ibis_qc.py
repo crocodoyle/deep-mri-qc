@@ -52,7 +52,7 @@ torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
 
-workdir = '/data1/users/adoyle/'
+workdir = '/data1/users/adoyle/IBIS/'
 # workdir = '/home/users/adoyle/deepqc/'
 input_filename = 'IBIS_QC.hdf5'
 
