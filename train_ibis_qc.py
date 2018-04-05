@@ -437,8 +437,8 @@ if __name__ == '__main__':
         validation_indices = other_indices[::2]
         test_indices = other_indices[1::2]
 
-        n_val_pass = np.sum(f['qc_label'][validation_indices])
-        n_test_pass = np.sum(f['qc_label'][test_indices])
+        n_val_pass = np.sum(f['qc_label'][tuple(validation_indices)])
+        n_test_pass = np.sum(f['qc_label'][tuple(test_indices)])
 
         n_val_fail = len(validation_indices) - n_val_pass
         n_test_fail = len(test_indices) - n_test_pass
@@ -447,7 +447,7 @@ if __name__ == '__main__':
         print('Fold', fold_num, 'has', n_test_pass, 'pass images and', n_test_fail, 'fail images in the test set.')
 
         train_dataset = QCDataset(workdir + input_filename, train_indices, random_slice=True)
-        validation_dataset = QCDataset(workdir + input_filename, validation_indices, random_slice=False)
+        validation_dataset = QCDataset(workdir + input_filename, validation_indices, random_slice=True)
         test_dataset = QCDataset(workdir + input_filename, test_indices, random_slice=False)
 
         train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=False, **kwargs)
