@@ -415,7 +415,7 @@ if __name__ == '__main__':
 
     # optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
-    n_pass = np.sum(f['qc_label'][:, ])
+    n_pass = np.sum(f['qc_label'])
     n_fail = len(ibis_indices) - n_pass
 
     print('Whole training set has ' + str(n_pass) + ' PASS and ' + str(n_fail) + ' FAIL images')
@@ -436,6 +436,15 @@ if __name__ == '__main__':
 
         validation_indices = other_indices[::2]
         test_indices = other_indices[1::2]
+
+        n_val_pass = np.sum(f['qc_label'][validation_indices])
+        n_test_pass = np.sum(f['qc_label'][test_indices])
+
+        n_val_fail = len(validation_indices) - n_val_pass
+        n_test_fail = len(test_indices) - n_test_pass
+
+        print('Fold', fold_num, 'has', n_val_pass, 'pass images and', n_val_fail, 'fail images in the validation set.')
+        print('Fold', fold_num, 'has', n_test_pass, 'pass images and', n_test_fail, 'fail images in the test set.')
 
         train_dataset = QCDataset(workdir + input_filename, train_indices, random_slice=True)
         validation_dataset = QCDataset(workdir + input_filename, validation_indices, random_slice=False)
@@ -464,6 +473,9 @@ if __name__ == '__main__':
             train_auc, val_auc, test_auc = plot_roc(train_truth, train_probabilities, val_truth, val_probabilities,
                                                     test_truth, test_probabilities, results_dir, epoch, fold_num)
 
+            print('probabilities shape:', train_probabilities.shape)
+            print('predictions shape:', train_predictions.shape)
+
             try:
                 [[train_tp, train_fn], [train_fp, train_tn]] = confusion_matrix(train_truth, train_predictions)
                 [[val_tp, val_fn], [val_fp, val_tn]] = confusion_matrix(val_truth, val_predictions)
@@ -484,6 +496,7 @@ if __name__ == '__main__':
                     'ERROR could not calculate confusion matrix properly, probably only one class predicted/present in ground truth.')
 
             if val_auc + train_auc > best_auc_score[fold_idx]:
+                print('This epoch is the new best model on the train/validation set!')
                 best_auc_score[fold_idx] = val_auc + train_auc
                 torch.save(model.state_dict(), results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch')
 
@@ -497,7 +510,7 @@ if __name__ == '__main__':
     grad_cam = GradCam(model=model, target_layer_names=['output'], use_cuda=args.cuda)
     # example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam)
 
-    dummy_input = Variable(torch.randn(1, 1, 192, 256))
+    dummy_input = Variable(torch.randn(1, 1, 256, 224))
 
     input_names = ["coronal_slice"]
     output_names = ["pass_fail"]
