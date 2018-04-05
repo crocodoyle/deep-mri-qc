@@ -438,14 +438,15 @@ if __name__ == '__main__':
         test_indices = other_indices[1::2]
 
         labels = f['qc_label']
-        val_ind = labels in validation_indices
-        test_ind = labels in test_indices
 
-        print('validation indices:', val_ind)
-        print('test indices:', test_ind)
+        validation_labels = labels[list(validation_indices)]
+        test_labels = labels[list(test_indices)]
 
-        n_val_pass = np.sum(labels[val_ind])
-        n_test_pass = np.sum(labels[test_ind])
+        print('validation indices:', validation_labels)
+        print('test indices:', test_labels)
+
+        n_val_pass = np.sum(validation_labels)
+        n_test_pass = np.sum(test_labels)
 
         n_val_fail = len(validation_indices) - n_val_pass
         n_test_fail = len(test_indices) - n_test_pass
