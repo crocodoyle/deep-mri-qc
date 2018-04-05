@@ -92,7 +92,7 @@ class QCDataset(Dataset):
 
 
 class FullyConnectedQCNet(nn.Module):
-    def __init__(self, input_shape=(image_shape[1], image_shape[2], 1)):
+    def __init__(self, input_shape=(1, image_shape[1], image_shape[2])):
         super(FullyConnectedQCNet, self).__init__()
 
         self.features = nn.Sequential(
@@ -127,20 +127,14 @@ class FullyConnectedQCNet(nn.Module):
         return int(np.prod(f.size()[1:]))
 
     def forward(self, x):
-        print('input shape:', x.shape)
-        sys.stdout.flush()
         x = self.features(x)
-        print('features shape:', x.shape)
-        sys.stdout.flush()
         x = self.classifier(x)
-        print('classifier shape:', x.shape)
-        sys.stdout.flush()
         x = self.output(x)
         return x
 
 
 class ConvolutionalQCNet(nn.Module):
-    def __init__(self):
+    def __init__(self, input_shape=(1, image_shape[1], image_shape[2])):
         super(ConvolutionalQCNet, self).__init__()
 
         self.features = nn.Sequential(
@@ -172,8 +166,10 @@ class ConvolutionalQCNet(nn.Module):
             nn.MaxPool2d(2)
         )
 
+        self.flat_features = self.get_flat_features(input_shape, self.features)
+
         self.classifier = nn.Sequential(
-            nn.Linear(256, 512),
+            nn.Linear(self.flat_features, 512),
             nn.Dropout(),
             nn.BatchNorm1d(512),
             nn.ReLU(),
@@ -191,11 +187,18 @@ class ConvolutionalQCNet(nn.Module):
         print(self.classifier)
         print(self.output)
 
+    def get_flat_features(self, image_shape, features):
+        f = features(Variable(torch.ones(1,*image_shape)))
+        return int(np.prod(f.size()[1:]))
+
     def forward(self, x):
+        print('input shape:', x.shape)
         x = self.features(x)
+        print('features shape:', x.shape)
         x = x.view(x.size(0), -1)
-        # print(x)
+        print('features reshaped:', x.shape)
         x = self.classifier(x)
+        print('classifier shape:', x.shape)
         x = self.output(x)
         return x
 
