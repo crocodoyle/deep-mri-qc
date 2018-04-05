@@ -112,6 +112,8 @@ class FullyConnectedQCNet(nn.Module):
 
         self.flat_features = self.get_flat_features(input_shape, self.features)
 
+        print('flat features:', self.flat_features)
+
         self.classifier = nn.Sequential(
             nn.Linear(self.flat_features, 256),
             nn.Dropout(),
