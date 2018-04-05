@@ -438,9 +438,9 @@ if __name__ == '__main__':
         test_indices = other_indices[1::2]
 
         labels = f['qc_label']
+        val_ind = labels in validation_indices
+        test_ind = labels in test_indices
 
-        val_ind = np.asarray(validation_indices)
-        test_ind = np.asarray(test_indices)
         print('validation indices:', val_ind)
         print('test indices:', test_ind)
 
