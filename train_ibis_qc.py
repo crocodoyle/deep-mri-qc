@@ -134,7 +134,7 @@ class ConvolutionalQCNet(nn.Module):
             nn.Conv2d(1, 32, kernel_size=3),
             nn.BatchNorm2d(32),
             nn.ReLU(),
-            # nn.MaxPool2d(2),
+            nn.MaxPool2d(2),
             nn.Conv2d(32, 32, kernel_size=3),
             nn.BatchNorm2d(32),
             nn.ReLU(),
@@ -207,8 +207,7 @@ def train(epoch):
         class_weight = torch.FloatTensor([fail_weight, pass_weight])
         if args.cuda:
             data, target, class_weight = data.cuda(), target.cuda(), class_weight.cuda()
-        data, target, class_weight = Variable(data), Variable(target).type(torch.cuda.LongTensor), Variable(
-            class_weight)
+        data, target, class_weight = Variable(data), Variable(target).type(torch.cuda.LongTensor), Variable(class_weight)
         optimizer.zero_grad()
         output = model(data)
         # print('P(qc=0):', np.exp(output.data.cpu().numpy())[0])
@@ -246,7 +245,7 @@ def validate():
         if args.cuda:
             data, target = data.cuda(), target.cuda()
 
-        data, target = Variable(data, volatile=True), Variable(target)
+        data, target = Variable(data, volatile=True), Variable(target).type(torch.cuda.LongTensor)
         output = model(data)
         loss_function = nn.CrossEntropyLoss()
 
@@ -276,7 +275,7 @@ def test():
     for batch_idx, (data, target) in enumerate(test_loader):
         if args.cuda:
             data, target = data.cuda(), target.cuda()
-        data, target = Variable(data, volatile=True), Variable(target)
+        data, target = Variable(data, volatile=True), Variable(target).type(torch.cuda.LongTensor)
         output = model(data)
         loss_function = nn.CrossEntropyLoss()
 
