@@ -8,6 +8,9 @@ import torch.onnx
 from torch.utils.data import Dataset, DataLoader
 from torch.autograd import Variable
 
+import torch.multiprocessing
+torch.multiprocessing.set_start_method('spawn')
+
 import h5py, pickle, os, time, sys
 import numpy as np
 
@@ -61,17 +64,17 @@ input_size = image_shape + (1,)
 
 class QCDataset(Dataset):
     def __init__(self, hdf5_file_path, all_indices, random_slice=False, augmentation_type=None):
-        f = h5py.File(hdf5_file_path)
-        self.images = f['MRI']
-        self.labels = f['qc_label']
+        with h5py.File(hdf5_file_path, 'r', libver='latest', swmr=True) as f:
+            self.images = f['MRI']
+            self.labels = f['qc_label']
 
-        self.n_subjects = len(all_indices)
-        self.indices = np.zeros((self.n_subjects))
+            self.n_subjects = len(all_indices)
+            self.indices = np.zeros((self.n_subjects))
 
-        self.random_slice = random_slice
+            self.random_slice = random_slice
 
-        for i, index in enumerate(all_indices):
-            self.indices[i] = index
+            for i, index in enumerate(all_indices):
+                self.indices[i] = index
 
     def __getitem__(self, index):
         if self.random_slice:
@@ -393,12 +396,16 @@ if __name__ == '__main__':
 
     results_dir, experiment_number = setup_experiment(workdir)
 
-    f = h5py.File(workdir + input_filename, 'r')
+    f = h5py.File(workdir + input_filename, 'r', libver='latest', swmr=True)
     print('HDF5 file has:', f.keys())
     ibis_indices = list(range(f['MRI'].shape[0]))
 
     ground_truth = np.asarray(f['qc_label'], dtype='uint8')
     print('Ground truth shape:', ground_truth.shape)
+
+    labels = np.copy(f['qc_label'])
+
+    f.close()
 
     n_total = len(ibis_indices)
 
@@ -436,8 +443,6 @@ if __name__ == '__main__':
 
         validation_indices = other_indices[::2]
         test_indices = other_indices[1::2]
-
-        labels = f['qc_label']
 
         validation_labels = labels[list(validation_indices)]
         test_labels = labels[list(test_indices)]
@@ -482,10 +487,15 @@ if __name__ == '__main__':
             print('predictions shape:', train_predictions.shape)
 
             try:
+                print('Generating confusion matrices...')
+                print('Training:')
                 [[train_tp, train_fn], [train_fp, train_tn]] = confusion_matrix(train_truth, train_predictions)
+                print('Validation')
                 [[val_tp, val_fn], [val_fp, val_tn]] = confusion_matrix(val_truth, val_predictions)
+                print('Testing')
                 [[test_tp, test_fn], [test_fp, test_tn]] = confusion_matrix(test_truth, test_predictions)
 
+                print('Calculating sensitivity/specificity...')
                 training_sensitivity[fold_idx, epoch_idx] = train_tp / (train_tp + train_fn)
                 training_specificity[fold_idx, epoch_idx] = train_tn / (train_tn + train_fp)
 
