@@ -437,8 +437,10 @@ if __name__ == '__main__':
         validation_indices = other_indices[::2]
         test_indices = other_indices[1::2]
 
-        n_val_pass = np.sum(f['qc_label'][tuple(validation_indices)])
-        n_test_pass = np.sum(f['qc_label'][tuple(test_indices)])
+        labels = f['qc_label']
+
+        n_val_pass = np.sum(labels[tuple(validation_indices)])
+        n_test_pass = np.sum(labels[tuple(test_indices)])
 
         n_val_fail = len(validation_indices) - n_val_pass
         n_test_fail = len(test_indices) - n_test_pass
