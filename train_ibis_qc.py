@@ -136,11 +136,11 @@ class ConvolutionalQCNet(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d(2),
             nn.Conv2d(32, 32, kernel_size=3),
-            nn.BatchNorm2d(32),
+            # nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.MaxPool2d(2),
             nn.Conv2d(32, 32, kernel_size=3),
-            nn.BatchNorm2d(32),
+            # nn.BatchNorm2d(32),
             nn.Dropout(),
             nn.ReLU(),
             nn.MaxPool2d(2),
@@ -162,11 +162,11 @@ class ConvolutionalQCNet(nn.Module):
         self.flat_features = self.get_flat_features(input_shape, self.features)
 
         self.classifier = nn.Sequential(
-            nn.Linear(self.flat_features, 512),
+            nn.Linear(self.flat_features, 256),
             nn.Dropout(),
-            nn.BatchNorm1d(512),
+            nn.BatchNorm1d(256),
             nn.ReLU(),
-            nn.Linear(512, 256),
+            nn.Linear(256, 256),
             nn.Dropout(),
             nn.BatchNorm1d(256),
             nn.ReLU(),
@@ -441,9 +441,6 @@ if __name__ == '__main__':
 
         validation_labels = labels[list(validation_indices)]
         test_labels = labels[list(test_indices)]
-
-        print('validation indices:', validation_labels)
-        print('test indices:', test_labels)
 
         n_val_pass = np.sum(validation_labels)
         n_test_pass = np.sum(test_labels)
