@@ -439,8 +439,8 @@ if __name__ == '__main__':
 
         labels = f['qc_label']
 
-        val_ind = tuple(validation_indices)
-        test_ind = tuple(test_indices)
+        val_ind = tuple(np.asarray(validation_indices))
+        test_ind = tuple(np.asarray(test_indices))
         print('validation indices:', val_ind)
         print('test indices:', test_ind)
 
