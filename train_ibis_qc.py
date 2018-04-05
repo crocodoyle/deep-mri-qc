@@ -8,7 +8,7 @@ import torch.onnx
 from torch.utils.data import Dataset, DataLoader
 from torch.autograd import Variable
 
-import h5py, pickle, os, time
+import h5py, pickle, os, time, sys
 import numpy as np
 
 from ml_experiment import setup_experiment
@@ -126,10 +126,13 @@ class FullyConnectedQCNet(nn.Module):
 
     def forward(self, x):
         print('input shape:', x.shape)
+        sys.stdout.flush()
         x = self.features(x)
         print('features shape:', x.shape)
+        sys.stdout.flush()
         x = self.classifier(x)
         print('classifier shape:', x.shape)
+        sys.stdout.flush()
         x = self.output(x)
         return x
 
