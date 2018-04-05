@@ -308,12 +308,12 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
     os.makedirs(results_dir + '/imgs/', exist_ok=True)
     for batch_idx, (data, target) in enumerate(train_loader):
 
-        data, target = Variable(data, volatile=True), Variable(target)
+        data, target = Variable(data, volatile=True), Variable(target).type(torch.cuda.LongTensor)
 
         target_batch = target.data.cpu().numpy()
         image_batch = data.data.cpu().numpy()
 
-        for img in image_batch, sites:
+        for img in image_batch:
 
             try:
                 histo = np.histogram(img, bins=bins)
@@ -341,7 +341,7 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
             print('Couldnt save one file')
 
     for batch_idx, (data, target) in enumerate(test_loader):
-        data, target = Variable(data, volatile=True), Variable(target)
+        data, target = Variable(data, volatile=True), Variable(target).type(torch.cuda.LongTensor)
 
         target_batch = target.data.cpu().numpy()
         image_batch = data.data.cpu().numpy()
