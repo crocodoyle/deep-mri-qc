@@ -194,6 +194,7 @@ class ConvolutionalQCNet(nn.Module):
         print('features shape:', x.shape)
         x = x.view(x.size(0), -1)
         print('features reshaped:', x.shape)
+        print('flattened features:', self.flat_features)
         x = self.classifier(x)
         print('classifier shape:', x.shape)
         x = self.output(x)
