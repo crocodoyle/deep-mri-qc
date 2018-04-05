@@ -107,10 +107,6 @@ class FullyConnectedQCNet(nn.Module):
             nn.ReLU()
         )
 
-        self.flat_features = self.get_flat_features(input_shape, self.features)
-
-        print('flat features:', self.flat_features)
-
         self.classifier = nn.Sequential(
             nn.Linear(self.flat_features, 256),
             nn.Dropout(),
@@ -170,11 +166,11 @@ class ConvolutionalQCNet(nn.Module):
             nn.Dropout(),
             nn.BatchNorm1d(512),
             nn.ReLU(),
-            nn.Linear(256, 64),
+            nn.Linear(512, 256),
             nn.Dropout(),
-            nn.BatchNorm1d(64),
+            nn.BatchNorm1d(256),
             nn.ReLU(),
-            nn.Linear(64, 2)
+            nn.Linear(256, 2)
         )
 
         self.output = nn.LogSoftmax(dim=-1)
@@ -189,14 +185,14 @@ class ConvolutionalQCNet(nn.Module):
         return int(np.prod(f.size()[1:]))
 
     def forward(self, x):
-        print('input shape:', x.shape)
+        # print('input shape:', x.shape)
         x = self.features(x)
-        print('features shape:', x.shape)
+        # print('features shape:', x.shape)
         x = x.view(x.size(0), -1)
-        print('features reshaped:', x.shape)
-        print('flattened features:', self.flat_features)
+        # print('features reshaped:', x.shape)
+        # print('flattened features:', self.flat_features)
         x = self.classifier(x)
-        print('classifier shape:', x.shape)
+        # print('classifier shape:', x.shape)
         x = self.output(x)
         return x
 
