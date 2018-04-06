@@ -1,15 +1,15 @@
 from __future__ import print_function
 import argparse
 import torch
+import torch.multiprocessing
+torch.multiprocessing.set_start_method('spawn')
+
 import torch.nn as nn
 import torch.optim as optim
 import torch.onnx
 
 from torch.utils.data import Dataset, DataLoader
 from torch.autograd import Variable
-
-import torch.multiprocessing
-torch.multiprocessing.set_start_method('spawn')
 
 import h5py, pickle, os, time, sys
 import numpy as np
