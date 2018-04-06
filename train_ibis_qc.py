@@ -422,7 +422,7 @@ if __name__ == '__main__':
 
     # optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
-    n_pass = np.sum(f['qc_label'])
+    n_pass = np.sum(labels)
     n_fail = len(ibis_indices) - n_pass
 
     print('Whole training set has ' + str(n_pass) + ' PASS and ' + str(n_fail) + ' FAIL images')
