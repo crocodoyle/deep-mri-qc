@@ -485,6 +485,8 @@ if __name__ == '__main__':
 
             print('probabilities shape:', train_probabilities.shape)
             print('predictions shape:', train_predictions.shape)
+            print('train ground truth', train_truth)
+            print('train_predictions', train_predictions)
 
             try:
                 print('Generating confusion matrices...')
