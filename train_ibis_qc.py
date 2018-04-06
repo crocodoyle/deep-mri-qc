@@ -64,17 +64,17 @@ input_size = image_shape + (1,)
 
 class QCDataset(Dataset):
     def __init__(self, hdf5_file_path, all_indices, random_slice=False, augmentation_type=None):
-        with h5py.File(hdf5_file_path, 'r', libver='latest', swmr=True) as f:
-            self.images = f['MRI']
-            self.labels = f['qc_label']
+        f = h5py.File(hdf5_file_path, 'r', libver='latest', swmr=True)
+        self.images = f['MRI']
+        self.labels = f['qc_label']
 
-            self.n_subjects = len(all_indices)
-            self.indices = np.zeros((self.n_subjects))
+        self.n_subjects = len(all_indices)
+        self.indices = np.zeros((self.n_subjects))
 
-            self.random_slice = random_slice
+        self.random_slice = random_slice
 
-            for i, index in enumerate(all_indices):
-                self.indices[i] = index
+        for i, index in enumerate(all_indices):
+            self.indices[i] = index
 
     def __getitem__(self, index):
         if self.random_slice:
