@@ -491,11 +491,11 @@ if __name__ == '__main__':
             try:
                 print('Generating confusion matrices...')
                 print('Training:')
-                [[train_tp, train_fn], [train_fp, train_tn]] = confusion_matrix(train_truth, train_predictions)
+                [[train_tp, train_fn], [train_fp, train_tn]] = confusion_matrix(np.asarray(train_truth, dtype='int'), np.asarray(train_predictions, dtype='int'))
                 print('Validation')
-                [[val_tp, val_fn], [val_fp, val_tn]] = confusion_matrix(val_truth, val_predictions)
+                [[val_tp, val_fn], [val_fp, val_tn]] = confusion_matrix(np.asarray(val_truth, dtype='int'), np.asarray(val_predictions, dtype='int'))
                 print('Testing')
-                [[test_tp, test_fn], [test_fp, test_tn]] = confusion_matrix(test_truth, test_predictions)
+                [[test_tp, test_fn], [test_fp, test_tn]] = confusion_matrix(np.asarray(test_truth, dtype='int'), np.asarray(test_predictions, dtype='int'))
 
                 print('Calculating sensitivity/specificity...')
                 training_sensitivity[fold_idx, epoch_idx] = train_tp / (train_tp + train_fn)
