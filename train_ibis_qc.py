@@ -64,7 +64,7 @@ input_size = image_shape + (1,)
 
 class QCDataset(Dataset):
     def __init__(self, hdf5_file_path, all_indices, random_slice=False, augmentation_type=None):
-        f = h5py.File(hdf5_file_path, 'r', libver='latest', swmr=True)
+        f = h5py.File(hdf5_file_path)
         self.images = f['MRI']
         self.labels = f['qc_label']
 
@@ -492,10 +492,15 @@ if __name__ == '__main__':
                 print('Generating confusion matrices...')
                 print('Training:')
                 [[train_tp, train_fn], [train_fp, train_tn]] = confusion_matrix(np.asarray(train_truth, dtype='int'), np.asarray(train_predictions, dtype='int'))
+                print('TP:', train_tp, 'TN:', train_tn, 'FP:', train_fp, 'FN:', train_fn)
+
                 print('Validation')
                 [[val_tp, val_fn], [val_fp, val_tn]] = confusion_matrix(np.asarray(val_truth, dtype='int'), np.asarray(val_predictions, dtype='int'))
+                print('TP:', val_tp, 'TN:', val_tn, 'FP:', val_fp, 'FN:', val_fn)
+
                 print('Testing')
                 [[test_tp, test_fn], [test_fp, test_tn]] = confusion_matrix(np.asarray(test_truth, dtype='int'), np.asarray(test_predictions, dtype='int'))
+                print('TP:', test_tp, 'TN:', test_tn, 'FP:', test_fp, 'FN:', test_fn)
 
                 print('Calculating sensitivity/specificity...')
                 training_sensitivity[fold_idx, epoch_idx] = train_tp / (train_tp + train_fn)

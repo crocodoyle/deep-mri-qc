@@ -51,7 +51,7 @@ def make_ibis_qc():
         f.create_dataset('qc_label', (total_subjects,), dtype='float32')
         dt = h5py.special_dtype(vlen=bytes)
         f.create_dataset('filename', (total_subjects,), dtype=dt)
-        f.swmr_mode = True
+        # f.swmr_mode = True
 
         for i, data_point in enumerate(data_points):
             if 'Pass' in data_point['qc_label']:
