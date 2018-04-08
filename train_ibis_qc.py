@@ -444,15 +444,19 @@ if __name__ == '__main__':
         validation_indices = other_indices[::2]
         test_indices = other_indices[1::2]
 
+        train_labels = labels[list(train_indices)]
         validation_labels = labels[list(validation_indices)]
         test_labels = labels[list(test_indices)]
 
+        n_train_pass = np.sum(train_labels)
         n_val_pass = np.sum(validation_labels)
         n_test_pass = np.sum(test_labels)
 
+        n_train_fail = len(train_indices) - n_train_pass
         n_val_fail = len(validation_indices) - n_val_pass
         n_test_fail = len(test_indices) - n_test_pass
 
+        print('Fold', fold_num, 'has', n_train_pass, 'pass images and', n_train_fail, 'fail images in the training set.')
         print('Fold', fold_num, 'has', n_val_pass, 'pass images and', n_val_fail, 'fail images in the validation set.')
         print('Fold', fold_num, 'has', n_test_pass, 'pass images and', n_test_fail, 'fail images in the test set.')
 
