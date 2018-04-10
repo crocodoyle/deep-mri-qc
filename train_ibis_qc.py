@@ -208,6 +208,7 @@ def train(epoch):
     truth, probabilities = np.zeros((len(train_loader.dataset))), np.zeros((len(train_loader.dataset), 2))
 
     for batch_idx, (data, target) in enumerate(train_loader):
+        class_weight = torch.FloatTensor([fail_weight, pass_weight])
         if args.cuda:
             data, target, class_weight = data.cuda(), target.cuda(), class_weight.cuda()
         data, target, class_weight = Variable(data), Variable(target).type(torch.cuda.LongTensor), Variable(class_weight)
@@ -276,7 +277,6 @@ def test():
     truth, probabilities = np.zeros((len(test_loader.dataset))), np.zeros((len(test_loader.dataset), 2))
 
     for batch_idx, (data, target) in enumerate(test_loader):
-        class_weight = torch.FloatTensor([fail_weight, pass_weight])
         if args.cuda:
             data, target = data.cuda(), target.cuda()
         data, target = Variable(data, volatile=True), Variable(target).type(torch.cuda.LongTensor)
