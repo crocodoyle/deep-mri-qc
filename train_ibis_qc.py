@@ -495,20 +495,20 @@ if __name__ == '__main__':
             try:
                 print('Generating confusion matrices...')
                 print('Training:')
-                [[train_fp, train_tn], [train_tp, train_fn]] = confusion_matrix(np.asarray(train_truth, dtype='int'), np.asarray(train_predictions, dtype='int'))
+                [[train_tn, train_fp], [train_fn, train_tp]] = confusion_matrix(np.asarray(train_truth, dtype='int'), np.asarray(train_predictions, dtype='int'))
                 print('TP:', train_tp, 'TN:', train_tn, 'FP:', train_fp, 'FN:', train_fn)
             except:
                 print('ERROR: couldnt calculate confusion matrix in training, probably only one class predicted/present in ground truth.')
             try:
                 print('Validation')
-                [[val_fp, val_tn], [val_tp, val_fn]] = confusion_matrix(np.asarray(val_truth, dtype='int'), np.asarray(val_predictions, dtype='int'))
+                [[val_tn, val_fp], [val_fn, val_tp]] = confusion_matrix(np.asarray(val_truth, dtype='int'), np.asarray(val_predictions, dtype='int'))
                 print('TP:', val_tp, 'TN:', val_tn, 'FP:', val_fp, 'FN:', val_fn)
             except:
                 print('ERROR: couldnt calculate confusion matrix in validation, probably only one class predicted/present in ground truth.')
 
             try:
                 print('Testing')
-                [[test_fp, test_tn], [test_tp, test_fn]] = confusion_matrix(np.asarray(test_truth, dtype='int'), np.asarray(test_predictions, dtype='int'))
+                [[test_tn, test_fp], [test_fn, test_tp]] = confusion_matrix(np.asarray(test_truth, dtype='int'), np.asarray(test_predictions, dtype='int'))
                 print('TP:', test_tp, 'TN:', test_tn, 'FP:', test_fp, 'FN:', test_fn)
             except:
                 print('ERROR: couldnt calculate confusion matrix in testing, probably only one class predicted/present in ground truth.')
