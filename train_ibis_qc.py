@@ -63,12 +63,11 @@ image_shape = (160, 256, 224)
 input_size = image_shape + (1,)
 
 class QCDataset(Dataset):
-    def __init__(self, hdf5_file_path, all_indices, random_slice=False, augmentation_type=None):
-        f = h5py.File(hdf5_file_path)
+    def __init__(self, f, all_indices, random_slice=False, augmentation_type=None):
         self.images = f['MRI']
         self.labels = f['qc_label']
 
-        self.n_subjects = len(all_indices)
+        self.n_subjects = len(self.images)
         self.indices = np.zeros((self.n_subjects))
 
         self.random_slice = random_slice
@@ -77,13 +76,15 @@ class QCDataset(Dataset):
             self.indices[i] = index
 
     def __getitem__(self, index):
+        good_index = self.indices[index]
+
         if self.random_slice:
             slice_modifier = np.random.randint(-10, 10)
         else:
             slice_modifier = 0
 
-        image = self.images[index, ...][image_shape[0] // 2 + slice_modifier, :, :, 0]
-        label = self.labels[index]
+        image = self.images[good_index, ...][image_shape[0] // 2 + slice_modifier, :, :, 0]
+        label = self.labels[good_index]
 
         return image[np.newaxis, ...], label
 
@@ -298,9 +299,6 @@ def test():
     return truth, probabilities
 
 
-model = ConvolutionalQCNet()
-
-
 def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
     model.eval()
 
@@ -391,21 +389,19 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
 if __name__ == '__main__':
     print('PyTorch implementation of DeepMRIQC.')
     start_time = time.time()
+
+    model = ConvolutionalQCNet()
     print("Convolutional QC Model")
     print(model)
 
     results_dir, experiment_number = setup_experiment(workdir)
 
     f = h5py.File(workdir + input_filename, 'r', libver='latest', swmr=True)
-    print('HDF5 file has:', f.keys())
     ibis_indices = list(range(f['MRI'].shape[0]))
 
     ground_truth = np.asarray(f['qc_label'], dtype='uint8')
-    print('Ground truth shape:', ground_truth.shape)
 
     labels = np.copy(f['qc_label'])
-
-    f.close()
 
     n_total = len(ibis_indices)
 
@@ -419,8 +415,6 @@ if __name__ == '__main__':
 
     if args.cuda:
         model.cuda()
-
-    # optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
     n_pass = np.sum(labels)
     n_fail = len(ibis_indices) - n_pass
@@ -460,26 +454,30 @@ if __name__ == '__main__':
         print('Fold', fold_num, 'has', n_val_pass, 'pass images and', n_val_fail, 'fail images in the validation set.')
         print('Fold', fold_num, 'has', n_test_pass, 'pass images and', n_test_fail, 'fail images in the test set.')
 
-        train_dataset = QCDataset(workdir + input_filename, train_indices, random_slice=True)
-        validation_dataset = QCDataset(workdir + input_filename, validation_indices, random_slice=True)
-        test_dataset = QCDataset(workdir + input_filename, test_indices, random_slice=False)
-
-        train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=False, **kwargs)
-        validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=args.val_batch_size, shuffle=False, **kwargs)
-        test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.test_batch_size, shuffle=False, **kwargs)
-
-        print('This fold has', str(len(train_loader.dataset)), 'training images and',
-              str(len(validation_loader.dataset)), 'validation images and', str(len(test_loader.dataset)),
-              'test images.')
+        # print('This fold has', str(len(train_loader.dataset)), 'training images and',
+        #       str(len(validation_loader.dataset)), 'validation images and', str(len(test_loader.dataset)),
+        #       'test images.')
 
         optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
+            train_dataset = QCDataset(train_indices, random_slice=True)
+            train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=False,
+                                                       **kwargs)
+
             train_truth, train_probabilities = train(epoch)
             train_predictions = np.argmax(train_probabilities, axis=-1)
 
+            validation_dataset = QCDataset(validation_indices, random_slice=True)
+            validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=args.val_batch_size,
+                                                            shuffle=False, **kwargs)
+
             val_truth, val_probabilities = validate()
             val_predictions = np.argmax(val_probabilities, axis=-1)
+
+            test_dataset = QCDataset(test_indices, random_slice=False)
+            test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.test_batch_size, shuffle=False,
+                                                      **kwargs)
 
             test_truth, test_probabilities = test()
             test_predictions = np.argmax(test_probabilities, axis=-1)
