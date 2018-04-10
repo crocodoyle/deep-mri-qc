@@ -201,7 +201,7 @@ class ConvolutionalQCNet(nn.Module):
         return x
 
 
-def train(epoch, class_weight):
+def train(epoch):
     model.train()
     train_loss, correct = 0, 0
 
