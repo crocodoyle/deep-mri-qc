@@ -67,7 +67,7 @@ class QCDataset(Dataset):
         self.images = f['MRI']
         self.labels = f['qc_label']
 
-        self.n_subjects = len(self.images)
+        self.n_subjects = len(all_indices)
         self.indices = np.zeros((self.n_subjects))
 
         self.random_slice = random_slice
@@ -396,7 +396,7 @@ if __name__ == '__main__':
 
     results_dir, experiment_number = setup_experiment(workdir)
 
-    f = h5py.File(workdir + input_filename, 'r', libver='latest', swmr=True)
+    f = h5py.File(workdir + input_filename, 'r')
     ibis_indices = list(range(f['MRI'].shape[0]))
 
     ground_truth = np.asarray(f['qc_label'], dtype='uint8')
@@ -468,12 +468,17 @@ if __name__ == '__main__':
             train_truth, train_probabilities = train(epoch)
             train_predictions = np.argmax(train_probabilities, axis=-1)
 
+            f.close()
+            f = h5py.File(workdir + input_filename, 'r')
             validation_dataset = QCDataset(f, validation_indices, random_slice=True)
             validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=args.val_batch_size,
                                                             shuffle=False, **kwargs)
 
             val_truth, val_probabilities = validate()
             val_predictions = np.argmax(val_probabilities, axis=-1)
+
+            f.close()
+            f = h5py.File(workdir + input_filename, 'r')
 
             test_dataset = QCDataset(f, test_indices, random_slice=False)
             test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.test_batch_size, shuffle=False,
@@ -482,6 +487,7 @@ if __name__ == '__main__':
             test_truth, test_probabilities = test()
             test_predictions = np.argmax(test_probabilities, axis=-1)
 
+            f.close()
             train_auc, val_auc, test_auc = plot_roc(train_truth, train_probabilities, val_truth, val_probabilities,
                                                     test_truth, test_probabilities, results_dir, epoch, fold_num)
 
@@ -495,29 +501,35 @@ if __name__ == '__main__':
                 print('Training:')
                 [[train_tp, train_fn], [train_fp, train_tn]] = confusion_matrix(np.asarray(train_truth, dtype='int'), np.asarray(train_predictions, dtype='int'))
                 print('TP:', train_tp, 'TN:', train_tn, 'FP:', train_fp, 'FN:', train_fn)
-
+            except:
+                print('ERROR: couldnt calculate confusion matrix in training, probably only one class predicted/present in ground truth.')
+            try:
                 print('Validation')
                 [[val_tp, val_fn], [val_fp, val_tn]] = confusion_matrix(np.asarray(val_truth, dtype='int'), np.asarray(val_predictions, dtype='int'))
                 print('TP:', val_tp, 'TN:', val_tn, 'FP:', val_fp, 'FN:', val_fn)
+            except:
+                print('ERROR: couldnt calculate confusion matrix in validation, probably only one class predicted/present in ground truth.')
 
+            try:
                 print('Testing')
                 [[test_tp, test_fn], [test_fp, test_tn]] = confusion_matrix(np.asarray(test_truth, dtype='int'), np.asarray(test_predictions, dtype='int'))
                 print('TP:', test_tp, 'TN:', test_tn, 'FP:', test_fp, 'FN:', test_fn)
-
-                print('Calculating sensitivity/specificity...')
-                training_sensitivity[fold_idx, epoch_idx] = train_tp / (train_tp + train_fn)
-                training_specificity[fold_idx, epoch_idx] = train_tn / (train_tn + train_fp)
-
-                validation_sensitivity[fold_idx, epoch_idx] = val_tp / (val_tp + val_fn)
-                validation_specificity[fold_idx, epoch_idx] = val_tn / (val_tn + val_fp)
-
-                test_sensitivity[fold_idx, epoch_idx] = test_tp / (test_tp + test_fn)
-                test_specificity[fold_idx, epoch_idx] = test_tn / (test_tn + test_fp)
-
-                val_aucs[fold_idx, epoch_idx] = val_auc
             except:
-                print(
-                    'ERROR could not calculate confusion matrix properly, probably only one class predicted/present in ground truth.')
+                print('ERROR: couldnt calculate confusion matrix in testing, probably only one class predicted/present in ground truth.')
+
+            print('Calculating sensitivity/specificity...')
+            epsilon = 1e-5
+            training_sensitivity[fold_idx, epoch_idx] = train_tp / (train_tp + train_fn + epsilon)
+            training_specificity[fold_idx, epoch_idx] = train_tn / (train_tn + train_fp + epsilon)
+
+            validation_sensitivity[fold_idx, epoch_idx] = val_tp / (val_tp + val_fn + epsilon)
+            validation_specificity[fold_idx, epoch_idx] = val_tn / (val_tn + val_fp + epsilon)
+
+            test_sensitivity[fold_idx, epoch_idx] = test_tp / (test_tp + test_fn + epsilon)
+            test_specificity[fold_idx, epoch_idx] = test_tn / (test_tn + test_fp + epsilon)
+
+            val_aucs[fold_idx, epoch_idx] = val_auc
+
 
             if val_auc + train_auc > best_auc_score[fold_idx]:
                 print('This epoch is the new best model on the train/validation set!')
