@@ -276,6 +276,7 @@ def test():
     truth, probabilities = np.zeros((len(test_loader.dataset))), np.zeros((len(test_loader.dataset), 2))
 
     for batch_idx, (data, target) in enumerate(test_loader):
+        class_weight = torch.FloatTensor([fail_weight, pass_weight])
         if args.cuda:
             data, target = data.cuda(), target.cuda()
         data, target = Variable(data, volatile=True), Variable(target).type(torch.cuda.LongTensor)
@@ -334,7 +335,7 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
                 plt.close()
                 plt.imshow(image_batch[i, 0, :, :], cmap='gray', origin='lower')
                 plt.axis('off')
-                filename = results_dir + '/imgs/' + qc_decision + '_' + site + '_' + str(batch_idx) + '_img_' + str(
+                filename = results_dir + '/imgs/' + qc_decision + '_' + str(batch_idx) + '_img_' + str(
                     i) + '.png'
                 plt.savefig(filename, bbox_inches='tight')
         except IndexError as e:
@@ -459,16 +460,13 @@ if __name__ == '__main__':
 
         optimizer = optim.Adam(model.parameters(), lr=0.002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
 
-
-
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             f = h5py.File(workdir + input_filename, 'r')
             train_dataset = QCDataset(f, train_indices, random_slice=True)
             train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=False,
                                                        **kwargs)
 
-            class_weight = torch.FloatTensor([fail_weight, pass_weight])
-            train_truth, train_probabilities = train(epoch, class_weight)
+            train_truth, train_probabilities = train(epoch)
             train_predictions = np.argmax(train_probabilities, axis=-1)
 
             f.close()
