@@ -461,21 +461,21 @@ if __name__ == '__main__':
         optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
-            train_dataset = QCDataset(train_indices, random_slice=True)
+            train_dataset = QCDataset(f, train_indices, random_slice=True)
             train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=False,
                                                        **kwargs)
 
             train_truth, train_probabilities = train(epoch)
             train_predictions = np.argmax(train_probabilities, axis=-1)
 
-            validation_dataset = QCDataset(validation_indices, random_slice=True)
+            validation_dataset = QCDataset(f, validation_indices, random_slice=True)
             validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=args.val_batch_size,
                                                             shuffle=False, **kwargs)
 
             val_truth, val_probabilities = validate()
             val_predictions = np.argmax(val_probabilities, axis=-1)
 
-            test_dataset = QCDataset(test_indices, random_slice=False)
+            test_dataset = QCDataset(f, test_indices, random_slice=False)
             test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.test_batch_size, shuffle=False,
                                                       **kwargs)
 
