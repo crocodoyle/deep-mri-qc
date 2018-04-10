@@ -201,14 +201,13 @@ class ConvolutionalQCNet(nn.Module):
         return x
 
 
-def train(epoch):
+def train(epoch, class_weight):
     model.train()
     train_loss, correct = 0, 0
 
     truth, probabilities = np.zeros((len(train_loader.dataset))), np.zeros((len(train_loader.dataset), 2))
 
     for batch_idx, (data, target) in enumerate(train_loader):
-        class_weight = torch.FloatTensor([fail_weight, pass_weight])
         if args.cuda:
             data, target, class_weight = data.cuda(), target.cuda(), class_weight.cuda()
         data, target, class_weight = Variable(data), Variable(target).type(torch.cuda.LongTensor), Variable(class_weight)
@@ -458,14 +457,18 @@ if __name__ == '__main__':
         #       str(len(validation_loader.dataset)), 'validation images and', str(len(test_loader.dataset)),
         #       'test images.')
 
-        optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
+        optimizer = optim.Adam(model.parameters(), lr=0.002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
+
+
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
+            f = h5py.File(workdir + input_filename, 'r')
             train_dataset = QCDataset(f, train_indices, random_slice=True)
             train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=False,
                                                        **kwargs)
 
-            train_truth, train_probabilities = train(epoch)
+            class_weight = torch.FloatTensor([fail_weight, pass_weight])
+            train_truth, train_probabilities = train(epoch, class_weight)
             train_predictions = np.argmax(train_probabilities, axis=-1)
 
             f.close()
@@ -491,28 +494,23 @@ if __name__ == '__main__':
             train_auc, val_auc, test_auc = plot_roc(train_truth, train_probabilities, val_truth, val_probabilities,
                                                     test_truth, test_probabilities, results_dir, epoch, fold_num)
 
-            print('probabilities shape:', train_probabilities.shape)
-            print('predictions shape:', train_predictions.shape)
-            print('train ground truth', train_truth)
-            print('train_predictions', train_predictions)
-
             try:
                 print('Generating confusion matrices...')
                 print('Training:')
-                [[train_tp, train_fn], [train_fp, train_tn]] = confusion_matrix(np.asarray(train_truth, dtype='int'), np.asarray(train_predictions, dtype='int'))
+                [[train_fp, train_tn], [train_tp, train_fn]] = confusion_matrix(np.asarray(train_truth, dtype='int'), np.asarray(train_predictions, dtype='int'))
                 print('TP:', train_tp, 'TN:', train_tn, 'FP:', train_fp, 'FN:', train_fn)
             except:
                 print('ERROR: couldnt calculate confusion matrix in training, probably only one class predicted/present in ground truth.')
             try:
                 print('Validation')
-                [[val_tp, val_fn], [val_fp, val_tn]] = confusion_matrix(np.asarray(val_truth, dtype='int'), np.asarray(val_predictions, dtype='int'))
+                [[val_fp, val_tn], [val_tp, val_fn]] = confusion_matrix(np.asarray(val_truth, dtype='int'), np.asarray(val_predictions, dtype='int'))
                 print('TP:', val_tp, 'TN:', val_tn, 'FP:', val_fp, 'FN:', val_fn)
             except:
                 print('ERROR: couldnt calculate confusion matrix in validation, probably only one class predicted/present in ground truth.')
 
             try:
                 print('Testing')
-                [[test_tp, test_fn], [test_fp, test_tn]] = confusion_matrix(np.asarray(test_truth, dtype='int'), np.asarray(test_predictions, dtype='int'))
+                [[test_fp, test_tn], [test_tp, test_fn]] = confusion_matrix(np.asarray(test_truth, dtype='int'), np.asarray(test_predictions, dtype='int'))
                 print('TP:', test_tp, 'TN:', test_tn, 'FP:', test_fp, 'FN:', test_fn)
             except:
                 print('ERROR: couldnt calculate confusion matrix in testing, probably only one class predicted/present in ground truth.')
@@ -529,7 +527,6 @@ if __name__ == '__main__':
             test_specificity[fold_idx, epoch_idx] = test_tn / (test_tn + test_fp + epsilon)
 
             val_aucs[fold_idx, epoch_idx] = val_auc
-
 
             if val_auc + train_auc > best_auc_score[fold_idx]:
                 print('This epoch is the new best model on the train/validation set!')
