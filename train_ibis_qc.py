@@ -28,8 +28,8 @@ import matplotlib.cm as cm
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch DeepMRIQC training.')
-parser.add_argument('--batch-size', type=int, default=256, metavar='N',
-                    help='input batch size for training (default: 64)')
+parser.add_argument('--batch-size', type=int, default=128, metavar='N',
+                    help='input batch size for training (default: 128)')
 parser.add_argument('--val-batch-size', type=int, default=32, metavar='N',
                     help='input batch size for validation (default: 32')
 parser.add_argument('--test-batch-size', type=int, default=32, metavar='N',
@@ -46,7 +46,7 @@ parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='disables CUDA training')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
-parser.add_argument('--log-interval', type=int, default=5, metavar='N',
+parser.add_argument('--log-interval', type=int, default=2, metavar='N',
                     help='how many batches to wait before logging training status')
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
