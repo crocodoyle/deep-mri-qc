@@ -47,7 +47,7 @@ def make_ibis_qc():
     total_subjects = len(data_points)
 
     with h5py.File(data_dir + 'IBIS_QC.hdf5', 'w') as f:
-        f.create_dataset('MRI', (total_subjects, target_size[0], target_size[1], target_size[2], 1), dtype='float32')
+        f.create_dataset('MRI', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float32')
         f.create_dataset('qc_label', (total_subjects,), dtype='float32')
         dt = h5py.special_dtype(vlen=bytes)
         f.create_dataset('filename', (total_subjects,), dtype=dt)
