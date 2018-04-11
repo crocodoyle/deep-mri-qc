@@ -62,44 +62,6 @@ class QCDataset(Dataset):
         return self.n_subjects
 
 
-class FullyConnectedQCNet(nn.Module):
-    def __init__(self, input_shape=(1, image_shape[1], image_shape[2])):
-        super(FullyConnectedQCNet, self).__init__()
-
-        self.features = nn.Sequential(
-            nn.Linear(1, 32),
-            nn.BatchNorm1d(32),
-            nn.ReLU(),
-            nn.Linear(32, 64),
-            nn.BatchNorm1d(64),
-            nn.ReLU(),
-            nn.Linear(64, 128),
-            nn.BatchNorm1d(128),
-            nn.ReLU(),
-            nn.Linear(128, 256),
-            nn.BatchNorm1d(256),
-            nn.ReLU()
-        )
-
-        self.classifier = nn.Sequential(
-            nn.Linear(self.flat_features, 256),
-            nn.Dropout(),
-            nn.Linear(2)
-        )
-
-        self.output = nn.LogSoftmax()
-
-    def get_flat_features(self, image_shape, features):
-        f = features(Variable(torch.ones(1,*image_shape)))
-        return int(np.prod(f.size()[1:]))
-
-    def forward(self, x):
-        x = self.features(x)
-        x = self.classifier(x)
-        x = self.output(x)
-        return x
-
-
 class ConvolutionalQCNet(nn.Module):
     def __init__(self, input_shape=(1, image_shape[1], image_shape[2])):
         super(ConvolutionalQCNet, self).__init__()
@@ -115,16 +77,16 @@ class ConvolutionalQCNet(nn.Module):
             nn.MaxPool2d(2),
             nn.Conv2d(32, 64, kernel_size=3),
             # nn.BatchNorm2d(32),
-            nn.Dropout(),
+            nn.Dropout(0.2),
             nn.ReLU(),
             nn.MaxPool2d(2),
             nn.Conv2d(64, 128, kernel_size=3),
             # nn.BatchNorm2d(64),
-            nn.Dropout(),
+            nn.Dropout(0.3),
             nn.ReLU(),
             nn.MaxPool2d(2),
             nn.Conv2d(128, 256, kernel_size=3),
-            nn.Dropout(),
+            nn.Dropout(0.4),
             nn.ReLU(),
             nn.MaxPool2d(2),
             nn.Conv2d(256, 256, kernel_size=3),
