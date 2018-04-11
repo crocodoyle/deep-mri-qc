@@ -63,7 +63,7 @@ def qc_image(image, target_size=(160, 256, 224), model_version=None):
 
     model_path = os.path.expanduser('~/ibis_qc_net_v' + str(model_version) + '.onnx')
 
-    model = onnx.load(model_path + 'ibis_qc_net_v' + str(model_version) + '.onnx')
+    model = onnx.load(model_path)
     tf_rep = prepare(model)
 
     print(tf_rep.predict_net)
