@@ -99,6 +99,8 @@ def qc_image(image, target_size=(160, 256, 224), model_version=None, using_onnx=
         predicted_tensors = output.data.cpu().numpy()
         print('predicted_tensors:', predicted_tensors)
 
+        predictions = np.exp(predicted_tensors)
+
     print('Predictions:', predictions)
     print('Variance:', np.var(predictions[:, 1]))
 
