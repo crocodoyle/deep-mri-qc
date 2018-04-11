@@ -9,7 +9,6 @@ from torch.autograd import Variable
 
 from train_ibis_qc import ConvolutionalQCNet
 
-
 import onnx
 from onnx_tf.backend import prepare
 

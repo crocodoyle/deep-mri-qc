@@ -26,35 +26,6 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
-# Training settings
-parser = argparse.ArgumentParser(description='PyTorch DeepMRIQC training.')
-parser.add_argument('--batch-size', type=int, default=128, metavar='N',
-                    help='input batch size for training (default: 128)')
-parser.add_argument('--val-batch-size', type=int, default=32, metavar='N',
-                    help='input batch size for validation (default: 32')
-parser.add_argument('--test-batch-size', type=int, default=32, metavar='N',
-                    help='input batch size for testing (default: 32)')
-parser.add_argument('--epochs', type=int, default=10, metavar='N',
-                    help='number of epochs to train (default: 100)')
-parser.add_argument('--folds', type=int, default=10, metavar='N',
-                    help='number of folds to cross-validate over (default: 10)')
-parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',
-                    help='learning rate (default: 0.01)')
-parser.add_argument('--momentum', type=float, default=0.5, metavar='M',
-                    help='SGD momentum (default: 0.5)')
-parser.add_argument('--no-cuda', action='store_true', default=False,
-                    help='disables CUDA training')
-parser.add_argument('--seed', type=int, default=1, metavar='S',
-                    help='random seed (default: 1)')
-parser.add_argument('--log-interval', type=int, default=2, metavar='N',
-                    help='how many batches to wait before logging training status')
-args = parser.parse_args()
-args.cuda = not args.no_cuda and torch.cuda.is_available()
-
-torch.manual_seed(args.seed)
-if args.cuda:
-    torch.cuda.manual_seed(args.seed)
-
 workdir = '/data1/users/adoyle/IBIS/'
 # workdir = '/home/users/adoyle/deepqc/'
 input_filename = 'IBIS_QC.hdf5'
@@ -389,6 +360,35 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
 if __name__ == '__main__':
     print('PyTorch implementation of DeepMRIQC.')
     start_time = time.time()
+
+    # Training settings
+    parser = argparse.ArgumentParser(description='PyTorch DeepMRIQC training.')
+    parser.add_argument('--batch-size', type=int, default=128, metavar='N',
+                        help='input batch size for training (default: 128)')
+    parser.add_argument('--val-batch-size', type=int, default=32, metavar='N',
+                        help='input batch size for validation (default: 32')
+    parser.add_argument('--test-batch-size', type=int, default=32, metavar='N',
+                        help='input batch size for testing (default: 32)')
+    parser.add_argument('--epochs', type=int, default=10, metavar='N',
+                        help='number of epochs to train (default: 100)')
+    parser.add_argument('--folds', type=int, default=10, metavar='N',
+                        help='number of folds to cross-validate over (default: 10)')
+    parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',
+                        help='learning rate (default: 0.01)')
+    parser.add_argument('--momentum', type=float, default=0.5, metavar='M',
+                        help='SGD momentum (default: 0.5)')
+    parser.add_argument('--no-cuda', action='store_true', default=False,
+                        help='disables CUDA training')
+    parser.add_argument('--seed', type=int, default=1, metavar='S',
+                        help='random seed (default: 1)')
+    parser.add_argument('--log-interval', type=int, default=2, metavar='N',
+                        help='how many batches to wait before logging training status')
+    args = parser.parse_args()
+    args.cuda = not args.no_cuda and torch.cuda.is_available()
+
+    torch.manual_seed(args.seed)
+    if args.cuda:
+        torch.cuda.manual_seed(args.seed)
 
     model = ConvolutionalQCNet()
     print("Convolutional QC Model")
