@@ -4,6 +4,12 @@ import argparse as ap
 import numpy as np
 import os
 
+import torch
+from torch.autograd import Variable
+
+from train_ibis_qc import ConvolutionalQCNet
+
+
 import onnx
 from onnx_tf.backend import prepare
 
@@ -56,28 +62,42 @@ def resize_image_with_crop_or_pad(image, img_size=(64, 64, 64), **kwargs):
     return np.pad(image[slicer], to_padding, **kwargs)
 
 
-def qc_image(image, target_size=(160, 256, 224), model_version=None):
+def qc_image(image, target_size=(160, 256, 224), model_version=None, using_onnx=False):
 
     if model_version == None:
         model_version = 1
 
-    model_path = os.path.expanduser('~/ibis_qc_net_v' + str(model_version) + '.onnx')
-
-    model = onnx.load(model_path)
-    tf_rep = prepare(model)
-
-    print(tf_rep.predict_net)
-    print('-----')
-    print(tf_rep.input_dict)
-    print('-----')
-    print(tf_rep.uninitialized)
-
     start_slice = (target_size[0] // 2) - 5
     end_slice = (target_size[0] // 2) + 5
 
-
     slices = image[start_slice:end_slice, :, :][..., np.newaxis]
-    predictions = tf_rep.run(slices)._0
+
+    if using_onnx:
+        model_path = os.path.expanduser('~/ibis_qc_net_v' + str(model_version) + '.onnx')
+
+        model = onnx.load(model_path)
+        tf_rep = prepare(model)
+
+        print(tf_rep.predict_net)
+        print('-----')
+        print(tf_rep.input_dict)
+        print('-----')
+        print(tf_rep.uninitialized)
+
+        predictions = tf_rep.run(slices)._0
+
+    else:
+        model_path = os.path.expanduser('~/ibis_qc_net_v' + str(model_version) + '.tch')
+
+        model = ConvolutionalQCNet()
+        model.load_state_dict(torch.load(model_path))
+        model.eval()
+
+        data = Variable(slices, volatile=True)
+        output = model(data)
+
+        predicted_tensors = output.data.cpu().numpy()
+        print('predicted_tensors:', predicted_tensors)
 
     print('Predictions:', predictions)
     print('Variance:', np.var(predictions[:, 1]))
