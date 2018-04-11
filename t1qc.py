@@ -92,7 +92,8 @@ def qc_image(image, target_size=(160, 256, 224), model_version=None, using_onnx=
         model.load_state_dict(torch.load(model_path))
         model.eval()
 
-        data = Variable(slices, volatile=True)
+        slices_tensor = torch.Tensor(slices)
+        data = Variable(slices_tensor, volatile=True)
         output = model(data)
 
         predicted_tensors = output.data.cpu().numpy()
