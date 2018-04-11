@@ -31,7 +31,6 @@ workdir = '/data1/users/adoyle/IBIS/'
 input_filename = 'IBIS_QC.hdf5'
 
 image_shape = (160, 256, 224)
-input_size = image_shape + (1,)
 
 class QCDataset(Dataset):
     def __init__(self, f, all_indices, random_slice=False, augmentation_type=None):
@@ -54,7 +53,7 @@ class QCDataset(Dataset):
         else:
             slice_modifier = 0
 
-        image = self.images[good_index, ...][image_shape[0] // 2 + slice_modifier, :, :, 0]
+        image = self.images[good_index, ...][image_shape[0] // 2 + slice_modifier, :, :]
         label = self.labels[good_index]
 
         return image[np.newaxis, ...], label
@@ -106,29 +105,29 @@ class ConvolutionalQCNet(nn.Module):
         super(ConvolutionalQCNet, self).__init__()
 
         self.features = nn.Sequential(
-            nn.Conv2d(1, 32, kernel_size=3),
-            nn.BatchNorm2d(32),
+            nn.Conv2d(1, 16, kernel_size=3),
+            nn.BatchNorm2d(16),
             nn.ReLU(),
             nn.MaxPool2d(2),
-            nn.Conv2d(32, 32, kernel_size=3),
+            nn.Conv2d(16, 32, kernel_size=3),
             # nn.BatchNorm2d(32),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(32, 32, kernel_size=3),
-            # nn.BatchNorm2d(32),
-            nn.Dropout(),
             nn.ReLU(),
             nn.MaxPool2d(2),
             nn.Conv2d(32, 64, kernel_size=3),
-            # nn.BatchNorm2d(64),
+            # nn.BatchNorm2d(32),
             nn.Dropout(),
             nn.ReLU(),
             nn.MaxPool2d(2),
             nn.Conv2d(64, 128, kernel_size=3),
+            # nn.BatchNorm2d(64),
             nn.Dropout(),
             nn.ReLU(),
             nn.MaxPool2d(2),
-            nn.Conv2d(128, 128, kernel_size=3),
+            nn.Conv2d(128, 256, kernel_size=3),
+            nn.Dropout(),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(256, 256, kernel_size=3),
             nn.ReLU(),
             nn.Dropout(),
             nn.MaxPool2d(2)
@@ -150,10 +149,10 @@ class ConvolutionalQCNet(nn.Module):
 
         self.output = nn.LogSoftmax(dim=-1)
 
-        print('ConvolutionalQC structure:')
-        print(self.features)
-        print(self.classifier)
-        print(self.output)
+        # print('ConvolutionalQC structure:')
+        # print(self.features)
+        # print(self.classifier)
+        # print(self.output)
 
     def get_flat_features(self, image_shape, features):
         f = features(Variable(torch.ones(1,*image_shape)))
@@ -458,7 +457,7 @@ if __name__ == '__main__':
         #       str(len(validation_loader.dataset)), 'validation images and', str(len(test_loader.dataset)),
         #       'test images.')
 
-        optimizer = optim.Adam(model.parameters(), lr=0.002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
+        optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             f = h5py.File(workdir + input_filename, 'r')

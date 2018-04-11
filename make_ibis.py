@@ -66,7 +66,7 @@ def make_ibis_qc():
                 # print('resizing from', t1_data.shape)
                 t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
-            image_to_save = np.reshape(normalise_zero_one(t1_data), (target_size) + (1,))
+            image_to_save = np.reshape(normalise_zero_one(t1_data), (1,) + (target_size))
 
             f['MRI'][i, ...] = image_to_save
             f['filename'][i] = data_point['t1_filename']
