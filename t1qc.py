@@ -104,7 +104,7 @@ def qc_image(image, target_size=(160, 256, 224), model_version=None, using_onnx=
     print('Predictions:', predictions)
     print('Variance:', np.var(predictions[:, 1]))
 
-    prediction = np.sum(predictions[:, 1])
+    prediction = np.mean(predictions[:, 1])
     confidence = 1 - np.var(predictions[:, 1])
 
     return prediction, confidence
