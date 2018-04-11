@@ -69,7 +69,7 @@ def qc_image(image, target_size=(160, 256, 224), model_version=None, using_onnx=
     start_slice = (target_size[0] // 2) - 5
     end_slice = (target_size[0] // 2) + 5
 
-    slices = image[start_slice:end_slice, :, :][..., np.newaxis]
+    slices = image[start_slice:end_slice, :, :][:, np.newaxis, :, :]
 
     if using_onnx:
         model_path = os.path.expanduser('~/ibis_qc_net_v' + str(model_version) + '.onnx')
