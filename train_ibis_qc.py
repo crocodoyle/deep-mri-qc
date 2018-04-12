@@ -394,23 +394,20 @@ if __name__ == '__main__':
                                                     test_truth, test_probabilities, results_dir, epoch, fold_num)
 
             try:
-                print('Generating confusion matrices...')
-                print('Training:')
-                [[train_tp, train_fn], [train_fp, train_tn]] = confusion_matrix(np.asarray(train_truth, dtype='int'), np.asarray(train_predictions, dtype='int'))
-                print('TP:', train_tp, 'TN:', train_tn, 'FP:', train_fp, 'FN:', train_fn)
+                [[train_tn, train_fp], [train_fn, train_tp]] = confusion_matrix(np.asarray(train_truth, dtype='int'), np.asarray(train_predictions, dtype='int'))
+                print('Training TP:', train_tp, 'TN:', train_tn, 'FP:', train_fp, 'FN:', train_fn)
             except:
                 print('ERROR: couldnt calculate confusion matrix in training, probably only one class predicted/present in ground truth.')
+
             try:
-                print('Validation')
-                [[val_tp, val_fn], [val_fp, val_tn]] = confusion_matrix(np.asarray(val_truth, dtype='int'), np.asarray(val_predictions, dtype='int'))
-                print('TP:', val_tp, 'TN:', val_tn, 'FP:', val_fp, 'FN:', val_fn)
+                [[val_tn, val_fp], [val_fn, val_tp]] = confusion_matrix(np.asarray(val_truth, dtype='int'), np.asarray(val_predictions, dtype='int'))
+                print('Validation TP:', val_tp, 'TN:', val_tn, 'FP:', val_fp, 'FN:', val_fn)
             except:
                 print('ERROR: couldnt calculate confusion matrix in validation, probably only one class predicted/present in ground truth.')
 
             try:
-                print('Testing')
-                [[test_tp, test_fn], [test_fp, test_tn]] = confusion_matrix(np.asarray(test_truth, dtype='int'), np.asarray(test_predictions, dtype='int'))
-                print('TP:', test_tp, 'TN:', test_tn, 'FP:', test_fp, 'FN:', test_fn)
+                [[test_tn, test_fp], [test_fn, test_tp]] = confusion_matrix(np.asarray(test_truth, dtype='int'), np.asarray(test_predictions, dtype='int'))
+                print('Testing TP:', test_tp, 'TN:', test_tn, 'FP:', test_fp, 'FN:', test_fn)
             except:
                 print('ERROR: couldnt calculate confusion matrix in testing, probably only one class predicted/present in ground truth.')
 
