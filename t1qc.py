@@ -113,7 +113,7 @@ def qc_image(image, target_size=(160, 256, 224), model_version=None, using_onnx=
 def preprocess_image(image, target_size=(160, 256, 224), preprocessing_version=None):
     normalized_image = image
 
-    if preprocessing_version == None:
+    if preprocessing_version == 1:
         resized_image = resize_image_with_crop_or_pad(img, img_size=target_size, mode='constant')
         normalized_image = normalise_zero_one(resized_image)
 
