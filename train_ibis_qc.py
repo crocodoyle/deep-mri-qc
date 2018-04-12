@@ -47,6 +47,8 @@ class QCDataset(Dataset):
         for i, index in enumerate(all_indices):
             self.indices[i] = index
 
+        self.augmentation_type = augmentation_type
+
     def __getitem__(self, index):
         good_index = self.indices[index]
 
@@ -55,8 +57,14 @@ class QCDataset(Dataset):
         else:
             slice_modifier = 0
 
-        image = self.images[good_index, ...][:, image_shape[0] // 2 + slice_modifier, :, :]
+
+        full_img = self.images[good_index, ...]
         label = self.labels[good_index]
+
+        if label == [1, 0] and np.random.rand() > 0.5 and 'flip' in self.augmentation_type:
+            full_img = np.flip(full_img, axis=1)
+
+        image = full_img[:, image_shape[0] // 2 + slice_modifier, :, :]
 
         return image, label
 
@@ -354,7 +362,7 @@ if __name__ == '__main__':
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             f = h5py.File(workdir + input_filename, 'r')
-            train_dataset = QCDataset(f, train_indices, random_slice=True)
+            train_dataset = QCDataset(f, train_indices, random_slice=True, augmentation_type='flip')
             train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=False,
                                                        **kwargs)
 
