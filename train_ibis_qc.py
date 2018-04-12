@@ -85,7 +85,7 @@ def train(epoch):
         data, target, class_weight = Variable(data), Variable(target).type(torch.cuda.LongTensor), Variable(class_weight)
         optimizer.zero_grad()
         output = model(data)
-        # print('P(qc=0):', np.exp(output.data.cpu().numpy())[0])
+        print('P(qc|mri):', np.exp(output.data.cpu().numpy()))
         loss = nn.CrossEntropyLoss(weight=class_weight)
         loss_val = loss(output, target)
         loss_val.backward()
@@ -358,7 +358,8 @@ if __name__ == '__main__':
         #       str(len(validation_loader.dataset)), 'validation images and', str(len(test_loader.dataset)),
         #       'test images.')
 
-        optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
+        # optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
+        optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9, nesterov=True)
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             epoch_start = time.time()
@@ -394,19 +395,19 @@ if __name__ == '__main__':
                                                     test_truth, test_probabilities, results_dir, epoch, fold_num)
 
             try:
-                [[train_tn, train_fp], [train_fn, train_tp]] = confusion_matrix(np.asarray(train_truth, dtype='int'), np.asarray(train_predictions, dtype='int'))
+                train_tn, train_fp, train_fn, train_tp = confusion_matrix(np.asarray(train_truth, dtype='uint8'), np.asarray(train_predictions, dtype='uint8')).ravel()
                 print('Training TP:', train_tp, 'TN:', train_tn, 'FP:', train_fp, 'FN:', train_fn)
             except:
                 print('ERROR: couldnt calculate confusion matrix in training, probably only one class predicted/present in ground truth.')
 
             try:
-                [[val_tn, val_fp], [val_fn, val_tp]] = confusion_matrix(np.asarray(val_truth, dtype='int'), np.asarray(val_predictions, dtype='int'))
+                val_tn, val_fp, val_fn, val_tp = confusion_matrix(np.asarray(val_truth, dtype='uint8'), np.asarray(val_predictions, dtype='uint8')).ravel()
                 print('Validation TP:', val_tp, 'TN:', val_tn, 'FP:', val_fp, 'FN:', val_fn)
             except:
                 print('ERROR: couldnt calculate confusion matrix in validation, probably only one class predicted/present in ground truth.')
 
             try:
-                [[test_tn, test_fp], [test_fn, test_tp]] = confusion_matrix(np.asarray(test_truth, dtype='int'), np.asarray(test_predictions, dtype='int'))
+                test_tn, test_fp, test_fn, test_tp = confusion_matrix(np.asarray(test_truth, dtype='uint8'), np.asarray(test_predictions, dtype='uint8')).ravel()
                 print('Testing TP:', test_tp, 'TN:', test_tn, 'FP:', test_fp, 'FN:', test_fn)
             except:
                 print('ERROR: couldnt calculate confusion matrix in testing, probably only one class predicted/present in ground truth.')
