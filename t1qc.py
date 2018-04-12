@@ -7,10 +7,7 @@ import os
 import torch
 from torch.autograd import Variable
 
-from train_ibis_qc import ConvolutionalQCNet
-
-import onnx
-from onnx_tf.backend import prepare
+from qc_pytorch_models import ConvolutionalQCNet
 
 # taken from DLTK
 def normalise_zero_one(image):
@@ -72,6 +69,9 @@ def qc_image(image, target_size=(160, 256, 224), model_version=None, using_onnx=
     slices = image[start_slice:end_slice, :, :][:, np.newaxis, :, :]
 
     if using_onnx:
+        import onnx
+        from onnx_tf.backend import prepare
+
         model_path = os.path.expanduser('~/ibis_qc_net_v' + str(model_version) + '.onnx')
 
         model = onnx.load(model_path)
@@ -112,7 +112,7 @@ def qc_image(image, target_size=(160, 256, 224), model_version=None, using_onnx=
 
 def preprocess_image(image, target_size=(160, 256, 224), preprocessing_version=None):
 
-    if preprocessing_version == 1:
+    if preprocessing_version == None:
         resized_image = resize_image_with_crop_or_pad(img, img_size=target_size, mode='constant')
         normalized_image = normalise_zero_one(resized_image)
 
@@ -129,7 +129,6 @@ if __name__ == "__main__":
     image_file = args.t1image
 
     target_size = (160, 256, 224)
-
 
     print('Input image file:', image_file)
 

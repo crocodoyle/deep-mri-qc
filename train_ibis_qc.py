@@ -11,6 +11,8 @@ import torch.onnx
 from torch.utils.data import Dataset, DataLoader
 from torch.autograd import Variable
 
+from qc_pytorch_models import ConvolutionalQCNet
+
 import h5py, pickle, os, time, sys
 import numpy as np
 
@@ -21,9 +23,9 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import StratifiedKFold, LeaveOneGroupOut
 
 import matplotlib as mpl
-
 mpl.use('Agg')
 import matplotlib.pyplot as plt
+
 import matplotlib.cm as cm
 
 workdir = '/data1/users/adoyle/IBIS/'
@@ -60,77 +62,6 @@ class QCDataset(Dataset):
 
     def __len__(self):
         return self.n_subjects
-
-
-class ConvolutionalQCNet(nn.Module):
-    def __init__(self, input_shape=(1, image_shape[1], image_shape[2])):
-        super(ConvolutionalQCNet, self).__init__()
-
-        self.features = nn.Sequential(
-            nn.Conv2d(1, 16, kernel_size=3),
-            nn.BatchNorm2d(16),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(16, 32, kernel_size=3),
-            # nn.BatchNorm2d(32),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(32, 64, kernel_size=3),
-            # nn.BatchNorm2d(32),
-            nn.Dropout(0.2),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(64, 128, kernel_size=3),
-            # nn.BatchNorm2d(64),
-            nn.Dropout(0.3),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(128, 256, kernel_size=3),
-            nn.Dropout(0.4),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(256, 256, kernel_size=3),
-            nn.ReLU(),
-            nn.Dropout(),
-            nn.MaxPool2d(2)
-        )
-
-        self.flat_features = self.get_flat_features(input_shape, self.features)
-
-        self.classifier = nn.Sequential(
-            nn.Linear(self.flat_features, 256),
-            nn.Dropout(),
-            nn.BatchNorm1d(256),
-            nn.ReLU(),
-            nn.Linear(256, 256),
-            nn.Dropout(),
-            nn.BatchNorm1d(256),
-            nn.ReLU(),
-            nn.Linear(256, 2)
-        )
-
-        self.output = nn.LogSoftmax(dim=-1)
-
-        # print('ConvolutionalQC structure:')
-        # print(self.features)
-        # print(self.classifier)
-        # print(self.output)
-
-    def get_flat_features(self, image_shape, features):
-        f = features(Variable(torch.ones(1,*image_shape)))
-        return int(np.prod(f.size()[1:]))
-
-    def forward(self, x):
-        # print('input shape:', x.shape)
-        x = self.features(x)
-        # print('features shape:', x.shape)
-        x = x.view(x.size(0), -1)
-        # print('features reshaped:', x.shape)
-        # print('flattened features:', self.flat_features)
-        x = self.classifier(x)
-        # print('classifier shape:', x.shape)
-        x = self.output(x)
-        return x
 
 
 def train(epoch):
@@ -351,7 +282,7 @@ if __name__ == '__main__':
     if args.cuda:
         torch.cuda.manual_seed(args.seed)
 
-    model = ConvolutionalQCNet()
+    model = ConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
     print("Convolutional QC Model")
     print(model)
 
@@ -392,7 +323,7 @@ if __name__ == '__main__':
     for fold_idx, (train_indices, other_indices) in enumerate(skf.split(ibis_indices, ground_truth)):
         fold_num = fold_idx + 1
         print("Starting fold", str(fold_num))
-        model = ConvolutionalQCNet()
+        model = ConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
         if args.cuda:
             model.cuda()
 
@@ -507,7 +438,7 @@ if __name__ == '__main__':
     input_names = ["coronal_slice"]
     output_names = ["pass_fail"]
 
-    model = ConvolutionalQCNet()
+    model = ConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
     model.load_state_dict(torch.load(results_dir + 'qc_torch_fold_1.tch'))
     model.eval()
 
