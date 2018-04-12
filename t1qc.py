@@ -88,7 +88,7 @@ def qc_image(image, target_size=(160, 256, 224), model_version=None, using_onnx=
     else:
         model_path = os.path.expanduser('~/ibis_qc_net_v' + str(model_version) + '.tch')
 
-        model = ConvolutionalQCNet()
+        model = ConvolutionalQCNet(input_shape=(1,) + (target_size[1],) + (target_size[2],))
         model.load_state_dict(torch.load(model_path))
         model.eval()
 
@@ -111,6 +111,7 @@ def qc_image(image, target_size=(160, 256, 224), model_version=None, using_onnx=
 
 
 def preprocess_image(image, target_size=(160, 256, 224), preprocessing_version=None):
+    normalized_image = image
 
     if preprocessing_version == None:
         resized_image = resize_image_with_crop_or_pad(img, img_size=target_size, mode='constant')
