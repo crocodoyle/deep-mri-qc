@@ -361,6 +361,7 @@ if __name__ == '__main__':
         optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
+            epoch_start = time.time()
             f = h5py.File(workdir + input_filename, 'r')
             train_dataset = QCDataset(f, train_indices, random_slice=True, augmentation_type='flip')
             train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=False,
@@ -438,6 +439,9 @@ if __name__ == '__main__':
         except:
             print('ERROR could not save sensitivity/specificity plot for epoch', epoch)
 
+        epoch_elapsed = time.time() - epoch_start
+        print('Epoch took ' + str(epoch_elapsed / 60) + ' minutes')
+
     grad_cam = GradCam(model=model, target_layer_names=['output'], use_cuda=args.cuda)
     # example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam)
 
@@ -456,7 +460,7 @@ if __name__ == '__main__':
         make_roc_gif(results_dir, args.epochs, fold + 1)
 
     time_elapsed = time.time() - start_time
-    print('Whole experiment took', time_elapsed / 216000, 'hours')
+    print('Whole experiment took', time_elapsed / (60*60), 'hours')
 
     print('This experiment was brought to you by the number:', experiment_number)
 
