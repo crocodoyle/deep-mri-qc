@@ -61,7 +61,7 @@ class QCDataset(Dataset):
         full_img = self.images[good_index, ...]
         label = self.labels[good_index]
 
-        if label == 0 and np.random.rand() > 0.5 and 'flip' in self.augmentation_type:
+        if label == 0 and np.random.rand() > 0.5 and self.augmentation_type == 'flip':
             full_img = np.flip(full_img, axis=1)
 
         image = full_img[:, image_shape[0] // 2 + slice_modifier, :, :]
