@@ -85,7 +85,7 @@ def train(epoch):
         data, target, class_weight = Variable(data), Variable(target).type(torch.cuda.LongTensor), Variable(class_weight)
         optimizer.zero_grad()
         output = model(data)
-        print('P(qc|mri):', np.exp(output.data.cpu().numpy()))
+        # print('P(qc|mri):', np.exp(output.data.cpu().numpy()))
         loss = nn.CrossEntropyLoss(weight=class_weight)
         loss_val = loss(output, target)
         loss_val.backward()
@@ -98,14 +98,14 @@ def train(epoch):
         truth[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = target.data.cpu().numpy()
         probabilities[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = output.data.cpu().numpy()
 
-        train_loss += loss_val.data[0]  # sum up batch loss
-        pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
-        correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+        # train_loss += loss_val.data[0]  # sum up batch loss
+        # pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
+        # correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
-    train_loss /= len(train_loader.dataset)
-    print('Train set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
-        train_loss, correct, len(train_loader.dataset),
-        100. * correct / len(train_loader.dataset)))
+    # train_loss /= len(train_loader.dataset)
+    # print('Train set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
+    #     train_loss, correct, len(train_loader.dataset),
+    #     100. * correct / len(train_loader.dataset)))
 
     return truth, probabilities
 
