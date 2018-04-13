@@ -93,7 +93,7 @@ def train(epoch, labels):
     while len(fail_indices) < len(pass_indices):
         more_fails = np.copy(fail_indices)
         np.random.shuffle(more_fails)
-        fail_indices = np.hstack((fail_indices, more fails)
+        fail_indices = np.hstack((fail_indices, more fails))
         print('new fail indices length:', len(fail_indices))
         print('pass_indices length', len(pass_indices))
 
