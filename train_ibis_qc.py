@@ -125,7 +125,7 @@ def train(epoch, labels):
             optimizer.zero_grad()
             output = model(data)
             # print('P(qc|mri):', np.exp(output.data.cpu().numpy()))
-            loss = nn.CrossEntropyLoss(weight=class_weight)
+            loss = nn.NLLLoss(weight=class_weight)
             loss_val = loss(output, target)
             loss_val.backward()
             optimizer.step()
@@ -164,7 +164,7 @@ def validate():
 
         data, target = Variable(data, volatile=True), Variable(target).type(torch.cuda.LongTensor)
         output = model(data)
-        loss_function = nn.CrossEntropyLoss()
+        loss_function = nn.NLLLoss()
 
         validation_loss += loss_function(output, target).data[0]
         pred = output.data.max(1, keepdim=True)[1]
@@ -194,7 +194,7 @@ def test():
             data, target = data.cuda(), target.cuda()
         data, target = Variable(data, volatile=True), Variable(target).type(torch.cuda.LongTensor)
         output = model(data)
-        loss_function = nn.CrossEntropyLoss()
+        loss_function = nn.NLLLoss()
 
         test_loss += loss_function(output, target).data[0]  # sum up batch loss
         pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
