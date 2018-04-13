@@ -97,7 +97,7 @@ def train(epoch, labels):
         print('new fail indices length:', len(fail_indices))
         print('pass_indices length', len(pass_indices))
 
-    pass_indices = np.random.shuffle(pass_indices)
+    np.random.shuffle(pass_indices)
 
     data = torch.FloatTensor(args.batch_size, 1, image_shape[1], image_shape[2])
     target = torch.LongTensor(args.batch_size, 1)
