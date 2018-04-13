@@ -99,8 +99,8 @@ def train(epoch, labels):
 
     np.random.shuffle(pass_indices)
 
-    data_numpy = np.zeros((args.batch_size, 1, image_shape[1], image_shape[2]))
-    target_numpy = np.zeros((args.batch_size))
+    data_numpy = np.zeros((args.batch_size, 1, image_shape[1], image_shape[2]), dtype='float32')
+    target_numpy = np.zeros((args.batch_size), dtype='uint8')
 
     batch_idx = 0
     sample_idx = 0
