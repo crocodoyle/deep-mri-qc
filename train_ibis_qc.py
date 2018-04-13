@@ -144,7 +144,8 @@ def train(epoch, labels):
         # print('Train set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
         #     train_loss, correct, len(train_loader.dataset),
         #     100. * correct / len(train_loader.dataset)))
-
+        data = torch.FloatTensor(args.batch_size, 1, image_shape[1], image_shape[2])
+        target = torch.LongTensor(args.batch_size)
     return truth, probabilities
 
 
