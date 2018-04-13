@@ -107,12 +107,12 @@ def train(epoch, labels):
     for pass_index, fail_index in zip(pass_indices, fail_indices[0:len(pass_indices)]):
         pass_image, _ = train_dataset[pass_index]
         data[sample_idx, ...] = torch.from_numpy(pass_image)
-        target[sample_idx] = torch.from_numpy(np.asarray([1], dtype='int'))
+        target[sample_idx] = torch.from_numpy(np.asarray(1, dtype='int64'))
         sample_idx += 1
 
         fail_image, _ = train_dataset[fail_index]
         data[sample_idx, ...] = torch.from_numpy(fail_image)
-        target[sample_idx] = torch.from_numpy(np.asarray([0], dtype='int'))
+        target[sample_idx] = torch.from_numpy(np.asarray(0, dtype='int64'))
         sample_idx += 1
 
         if sample_idx % args.batch_size == 0:
