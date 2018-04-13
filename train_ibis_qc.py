@@ -110,8 +110,8 @@ def train(epoch, labels):
         print('image', image.shape)
         print('target', target.shape)
 
-        data[data_idx % args.batch_size, ...] = image
-        target[data_idx % args.batch_size, ...] = target
+        data[data_idx % args.batch_size, ...] = torch.from_numpy(image)
+        target[data_idx % args.batch_size, ...] = torch.from_numpy(target)
 
         if data_idx % args.batch_size == 0 and not data_idx == 0:
             class_weight = torch.FloatTensor([fail_weight, pass_weight])
