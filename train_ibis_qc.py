@@ -116,6 +116,7 @@ def train(epoch, labels):
         sample_idx += 1
 
         if sample_idx % args.batch_size == 0:
+            print('Loading batch', batch_idx)
             sample_idx = 0
             class_weight = torch.FloatTensor([fail_weight, pass_weight])
             if args.cuda:
@@ -140,12 +141,14 @@ def train(epoch, labels):
             # pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
             # correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
+        data = torch.FloatTensor(args.batch_size, 1, image_shape[1], image_shape[2])
+        target = torch.LongTensor(args.batch_size)
+
         # train_loss /= len(train_loader.dataset)
         # print('Train set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
         #     train_loss, correct, len(train_loader.dataset),
         #     100. * correct / len(train_loader.dataset)))
-        data = torch.FloatTensor(args.batch_size, 1, image_shape[1], image_shape[2])
-        target = torch.LongTensor(args.batch_size)
+
     return truth, probabilities
 
 
