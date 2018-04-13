@@ -111,7 +111,7 @@ def train(epoch, labels):
         print('target', label.shape)
 
         data[data_idx % args.batch_size, ...] = torch.from_numpy(image)
-        target[data_idx % args.batch_size, ...] = torch.from_numpy(np.asarray(label, dtype='int'))
+        target[data_idx % args.batch_size, ...] = torch.from_numpy(np.asarray([label], dtype='int'))
 
         if data_idx % args.batch_size == 0 and not data_idx == 0:
             class_weight = torch.FloatTensor([fail_weight, pass_weight])
