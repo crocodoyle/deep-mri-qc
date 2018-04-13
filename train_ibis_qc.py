@@ -111,8 +111,8 @@ def train(epoch, labels):
         sample_idx += 1
 
         fail_image, _ = train_dataset[fail_index]
-        data[sample_idx + 1 % args.batch_size, ...] = torch.from_numpy(fail_image)
-        target[sample_idx + 1 % args.batch_size, ...] = torch.from_numpy(np.asarray([1, 0], dtype='int'))
+        data[sample_idx % args.batch_size, ...] = torch.from_numpy(fail_image)
+        target[sample_idx % args.batch_size, ...] = torch.from_numpy(np.asarray([1, 0], dtype='int'))
         sample_idx += 1
 
         if sample_idx % args.batch_size == 0:
