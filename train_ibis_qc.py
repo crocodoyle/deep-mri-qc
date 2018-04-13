@@ -117,8 +117,8 @@ def train(epoch, labels):
 
         if sample_idx % args.batch_size == 0:
             print('Loading batch', batch_idx)
-            print('data', data)
-            print('target', target)
+            # print('data', data)
+            # print('target', target)
             print('target shape', target.shape)
             sample_idx = 0
             class_weight = torch.FloatTensor([fail_weight, pass_weight])
@@ -127,9 +127,10 @@ def train(epoch, labels):
             data, target, class_weight = Variable(data), Variable(target).type(torch.cuda.LongTensor), Variable(class_weight)
             optimizer.zero_grad()
             output = model(data)
-            print('output', output)
+            # print('output', output)
             print('output shape', output.shape)
             # print('P(qc|mri):', np.exp(output.data.cpu().numpy()))
+            print(output.data, target.data)
             loss = nn.NLLLoss(weight=class_weight)
             loss_val = loss(output, target)
             loss_val.backward()
