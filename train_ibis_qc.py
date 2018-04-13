@@ -99,27 +99,27 @@ def train(epoch, labels):
 
     np.random.shuffle(pass_indices)
 
-    data = torch.FloatTensor(args.batch_size, 1, image_shape[1], image_shape[2])
-    target = torch.LongTensor(args.batch_size)
+    data_numpy = np.zeros((args.batch_size, 1, image_shape[1], image_shape[2]))
+    target_numpy = np.zeros((args.batch_size))
 
     batch_idx = 0
     sample_idx = 0
     for pass_index, fail_index in zip(pass_indices, fail_indices[0:len(pass_indices)]):
         pass_image, _ = train_dataset[pass_index]
-        data[sample_idx, ...] = torch.from_numpy(pass_image)
-        target[sample_idx] = torch.from_numpy(1)
+        data_numpy[sample_idx, ...] = pass_image
+        target_numpy[sample_idx] = 1
         sample_idx += 1
 
         fail_image, _ = train_dataset[fail_index]
-        data[sample_idx, ...] = torch.from_numpy(fail_image)
-        target[sample_idx] = torch.from_numpy(0)
+        data_numpy[sample_idx, ...] = fail_image
+        target_numpy[sample_idx] = 0
         sample_idx += 1
 
         if sample_idx % args.batch_size == 0:
             print('Loading batch', batch_idx)
-            # print('data', data)
-            # print('target', target)
-            print('target shape', target.shape)
+            data = torch.from_numpy(data_numpy)
+            target = torch.from_numpy(target_numpy)
+
             sample_idx = 0
             class_weight = torch.FloatTensor([fail_weight, pass_weight])
             if args.cuda:
@@ -146,9 +146,6 @@ def train(epoch, labels):
             # train_loss += loss_val.data[0]  # sum up batch loss
             # pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
             # correct += pred.eq(target.data.view_as(pred)).cpu().sum()
-
-        data = torch.FloatTensor(args.batch_size, 1, image_shape[1], image_shape[2])
-        target = torch.LongTensor(args.batch_size)
 
         # train_loss /= len(train_loader.dataset)
         # print('Train set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
