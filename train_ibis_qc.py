@@ -106,14 +106,14 @@ def train(epoch, labels):
     sample_idx = 0
     for pass_index, fail_index in zip(pass_indices, fail_indices[0:len(pass_indices)]):
         pass_image, _ = train_dataset[pass_index]
-        target[sample_idx % args.batch_size, ...] = [0, 1]
+        target[sample_idx % args.batch_size, ...] = torch.from_numpy(np.asarray([0, 1], dtype='int'))
         data[sample_idx % args.batch_size, ...] = torch.from_numpy(pass_image)
 
         sample_idx += 1
 
         fail_image, _ = train_dataset[fail_index]
         data[sample_idx + 1 % args.batch_size, ...] = torch.from_numpy(fail_image)
-        target[sample_idx + 1 % args.batch_size, ...] = [1, 0]
+        target[sample_idx + 1 % args.batch_size, ...] = torch.from_numpy(np.asarray([1, 0], dtype='int'))
 
         if sample_idx % args.batch_size == 0:
             class_weight = torch.FloatTensor([fail_weight, pass_weight])
