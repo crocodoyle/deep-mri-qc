@@ -116,6 +116,7 @@ def train(epoch, labels):
         target[sample_idx + 1 % args.batch_size, ...] = torch.from_numpy(np.asarray([1, 0], dtype='int'))
 
         if sample_idx % args.batch_size == 0:
+            sample_idx = 0
             class_weight = torch.FloatTensor([fail_weight, pass_weight])
             if args.cuda:
                 data, target, class_weight = data.cuda(), target.cuda(), class_weight.cuda()
