@@ -79,14 +79,14 @@ def train(epoch, labels):
     truth, probabilities = np.zeros((len(train_loader.dataset))), np.zeros((len(train_loader.dataset), 2))
 
     labels = np.asarray(labels, dtype='uint8')
-    print('labels', labels)
-    print(labels.shape)
+    # print('labels', labels)
+    # print(labels.shape)
 
     indices = np.asarray(list(range(len(labels))), dtype='int')
     fail_indices = indices[labels == 0]
     pass_indices = indices[labels == 1]
 
-    print(len(fail_indices), len(pass_indices))
+    # print(len(fail_indices), len(pass_indices))
 
     np.random.shuffle(fail_indices)
 
@@ -94,26 +94,28 @@ def train(epoch, labels):
         more_fails = np.copy(fail_indices)
         np.random.shuffle(more_fails)
         fail_indices = np.hstack((fail_indices, more_fails))
-        print('new fail indices length:', len(fail_indices))
-        print('pass_indices length', len(pass_indices))
+        # print('new fail indices length:', len(fail_indices))
+        # print('pass_indices length', len(pass_indices))
 
     np.random.shuffle(pass_indices)
 
     data = torch.FloatTensor(args.batch_size, 1, image_shape[1], image_shape[2])
-    target = torch.LongTensor(args.batch_size, 1)
-
-    print('Class weight:', fail_weight, pass_weight)
+    target = torch.LongTensor(args.batch_size, 2)
 
     batch_idx = 0
-    for data_idx in range(len(pass_indices)):
-        image, label = train_dataset[data_idx]
-        print('image', image.shape)
-        print('target', label.shape)
+    sample_idx = 0
+    for pass_index, fail_index in zip(pass_indices, fail_indices[0:len(pass_indices)]):
+        pass_image, _ = train_dataset[pass_index]
+        target[sample_idx % args.batch_size, ...] = [0, 1]
+        data[sample_idx % args.batch_size, ...] = torch.from_numpy(pass_image)
 
-        data[data_idx % args.batch_size, ...] = torch.from_numpy(image)
-        target[data_idx % args.batch_size, ...] = torch.from_numpy(np.asarray([label], dtype='int'))
+        sample_idx += 1
 
-        if data_idx % args.batch_size == 0 and not data_idx == 0:
+        fail_image, _ = train_dataset[fail_index]
+        data[sample_idx + 1 % args.batch_size, ...] = torch.from_numpy(fail_image)
+        target[sample_idx + 1 % args.batch_size, ...] = [1, 0]
+
+        if sample_idx % args.batch_size == 0:
             class_weight = torch.FloatTensor([fail_weight, pass_weight])
             if args.cuda:
                 data, target, class_weight = data.cuda(), target.cuda(), class_weight.cuda()
