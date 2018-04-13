@@ -78,6 +78,10 @@ def train(epoch, labels):
 
     truth, probabilities = np.zeros((len(train_loader.dataset))), np.zeros((len(train_loader.dataset), 2))
 
+    labels = np.asarray(labels, dtype='uint8')
+    print('labels', labels)
+    print(labels.shape)
+
     indices = list(range(len(labels)))
     fail_indices = indices[labels == 0]
     pass_indices = indices[labels == 1]
@@ -345,7 +349,7 @@ if __name__ == '__main__':
     n_fail = len(ibis_indices) - n_pass
 
     print('Whole dataset has ' + str(len(ibis_indices)) + ' images ('+ str(n_pass) + ' PASS, ' + str(n_fail) + ' FAIL)')
-    fail_weight = (n_pass / n_total) * 5
+    fail_weight = (n_pass / n_total)
     pass_weight = n_fail / n_total
     print('Setting class weighting to ' + str(fail_weight) + ' for FAIL class and ' + str(
         pass_weight) + ' for PASS class')
