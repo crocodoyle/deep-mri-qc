@@ -82,9 +82,9 @@ def train(epoch, labels):
     print('labels', labels)
     print(labels.shape)
 
-    indices = list(range(len(labels)))
-    fail_indices = indices[list(labels == 0)]
-    pass_indices = indices[list(labels == 1)]
+    indices = np.asarray(list(range(len(labels))), dtype='int')
+    fail_indices = indices[labels == 0]
+    pass_indices = indices[labels == 1]
 
     fail_indices = np.random.shuffle(fail_indices)
 
