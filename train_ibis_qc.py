@@ -117,6 +117,8 @@ def train(epoch, labels):
 
         if sample_idx % args.batch_size == 0:
             print('Loading batch', batch_idx)
+            print('data', data)
+            print('target', target)
             sample_idx = 0
             class_weight = torch.FloatTensor([fail_weight, pass_weight])
             if args.cuda:
