@@ -100,19 +100,19 @@ def train(epoch, labels):
     np.random.shuffle(pass_indices)
 
     data = torch.FloatTensor(args.batch_size, 1, image_shape[1], image_shape[2])
-    target = torch.LongTensor(args.batch_size, 2)
+    target = torch.LongTensor(args.batch_size, 1)
 
     batch_idx = 0
     sample_idx = 0
     for pass_index, fail_index in zip(pass_indices, fail_indices[0:len(pass_indices)]):
         pass_image, _ = train_dataset[pass_index]
-        target[sample_idx % args.batch_size, ...] = torch.from_numpy(np.asarray([0, 1], dtype='int'))
+        target[sample_idx % args.batch_size, ...] = torch.from_numpy(np.asarray([1], dtype='int'))
         data[sample_idx % args.batch_size, ...] = torch.from_numpy(pass_image)
         sample_idx += 1
 
         fail_image, _ = train_dataset[fail_index]
         data[sample_idx % args.batch_size, ...] = torch.from_numpy(fail_image)
-        target[sample_idx % args.batch_size, ...] = torch.from_numpy(np.asarray([1, 0], dtype='int'))
+        target[sample_idx % args.batch_size, ...] = torch.from_numpy(np.asarray([0], dtype='int'))
         sample_idx += 1
 
         if sample_idx % args.batch_size == 0:
