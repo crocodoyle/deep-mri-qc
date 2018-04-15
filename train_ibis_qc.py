@@ -76,8 +76,6 @@ def train(epoch, labels):
     model.train()
     # train_loss, correct = 0, 0
 
-
-
     labels = np.asarray(labels, dtype='uint8')
     # print('labels', labels)
     # print(labels.shape)
@@ -98,6 +96,7 @@ def train(epoch, labels):
         # print('pass_indices length', len(pass_indices))
 
     n_batches = len(pass_indices)*2 // args.batch_size
+    print(len(pass_indices), 'pass images and', len(fail_indices), 'fail indices with batch size', args.batch_size, 'results in', n_batches, 'batches.')
 
     truth, probabilities = np.zeros(n_batches), np.zeros((n_batches, 2))
 
@@ -131,7 +130,7 @@ def train(epoch, labels):
             data, target, class_weight = Variable(data), Variable(target).type(torch.cuda.LongTensor), Variable(class_weight)
             optimizer.zero_grad()
             output = model(data)
-            # print('output', output)
+            print('output', output)
             # print('P(qc|mri):', np.exp(output.data.cpu().numpy()))
             loss = nn.NLLLoss(weight=class_weight)
             loss_val = loss(output, target)
@@ -312,8 +311,8 @@ if __name__ == '__main__':
 
     # Training settings
     parser = argparse.ArgumentParser(description='PyTorch DeepMRIQC training.')
-    parser.add_argument('--batch-size', type=int, default=128, metavar='N',
-                        help='input batch size for training (default: 128)')
+    parser.add_argument('--batch-size', type=int, default=32, metavar='N',
+                        help='input batch size for training (default: 32)')
     parser.add_argument('--val-batch-size', type=int, default=32, metavar='N',
                         help='input batch size for validation (default: 32')
     parser.add_argument('--test-batch-size', type=int, default=32, metavar='N',
