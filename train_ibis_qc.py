@@ -98,7 +98,7 @@ def train(epoch, labels):
     n_batches = len(pass_indices)*2 // args.batch_size
     print(len(pass_indices), 'pass images and', len(fail_indices), 'fail indices with batch size', args.batch_size, 'results in', n_batches, 'batches.')
 
-    truth, probabilities = np.zeros(n_batches), np.zeros((n_batches, 2))
+    truth, probabilities = np.zeros(n_batches*args.batch_size), np.zeros((n_batches*args.batch_size, 2))
 
     np.random.shuffle(pass_indices)
 
@@ -130,7 +130,7 @@ def train(epoch, labels):
             data, target, class_weight = Variable(data), Variable(target).type(torch.cuda.LongTensor), Variable(class_weight)
             optimizer.zero_grad()
             output = model(data)
-            print('output', output.shape)
+            # print('output', output.shape)
             # print('P(qc|mri):', np.exp(output.data.cpu().numpy()))
             loss = nn.NLLLoss(weight=class_weight)
             loss_val = loss(output, target)
@@ -141,9 +141,9 @@ def train(epoch, labels):
                     epoch, batch_idx * len(data), n_batches * len(data),
                            100. * batch_idx / (n_batches * len(data)), loss_val.data[0]))
 
-            print('output shape', output.shape)
-            print('batch size', args.batch_size)
-            print('indices: ', batch_idx * args.batch_size, (batch_idx + 1) * args.batch_size)
+            # print('output shape', output.shape)
+            # print('batch size', args.batch_size)
+            # print('indices: ', batch_idx * args.batch_size, (batch_idx + 1) * args.batch_size)
             truth[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = target.data.cpu().numpy()
             probabilities[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = output.data.cpu().numpy()
 
