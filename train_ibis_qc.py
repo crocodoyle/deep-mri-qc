@@ -76,7 +76,7 @@ def train(epoch, labels):
     model.train()
     # train_loss, correct = 0, 0
 
-    truth, probabilities = np.zeros((len(train_loader.dataset))), np.zeros((len(train_loader.dataset), 2))
+
 
     labels = np.asarray(labels, dtype='uint8')
     # print('labels', labels)
@@ -96,6 +96,10 @@ def train(epoch, labels):
         fail_indices = np.hstack((fail_indices, more_fails))
         # print('new fail indices length:', len(fail_indices))
         # print('pass_indices length', len(pass_indices))
+
+    n_batches = len(pass_indices)*2 // args.batch_size
+
+    truth, probabilities = np.zeros(n_batches), np.zeros((n_batches, 2))
 
     np.random.shuffle(pass_indices)
 
@@ -137,9 +141,11 @@ def train(epoch, labels):
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                     epoch, batch_idx * len(data), len(train_loader.dataset),
                            100. * batch_idx / len(train_loader), loss_val.data[0]))
+            try:
+                truth[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = target.data.cpu().numpy()
+                probabilities[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = output.data.cpu().numpy()
+            except:
 
-            truth[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = target.data.cpu().numpy()
-            probabilities[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = output.data.cpu().numpy()
             batch_idx += 1
             # train_loss += loss_val.data[0]  # sum up batch loss
             # pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
