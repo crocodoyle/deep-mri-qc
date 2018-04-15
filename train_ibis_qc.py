@@ -130,7 +130,7 @@ def train(epoch, labels):
             data, target, class_weight = Variable(data), Variable(target).type(torch.cuda.LongTensor), Variable(class_weight)
             optimizer.zero_grad()
             output = model(data)
-            # print('output', output)
+            print('output', output.shape)
             # print('P(qc|mri):', np.exp(output.data.cpu().numpy()))
             loss = nn.NLLLoss(weight=class_weight)
             loss_val = loss(output, target)
