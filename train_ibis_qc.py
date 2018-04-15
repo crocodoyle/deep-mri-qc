@@ -145,7 +145,7 @@ def train(epoch, labels):
                 truth[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = target.data.cpu().numpy()
                 probabilities[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = output.data.cpu().numpy()
             except:
-
+                print('end of this batch')
             batch_idx += 1
             # train_loss += loss_val.data[0]  # sum up batch loss
             # pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
