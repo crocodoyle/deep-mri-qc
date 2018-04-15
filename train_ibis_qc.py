@@ -130,7 +130,7 @@ def train(epoch, labels):
             data, target, class_weight = Variable(data), Variable(target).type(torch.cuda.LongTensor), Variable(class_weight)
             optimizer.zero_grad()
             output = model(data)
-            print('output', output)
+            # print('output', output)
             # print('P(qc|mri):', np.exp(output.data.cpu().numpy()))
             loss = nn.NLLLoss(weight=class_weight)
             loss_val = loss(output, target)
@@ -140,11 +140,11 @@ def train(epoch, labels):
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                     epoch, batch_idx * len(data), len(train_loader.dataset),
                            100. * batch_idx / len(train_loader), loss_val.data[0]))
-            try:
-                truth[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = target.data.cpu().numpy()
-                probabilities[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = output.data.cpu().numpy()
-            except:
-                print('end of this batch')
+
+            print('batch:', batch_idx, 'size', args.batch_size)
+            truth[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = target.data.cpu().numpy()
+            probabilities[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = output.data.cpu().numpy()
+
             batch_idx += 1
             # train_loss += loss_val.data[0]  # sum up batch loss
             # pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
