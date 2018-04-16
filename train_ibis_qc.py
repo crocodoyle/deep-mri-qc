@@ -138,14 +138,12 @@ def train(epoch, labels):
             loss_val.backward()
             optimizer.step()
             if batch_idx % args.log_interval == 0:
-                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                    epoch, batch_idx * len(data), n_batches * len(data),
-                           100. * batch_idx / (n_batches * len(data)), loss_val.data[0]))
+                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch, batch_idx * len(data), n_batches * len(data), 100. * batch_idx / n_batches, loss_val.data[0]))
 
             # print('output shape', output.shape)
             # print('batch size', args.batch_size)
             # print('indices: ', batch_idx * args.batch_size, (batch_idx + 1) * args.batch_size)
-            truth[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = target.data.cpu().numpy()
+            truth[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = target_numpy
             probabilities[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = output.data.cpu().numpy()
 
             batch_idx += 1

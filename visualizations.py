@@ -88,9 +88,10 @@ def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_s
     if not test_spec is None:
         plt.plot(epoch_number, test_spec, color='mediumblue', lw=lw, label='Test Specificity')
 
+    plt.xlabel('Epoch #')
+    plt.ylabel('Metric Value')
 
-
-    plt.legend(shadow=True, fontsize=20)
+    plt.legend(shadow=True, fontsize=20, loc='center left', bbox_to_anchor=(1, 0.5))
     plt.savefig(results_dir + 'results_fold_' + str(fold_num), bbox_inches='tight')
     plt.close()
 
