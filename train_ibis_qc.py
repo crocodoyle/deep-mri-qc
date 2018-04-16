@@ -119,7 +119,7 @@ def train(epoch, labels):
         sample_idx += 1
 
         if sample_idx % args.batch_size == 0:
-            print('Loading batch', batch_idx)
+            # print('Loading batch', batch_idx)
             data = torch.from_numpy(data_numpy)
             target = torch.from_numpy(target_numpy)
 
@@ -407,8 +407,8 @@ if __name__ == '__main__':
         #       str(len(validation_loader.dataset)), 'validation images and', str(len(test_loader.dataset)),
         #       'test images.')
 
-        # optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
-        optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9, nesterov=True)
+        optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
+        # optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9, nesterov=True)
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             epoch_start = time.time()
