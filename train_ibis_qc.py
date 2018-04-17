@@ -61,7 +61,7 @@ class QCDataset(Dataset):
         label = self.labels[good_index]
 
         if label == 0 and np.random.rand() > 0.5 and self.augmentation_type == 'flip':
-            image_slice = np.fliplr(self.images[good_index, ...][:, image_shape[0] // 2 + slice_modifier, :, :])
+            image_slice = np.fliplr(self.images[good_index, ...][:, image_shape[0] // 2 + slice_modifier, :, :]).copy()
         else:
             image_slice = self.images[good_index, ...][:, image_shape[0] // 2 + slice_modifier, :, :]
 
@@ -375,7 +375,7 @@ if __name__ == '__main__':
             train_dataset = QCDataset(f, train_indices, random_slice=True, augmentation_type='flip')
 
             sampler = WeightedRandomSampler(weights=train_sample_weights, num_samples=len(train_sample_weights))
-            train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=False,
+            train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=True,
                                                        **kwargs)
 
             train_truth, train_probabilities = train(epoch)
