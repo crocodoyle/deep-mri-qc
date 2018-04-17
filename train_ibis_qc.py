@@ -9,6 +9,7 @@ import torch.optim as optim
 import torch.onnx
 
 from torch.utils.data import Dataset, DataLoader
+from torch.utils.data.sampler import WeightedRandomSampler
 from torch.autograd import Variable
 
 from qc_pytorch_models import ConvolutionalQCNet
@@ -57,16 +58,14 @@ class QCDataset(Dataset):
         else:
             slice_modifier = 0
 
-
-        full_img = self.images[good_index, ...]
         label = self.labels[good_index]
 
         if label == 0 and np.random.rand() > 0.5 and self.augmentation_type == 'flip':
-            full_img = np.flip(full_img, axis=1)
+            image_slice = np.fliplr(self.images[good_index, ...][:, image_shape[0] // 2 + slice_modifier, :, :])
+        else:
+            image_slice = self.images[good_index, ...][:, image_shape[0] // 2 + slice_modifier, :, :]
 
-        image = full_img[:, image_shape[0] // 2 + slice_modifier, :, :]
-
-        return image, label
+        return image_slice, label
 
     def __len__(self):
         return self.n_subjects
@@ -76,85 +75,38 @@ def train(epoch, labels):
     model.train()
     # train_loss, correct = 0, 0
 
-    labels = np.asarray(labels, dtype='uint8')
-    # print('labels', labels)
-    # print(labels.shape)
+    truth, probabilities = np.zeros((len(train_loader.dataset))), np.zeros((len(train_loader.dataset), 2))
 
-    indices = np.asarray(list(range(len(labels))), dtype='int')
-    fail_indices = indices[labels == 0]
-    pass_indices = indices[labels == 1]
+    for batch_idx, (data, target) in enumerate(train_loader):
+        if args.cuda:
+            data, target = data.cuda(), target.cuda()
+        data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
+        optimizer.zero_grad()
+        output = model(data)
+        # print('output', output.shape)
+        # print('P(qc|mri):', np.exp(output.data.cpu().numpy()))
+        # loss = nn.NLLLoss(weight=class_weight)
+        loss = nn.NLLLoss()
+        loss_val = loss(output, target)
+        loss_val.backward()
+        optimizer.step()
+        if batch_idx % args.log_interval == 0:
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch, batch_idx * args.batch_size, len(train_loader.dataset), 100. * batch_idx * args.batch_size / len(train_loader.dataset), loss_val.data[0]))
 
-    # print(len(fail_indices), len(pass_indices))
+        # print('output shape', output.shape)
+        # print('batch size', args.batch_size)
+        # print('indices: ', batch_idx * args.batch_size, (batch_idx + 1) * args.batch_size)
+        truth[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = target.data.cpu().numpy()
+        probabilities[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = output.data.cpu().numpy()
 
-    np.random.shuffle(fail_indices)
+        # train_loss += loss_val.data[0]  # sum up batch loss
+        # pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
+        # correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
-    while len(fail_indices) < len(pass_indices):
-        more_fails = np.copy(fail_indices)
-        np.random.shuffle(more_fails)
-        fail_indices = np.hstack((fail_indices, more_fails))
-        # print('new fail indices length:', len(fail_indices))
-        # print('pass_indices length', len(pass_indices))
-
-    n_batches = len(pass_indices)*2 // args.batch_size
-    print(len(pass_indices), 'pass images and', len(fail_indices), 'fail indices with batch size', args.batch_size, 'results in', n_batches, 'batches.')
-
-    truth, probabilities = np.zeros(n_batches*args.batch_size), np.zeros((n_batches*args.batch_size, 2))
-
-    np.random.shuffle(pass_indices)
-
-    data_numpy = np.zeros((args.batch_size, 1, image_shape[1], image_shape[2]), dtype='float32')
-    target_numpy = np.zeros((args.batch_size), dtype='uint8')
-
-    batch_idx = 0
-    sample_idx = 0
-    for pass_index, fail_index in zip(pass_indices, fail_indices[0:len(pass_indices)]):
-        pass_image, _ = train_dataset[pass_index]
-        data_numpy[sample_idx, ...] = pass_image
-        target_numpy[sample_idx] = 1
-        sample_idx += 1
-
-        fail_image, _ = train_dataset[fail_index]
-        data_numpy[sample_idx, ...] = fail_image
-        target_numpy[sample_idx] = 0
-        sample_idx += 1
-
-        if sample_idx % args.batch_size == 0:
-            # print('Loading batch', batch_idx)
-            data = torch.from_numpy(data_numpy)
-            target = torch.from_numpy(target_numpy)
-
-            sample_idx = 0
-            class_weight = torch.FloatTensor([fail_weight, pass_weight])
-            if args.cuda:
-                data, target, class_weight = data.cuda(), target.cuda(), class_weight.cuda()
-            data, target, class_weight = Variable(data), Variable(target).type(torch.cuda.LongTensor), Variable(class_weight)
-            optimizer.zero_grad()
-            output = model(data)
-            # print('output', output.shape)
-            # print('P(qc|mri):', np.exp(output.data.cpu().numpy()))
-            # loss = nn.NLLLoss(weight=class_weight)
-            loss = nn.NLLLoss()
-            loss_val = loss(output, target)
-            loss_val.backward()
-            optimizer.step()
-            if batch_idx % args.log_interval == 0:
-                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch, batch_idx * len(data), n_batches * len(data), 100. * batch_idx / n_batches, loss_val.data[0]))
-
-            # print('output shape', output.shape)
-            # print('batch size', args.batch_size)
-            # print('indices: ', batch_idx * args.batch_size, (batch_idx + 1) * args.batch_size)
-            truth[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = target_numpy
-            probabilities[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = output.data.cpu().numpy()
-
-            batch_idx += 1
-            # train_loss += loss_val.data[0]  # sum up batch loss
-            # pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
-            # correct += pred.eq(target.data.view_as(pred)).cpu().sum()
-
-        # train_loss /= len(train_loader.dataset)
-        # print('Train set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
-        #     train_loss, correct, len(train_loader.dataset),
-        #     100. * correct / len(train_loader.dataset)))
+    # train_loss /= len(train_loader.dataset)
+    # print('Train set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
+    #     train_loss, correct, len(train_loader.dataset),
+    #     100. * correct / len(train_loader.dataset)))
 
     return truth, probabilities
 
@@ -401,6 +353,13 @@ if __name__ == '__main__':
         print('Fold', fold_num, 'has', n_val_pass, 'pass images and', n_val_fail, 'fail images in the validation set.')
         print('Fold', fold_num, 'has', n_test_pass, 'pass images and', n_test_fail, 'fail images in the test set.')
 
+        train_sample_weights = np.zeros((len(train_labels)))
+        for i, label in enumerate(train_labels):
+            if label == 1:
+                train_sample_weights[i] = pass_weight
+            else:
+                train_sample_weights[i] = fail_weight
+
         # print('This fold has', str(len(train_loader.dataset)), 'training images and',
         #       str(len(validation_loader.dataset)), 'validation images and', str(len(test_loader.dataset)),
         #       'test images.')
@@ -412,7 +371,9 @@ if __name__ == '__main__':
             epoch_start = time.time()
             f = h5py.File(workdir + input_filename, 'r')
             train_dataset = QCDataset(f, train_indices, random_slice=True, augmentation_type='flip')
-            train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=False,
+
+            sampler = WeightedRandomSampler(weights=train_sample_weights, num_samples=len(train_sample_weights))
+            train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=False,
                                                        **kwargs)
 
             train_truth, train_probabilities = train(epoch, train_labels)
