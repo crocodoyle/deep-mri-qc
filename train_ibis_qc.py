@@ -381,8 +381,8 @@ if __name__ == '__main__':
             train_truth, train_probabilities = train(epoch)
             train_predictions = np.argmax(train_probabilities, axis=-1)
 
-            f.close()
-            f = h5py.File(workdir + input_filename, 'r')
+            # f.close()
+            # f = h5py.File(workdir + input_filename, 'r')
             validation_dataset = QCDataset(f, validation_indices, random_slice=True)
             validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=args.val_batch_size,
                                                             shuffle=False, **kwargs)
@@ -390,8 +390,8 @@ if __name__ == '__main__':
             val_truth, val_probabilities = validate()
             val_predictions = np.argmax(val_probabilities, axis=-1)
 
-            f.close()
-            f = h5py.File(workdir + input_filename, 'r')
+            # f.close()
+            # f = h5py.File(workdir + input_filename, 'r')
 
             test_dataset = QCDataset(f, test_indices, random_slice=False)
             test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.test_batch_size, shuffle=False,
@@ -400,7 +400,7 @@ if __name__ == '__main__':
             test_truth, test_probabilities = test()
             test_predictions = np.argmax(test_probabilities, axis=-1)
 
-            f.close()
+            # f.close()
             train_auc, val_auc, test_auc = plot_roc(train_truth, train_probabilities, val_truth, val_probabilities,
                                                     test_truth, test_probabilities, results_dir, epoch, fold_num)
 
