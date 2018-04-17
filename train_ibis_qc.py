@@ -270,7 +270,7 @@ if __name__ == '__main__':
                         help='input batch size for validation (default: 32')
     parser.add_argument('--test-batch-size', type=int, default=32, metavar='N',
                         help='input batch size for testing (default: 32)')
-    parser.add_argument('--epochs', type=int, default=10, metavar='N',
+    parser.add_argument('--epochs', type=int, default=50, metavar='N',
                         help='number of epochs to train (default: 100)')
     parser.add_argument('--folds', type=int, default=10, metavar='N',
                         help='number of folds to cross-validate over (default: 10)')
@@ -440,15 +440,16 @@ if __name__ == '__main__':
                 best_auc_score[fold_idx] = val_auc + train_auc
                 torch.save(model.state_dict(), results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch')
 
+            epoch_elapsed = time.time() - epoch_start
+            print('Epoch took ' + str(epoch_elapsed / 60) + ' minutes')
+
+            continue
         try:
             plot_sens_spec(training_sensitivity[fold_idx, :], training_specificity[fold_idx, :],
                            validation_sensitivity[fold_idx, :], validation_specificity[fold_idx, :],
                            test_sensitivity[fold_idx, :], test_specificity[fold_idx, :], results_dir, fold_num)
         except:
             print('ERROR could not save sensitivity/specificity plot for epoch', epoch)
-
-        epoch_elapsed = time.time() - epoch_start
-        print('Epoch took ' + str(epoch_elapsed / 60) + ' minutes')
 
     grad_cam = GradCam(model=model, target_layer_names=['output'], use_cuda=args.cuda)
     # example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam)
