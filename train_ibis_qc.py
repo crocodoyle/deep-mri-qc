@@ -71,7 +71,7 @@ class QCDataset(Dataset):
         return self.n_subjects
 
 
-def train(epoch, labels):
+def train(epoch):
     model.train()
     # train_loss, correct = 0, 0
 
@@ -360,7 +360,9 @@ if __name__ == '__main__':
             else:
                 train_sample_weights[i] = fail_weight
 
-        # print('This fold has', str(len(train_loader.dataset)), 'training images and',
+        train_sample_weights = torch.DoubleTensor(train_sample_weights)
+
+            # print('This fold has', str(len(train_loader.dataset)), 'training images and',
         #       str(len(validation_loader.dataset)), 'validation images and', str(len(test_loader.dataset)),
         #       'test images.')
 
@@ -376,7 +378,7 @@ if __name__ == '__main__':
             train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=False,
                                                        **kwargs)
 
-            train_truth, train_probabilities = train(epoch, train_labels)
+            train_truth, train_probabilities = train(epoch)
             train_predictions = np.argmax(train_probabilities, axis=-1)
 
             f.close()
