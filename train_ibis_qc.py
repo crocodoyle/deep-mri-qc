@@ -375,7 +375,7 @@ if __name__ == '__main__':
             train_dataset = QCDataset(f, train_indices, random_slice=True, augmentation_type='flip')
 
             sampler = WeightedRandomSampler(weights=train_sample_weights, num_samples=len(train_sample_weights))
-            train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=True,
+            train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=False,
                                                        **kwargs)
 
             train_truth, train_probabilities = train(epoch)
