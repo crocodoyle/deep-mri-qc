@@ -40,7 +40,7 @@ class ConvolutionalQCNet(nn.Module):
         self.flat_features = self.get_flat_features(input_shape, self.features)
 
         self.classifier = nn.Sequential(
-            nn.Linear(self.flat_features, 128),
+            nn.Linear(self.flat_features, 256),
             nn.Dropout(),
             # nn.BatchNorm1d(256),
             nn.ReLU(),
