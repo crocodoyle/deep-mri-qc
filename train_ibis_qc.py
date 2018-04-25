@@ -327,7 +327,7 @@ if __name__ == '__main__':
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
-    skf = StratifiedKFold(n_splits=10)
+    skf = StratifiedKFold(n_splits=n_folds)
     for fold_idx, (train_indices, other_indices) in enumerate(skf.split(ibis_indices, labels)):
         fold_num = fold_idx + 1
         print("Starting fold", str(fold_num))
