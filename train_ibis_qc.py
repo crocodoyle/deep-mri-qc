@@ -310,7 +310,8 @@ if __name__ == '__main__':
     training_sensitivity, training_specificity, validation_sensitivity, validation_specificity, test_sensitivity, test_specificity, val_aucs = np.zeros(
         results_shape), np.zeros(results_shape), np.zeros(results_shape), np.zeros(results_shape), np.zeros(
         results_shape), np.zeros(results_shape), np.zeros(results_shape)
-    best_auc_score = np.zeros(n_folds)
+
+    best_auc_score, best_sensitivity, best_specificity = np.zeros(n_folds), np.zeros((n_folds, 3)), np.zeros((n_folds, 3))
 
     if args.cuda:
         model.cuda()
@@ -366,7 +367,7 @@ if __name__ == '__main__':
         #       str(len(validation_loader.dataset)), 'validation images and', str(len(test_loader.dataset)),
         #       'test images.')
 
-        optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
+        optimizer = optim.Adam(model.parameters(), lr=0.0001, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
         # optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9, nesterov=True)
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
@@ -437,7 +438,17 @@ if __name__ == '__main__':
 
             if val_auc + train_auc > best_auc_score[fold_idx]:
                 print('This epoch is the new best model on the train/validation set!')
-                best_auc_score[fold_idx] = val_auc + train_auc
+                best_auc_score[fold_idx] = (val_auc + train_auc) / 2
+
+                best_sensitivity[fold_idx, 0] = training_sensitivity[fold_idx, epoch_idx]
+                best_specificity[fold_idx, 0] = training_specificity[fold_idx, epoch_idx]
+
+                best_sensitivity[fold_idx, 1] = validation_sensitivity[fold_idx, epoch_idx]
+                best_specificity[fold_idx, 1] = validation_specificity[fold_idx, epoch_idx]
+
+                best_sensitivity[fold_idx, 2] = test_sensitivity[fold_idx, epoch_idx]
+                best_specificity[fold_idx, 2] = test_specificity[fold_idx, epoch_idx]
+
                 torch.save(model.state_dict(), results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch')
 
             epoch_elapsed = time.time() - epoch_start
@@ -450,6 +461,24 @@ if __name__ == '__main__':
                            test_sensitivity[fold_idx, :], test_specificity[fold_idx, :], results_dir, fold_num)
         except:
             print('ERROR could not save sensitivity/specificity plot for epoch', epoch)
+
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
+    ax1.boxplot(best_sensitivity[:, 0])
+    ax1.boxplot(best_sensitivity[:, 1])
+    ax1.boxplot(best_sensitivity[:, 2])
+
+    ax2.boxplot(best_specificity[:, 0])
+    ax2.boxplot(best_specificity[:, 1])
+    ax2.boxplot(best_specificity[:, 2])
+
+    ax1.set_xticklabels(['Train', 'Validation', 'Test'])
+    ax2.set_xticklabels(['Train', 'Validation', 'Test'])
+
+    ax1.set_title('Sensitivity')
+    ax2.set_title('Specificity')
+
+    plt.savefig(results_dir + 'sensitivity_specificity_all_folds.png')
 
     grad_cam = GradCam(model=model, target_layer_names=['output'], use_cuda=args.cuda)
     # example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam)
