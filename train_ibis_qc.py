@@ -18,7 +18,7 @@ import h5py, pickle, os, time, sys
 import numpy as np
 
 from ml_experiment import setup_experiment
-from visualizations import plot_roc, plot_sens_spec, make_roc_gif, GradCam
+from visualizations import plot_roc, plot_sens_spec, make_roc_gif, GradCam, sens_spec_across_folds
 
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import StratifiedKFold, LeaveOneGroupOut
@@ -462,23 +462,15 @@ if __name__ == '__main__':
         except:
             print('ERROR could not save sensitivity/specificity plot for epoch', epoch)
 
+    # done training
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
-    ax1.boxplot(best_sensitivity[:, 0])
-    ax1.boxplot(best_sensitivity[:, 1])
-    ax1.boxplot(best_sensitivity[:, 2])
+    sens_plot = [best_sensitivity[:, 0], best_sensitivity[:, 1], best_sensitivity[:, 2]]
+    spec_plot = [best_specificity[:, 0], best_specificity[:, 1], best_specificity[:, 2]]
 
-    ax2.boxplot(best_specificity[:, 0])
-    ax2.boxplot(best_specificity[:, 1])
-    ax2.boxplot(best_specificity[:, 2])
+    pickle.dump(sens_plot, workdir + 'best_sens.pkl')
+    pickle.dump(spec_plot, workdir + 'best_spec.pkl')
 
-    ax1.set_xticklabels(['Train', 'Validation', 'Test'])
-    ax2.set_xticklabels(['Train', 'Validation', 'Test'])
-
-    ax1.set_title('Sensitivity')
-    ax2.set_title('Specificity')
-
-    plt.savefig(results_dir + 'sensitivity_specificity_all_folds.png')
+    sens_spec_across_folds(sens_plot, spec_plot, results_dir)
 
     grad_cam = GradCam(model=model, target_layer_names=['output'], use_cuda=args.cuda)
     # example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam)

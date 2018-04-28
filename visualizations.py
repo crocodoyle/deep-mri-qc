@@ -88,12 +88,30 @@ def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_s
     if not test_spec is None:
         plt.plot(epoch_number, test_spec, color='mediumblue', lw=lw, label='Test Specificity')
 
-    plt.xlabel('Epoch #')
-    plt.ylabel('Metric Value')
+    plt.xlabel('Epoch #', fontsize=20)
+    plt.ylabel('Metric Value', fontsize=20)
 
     plt.legend(shadow=True, fontsize=20, loc='center left', bbox_to_anchor=(1, 0.5))
     plt.savefig(results_dir + 'results_fold_' + str(fold_num), bbox_inches='tight')
     plt.close()
+
+def sens_spec_across_folds(sens_to_plot, spec_to_plot, results_dir):
+    fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
+
+    ax1.boxplot(sens_to_plot)
+    ax2.boxplot(spec_to_plot)
+
+    ax1.set_ylim([0, 1])
+    ax2.set_ylim([0, 1])
+
+    ax1.set_xticklabels(['Train', 'Validation', 'Test'])
+    ax2.set_xticklabels(['Train', 'Validation', 'Test'])
+
+    ax1.set_title('Sensitivity')
+    ax2.set_title('Specificity')
+
+    plt.savefig(results_dir + 'sensitivity_specificity_all_folds.png')
+
 
 # code below here from https://github.com/jacobgil/pytorch-grad-cam/blob/master/grad-cam.py
 class FeatureExtractor():
