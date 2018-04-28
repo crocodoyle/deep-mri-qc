@@ -369,7 +369,7 @@ if __name__ == '__main__':
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             epoch_start = time.time()
             f = h5py.File(workdir + input_filename, 'r')
-            train_dataset = QCDataset(f, train_indices, random_slice=True, augmentation_type='flip')
+            train_dataset = QCDataset(f, train_indices, random_slice=True)
 
             sampler = WeightedRandomSampler(weights=train_sample_weights, num_samples=len(train_sample_weights))
             train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=False,
