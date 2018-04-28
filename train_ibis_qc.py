@@ -270,18 +270,12 @@ if __name__ == '__main__':
                         help='input batch size for validation (default: 32')
     parser.add_argument('--test-batch-size', type=int, default=32, metavar='N',
                         help='input batch size for testing (default: 32)')
-    parser.add_argument('--epochs', type=int, default=100, metavar='N',
+    parser.add_argument('--epochs', type=int, default=75, metavar='N',
                         help='number of epochs to train (default: 100)')
-    parser.add_argument('--folds', type=int, default=5, metavar='N',
+    parser.add_argument('--folds', type=int, default=10, metavar='N',
                         help='number of folds to cross-validate over (default: 10)')
-    parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',
-                        help='learning rate (default: 0.01)')
-    parser.add_argument('--momentum', type=float, default=0.5, metavar='M',
-                        help='SGD momentum (default: 0.5)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='disables CUDA training')
-    parser.add_argument('--seed', type=int, default=1, metavar='S',
-                        help='random seed (default: 1)')
     parser.add_argument('--log-interval', type=int, default=2, metavar='N',
                         help='how many batches to wait before logging training status')
     args = parser.parse_args()
@@ -438,7 +432,9 @@ if __name__ == '__main__':
 
             if val_auc + train_auc > best_auc_score[fold_idx]:
                 print('This epoch is the new best model on the train/validation set!')
-                best_auc_score[fold_idx] = (val_auc + train_auc) / 2
+                print('Validation sensitivity/specificity:', validation_sensitivity[fold_idx, epoch_idx], validation_specificity[fold_idx, epoch_idx])
+                print('Test sensitivity/specificity:', test_sensitivity[fold_idx, epoch_idx], test_specificity[fold_idx, epoch_idx])
+                best_auc_score[fold_idx] = (val_auc + train_auc)
 
                 best_sensitivity[fold_idx, 0] = training_sensitivity[fold_idx, epoch_idx]
                 best_specificity[fold_idx, 0] = training_specificity[fold_idx, epoch_idx]
