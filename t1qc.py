@@ -3,6 +3,7 @@ import argparse as ap
 
 import numpy as np
 import os
+from scipy.stats import entropy
 
 import torch
 from torch.autograd import Variable
@@ -63,8 +64,8 @@ def qc_image(image, target_size=(160, 256, 224), model_version=None, using_onnx=
     if model_version == None:
         model_version = 1
 
-    start_slice = (target_size[0] // 2) - 5
-    end_slice = (target_size[0] // 2) + 5
+    start_slice = (target_size[0] // 2) - 10
+    end_slice = (target_size[0] // 2) + 10
 
     slices = image[start_slice:end_slice, :, :][:, np.newaxis, :, :]
 
@@ -103,9 +104,10 @@ def qc_image(image, target_size=(160, 256, 224), model_version=None, using_onnx=
 
     print('Predictions:', predictions)
     print('Variance:', np.var(predictions[:, 1]))
+    print('Entropy:', entropy(predictions[:, 1]))
 
     prediction = np.mean(predictions[:, 1])
-    confidence = 1 - np.var(predictions[:, 1])
+    confidence = 1 - entropy(predictions[:, 1])
 
     return prediction, confidence
 

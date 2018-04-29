@@ -3,6 +3,7 @@ import argparse
 import torch
 # import torch.multiprocessing
 # torch.multiprocessing.set_start_method('spawn')
+from shutil import copyfile, SameFileError
 
 import torch.nn as nn
 import torch.optim as optim
@@ -23,6 +24,8 @@ from visualizations import plot_roc, plot_sens_spec, make_roc_gif, GradCam, sens
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import StratifiedKFold, LeaveOneGroupOut
 
+from scipy.stats import entropy
+
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
@@ -36,7 +39,7 @@ input_filename = 'IBIS_QC.hdf5'
 image_shape = (160, 256, 224)
 
 class QCDataset(Dataset):
-    def __init__(self, f, all_indices, random_slice=False, augmentation_type=None):
+    def __init__(self, f, all_indices, random_slice=False):
         self.images = f['MRI']
         self.labels = f['qc_label']
 
@@ -48,8 +51,6 @@ class QCDataset(Dataset):
         for i, index in enumerate(all_indices):
             self.indices[i] = index
 
-        self.augmentation_type = augmentation_type
-
     def __getitem__(self, index):
         good_index = self.indices[index]
 
@@ -59,11 +60,7 @@ class QCDataset(Dataset):
             slice_modifier = 0
 
         label = self.labels[good_index]
-
-        if label == 0 and np.random.rand() > 0.5 and self.augmentation_type == 'flip':
-            image_slice = np.fliplr(self.images[good_index, ...][:, image_shape[0] // 2 + slice_modifier, :, :]).copy()
-        else:
-            image_slice = self.images[good_index, ...][:, image_shape[0] // 2 + slice_modifier, :, :]
+        image_slice = self.images[good_index, ...][:, image_shape[0] // 2 + slice_modifier, :, :]
 
         return image_slice, label
 
@@ -73,7 +70,6 @@ class QCDataset(Dataset):
 
 def train(epoch):
     model.train()
-    # train_loss, correct = 0, 0
 
     truth, probabilities = np.zeros((len(train_loader.dataset))), np.zeros((len(train_loader.dataset), 2))
 
@@ -142,31 +138,35 @@ def validate():
     return truth, probabilities
 
 
-def test():
+def test(f, test_indices):
     model.eval()
-    test_loss, correct = 0, 0
 
-    truth, probabilities = np.zeros((len(test_loader.dataset))), np.zeros((len(test_loader.dataset), 2))
+    truth, probabilities = np.zeros((len(test_indices))), np.zeros((len(test_indices), 20, 2))
 
-    for batch_idx, (data, target) in enumerate(test_loader):
+    images = f['MRI']
+    labels = f['qc_label']
+
+    for test_idx in test_indices:
+        data = images[test_idx, :, (image_shape[0] // 2 - 10):(image_shape[0] // 2 + 10), ...]
+        print('Test input shape:', data.shape)
+        np.swapaxes(data, 0, 1)
+        print('Test input shape after swapping:', data.shape)
+
+        target = np.zeros((data.shape[0], 1))
+        target[:, 0] = labels[test_idx]
+        truth[test_idx] = target[0, 0]
+        print('Test target shape:', target.shape)
+
+        data = torch.FloatTensor(data)
+        target = torch.LongTensor(target)
+
         if args.cuda:
             data, target = data.cuda(), target.cuda()
         data, target = Variable(data, volatile=True), Variable(target).type(torch.cuda.LongTensor)
         output = model(data)
         loss_function = nn.NLLLoss()
 
-        test_loss += loss_function(output, target).data[0]  # sum up batch loss
-        pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
-        correct += pred.eq(target.data.view_as(pred)).cpu().sum()
-
-        truth[batch_idx * args.test_batch_size:(batch_idx + 1) * args.test_batch_size] = target.data.cpu().numpy()
-        probabilities[
-        batch_idx * args.test_batch_size:(batch_idx + 1) * args.test_batch_size] = output.data.cpu().numpy()
-
-    test_loss /= len(test_loader.dataset)
-    print('Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
-        test_loss, correct, len(test_loader.dataset),
-        100. * correct / len(test_loader.dataset)))
+        probabilities[test_idx, :, :] = output.data.cpu().numpy()
 
     return truth, probabilities
 
@@ -280,6 +280,9 @@ if __name__ == '__main__':
                         help='random seed (default: 1)')
     parser.add_argument('--log-interval', type=int, default=5, metavar='N',
                         help='how many batches to wait before logging training status (default: 5)')
+    parser.add_argument('--ssd', type=bool, default=True, metavar='N',
+                        help='specifies to copy the input file to the home directory (default: True')
+
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -293,7 +296,16 @@ if __name__ == '__main__':
 
     results_dir, experiment_number = setup_experiment(workdir)
 
-    f = h5py.File(workdir + input_filename, 'r')
+    data_filename = workdir + input_filename
+    if args.ssd:
+        new_data_filename = '/home/users/adoyle/IBIS/' + input_filename
+        try:
+            copyfile(data_filename, new_data_filename)
+        except SameFileError:
+            print('Data file already exists at ' + new_data_filename)
+        data_filename = new_data_filename
+
+    f = h5py.File(data_filename, 'r')
     ibis_indices = list(range(f['MRI'].shape[0]))
 
     labels = np.copy(f['qc_label'])
@@ -326,7 +338,7 @@ if __name__ == '__main__':
     skf = StratifiedKFold(n_splits=n_folds)
     for fold_idx, (train_indices, other_indices) in enumerate(skf.split(ibis_indices, labels)):
         fold_num = fold_idx + 1
-        print("Starting fold", str(fold_num))
+
         model = ConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
         if args.cuda:
             model.cuda()
@@ -378,8 +390,6 @@ if __name__ == '__main__':
             train_truth, train_probabilities = train(epoch)
             train_predictions = np.argmax(train_probabilities, axis=-1)
 
-            # f.close()
-            # f = h5py.File(workdir + input_filename, 'r')
             validation_dataset = QCDataset(f, validation_indices, random_slice=True)
             validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=args.val_batch_size,
                                                             shuffle=False, **kwargs)
@@ -387,19 +397,15 @@ if __name__ == '__main__':
             val_truth, val_probabilities = validate()
             val_predictions = np.argmax(val_probabilities, axis=-1)
 
-            # f.close()
-            # f = h5py.File(workdir + input_filename, 'r')
+            test_truth, test_probabilities = test(f, test_indices)
+            test_entropies = np.zeros((test_truth.shape[0], 1))
+            for idx in test_entropies:
+                test_entropies[idx, 0] = entropy(test_probabilities[idx, :, 1])
+            test_average_probs = np.mean(test_probabilities, axis=1)
+            test_predictions = np.argmax(test_average_probs, axis=-1)
 
-            test_dataset = QCDataset(f, test_indices, random_slice=False)
-            test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.test_batch_size, shuffle=False,
-                                                      **kwargs)
-
-            test_truth, test_probabilities = test()
-            test_predictions = np.argmax(test_probabilities, axis=-1)
-
-            # f.close()
             train_auc, val_auc, test_auc = plot_roc(train_truth, train_probabilities, val_truth, val_probabilities,
-                                                    test_truth, test_probabilities, results_dir, epoch, fold_num)
+                                                    test_truth, test_average_probs, results_dir, epoch, fold_num)
 
             try:
                 train_tn, train_fp, train_fn, train_tp = confusion_matrix(np.asarray(train_truth, dtype='uint8'), np.asarray(train_predictions, dtype='uint8')).ravel()
@@ -450,7 +456,7 @@ if __name__ == '__main__':
                 torch.save(model.state_dict(), results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch')
 
             epoch_elapsed = time.time() - epoch_start
-            print('Epoch took ' + str(epoch_elapsed / 60) + ' minutes')
+            print('Epoch ' + str(epoch) + ' of fold ' + str(fold_num) + ' took ' + str(epoch_elapsed / 60) + ' minutes')
 
             continue
         try:

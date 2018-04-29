@@ -98,17 +98,22 @@ def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_s
 def sens_spec_across_folds(sens_to_plot, spec_to_plot, results_dir):
     fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
 
-    ax1.boxplot(sens_to_plot)
-    ax2.boxplot(spec_to_plot)
+    bplot1 = ax1.boxplot(sens_to_plot, notch=True, patch_artist=True)
+    bplot2 = ax2.boxplot(spec_to_plot, notch=True, patch_artist=True)
+
+    colors = ['pink', 'lightblue', 'lightgreen']
+    for bplot in (bplot1, bplot2):
+        for patch, color in zip(bplot['boxes'], colors):
+            patch.set_facecolor(color)
 
     ax1.set_ylim([0, 1])
     ax2.set_ylim([0, 1])
 
-    ax1.set_xticklabels(['Train', 'Validation', 'Test'])
-    ax2.set_xticklabels(['Train', 'Validation', 'Test'])
+    ax1.set_xticklabels(['Train', 'Validation', 'Test'], fontsize=20)
+    ax2.set_xticklabels(['Train', 'Validation', 'Test'], fontsize=20)
 
-    ax1.set_title('Sensitivity')
-    ax2.set_title('Specificity')
+    ax1.set_title('Sensitivity', fontsize=24)
+    ax2.set_title('Specificity', fontsize=24)
 
     plt.savefig(results_dir + 'sensitivity_specificity_all_folds.png')
 
