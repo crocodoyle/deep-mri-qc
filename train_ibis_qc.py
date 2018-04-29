@@ -146,11 +146,12 @@ def test(f, test_indices):
     images = f['MRI']
     labels = f['qc_label']
 
+    data = np.zeros((20, 1, image_shape[1], image_shape[2]))
+
     for test_idx in test_indices:
-        data = images[test_idx, :, (image_shape[0] // 2 - 10):(image_shape[0] // 2 + 10), ...]
+        for i in range(20):
+            data[i, ...] = images[test_idx, : image_shape[0] // 2 - 20 + i, ...]
         print('Test input shape:', data.shape)
-        np.swapaxes(data, 0, 1)
-        print('Test input shape after swapping:', data.shape)
 
         target = np.zeros((data.shape[0], 1))
         target[:, 0] = labels[test_idx]
@@ -164,7 +165,6 @@ def test(f, test_indices):
             data, target = data.cuda(), target.cuda()
         data, target = Variable(data, volatile=True), Variable(target).type(torch.cuda.LongTensor)
         output = model(data)
-        loss_function = nn.NLLLoss()
 
         probabilities[test_idx, :, :] = output.data.cpu().numpy()
 
