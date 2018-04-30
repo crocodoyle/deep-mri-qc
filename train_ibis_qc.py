@@ -398,7 +398,7 @@ if __name__ == '__main__':
 
             test_truth, test_probabilities = test(f, test_indices)
             test_entropies = np.zeros((test_truth.shape[0], 1))
-            for idx in test_entropies:
+            for idx in range(test_truth.shape[0]):
                 test_entropies[idx, 0] = entropy(test_probabilities[idx, :, 1])
             test_average_probs = np.mean(test_probabilities, axis=1)
             test_predictions = np.argmax(test_average_probs, axis=-1)
