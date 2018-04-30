@@ -164,7 +164,7 @@ def test(f, test_indices):
         data, target = Variable(data, volatile=True), Variable(target).type(torch.cuda.LongTensor)
         output = model(data)
 
-        probabilities[test_idx, :, :] = output.data.cpu().numpy()
+        probabilities[i, :, :] = output.data.cpu().numpy()
 
     return truth, probabilities
 
