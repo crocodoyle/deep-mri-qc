@@ -150,7 +150,7 @@ def test(f, test_indices):
 
     for test_idx in test_indices:
         for i in range(20):
-            data[i, ...] = images[test_idx, : image_shape[0] // 2 - 20 + i, ...]
+            data[i, ...] = images[test_idx, image_shape[0] // 2 - 20 + i, ...]
         print('Test input shape:', data.shape)
 
         target = np.zeros((data.shape[0], 1))
