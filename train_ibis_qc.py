@@ -146,16 +146,15 @@ def test(f, test_indices):
     images = f['MRI']
     labels = f['qc_label']
 
-    for test_idx in test_indices:
+    for i, test_idx in enumerate(test_indices):
         data = np.zeros((20, 1, image_shape[1], image_shape[2]))
-        for i in range(20):
-            data[i, 0, ...] = images[test_idx, 0, image_shape[0] // 2 - 20 + i, ...]
-        print('Test input shape:', data.shape)
+        data[:, 0, ...] = images[test_idx, 0, image_shape[0] // 2 - 10 : image_shape[0] // 2 + 10, ...]
+        # print('Test input shape:', data.shape)
 
         target = np.zeros((data.shape[0], 1))
         target[:, 0] = labels[test_idx]
         truth[test_idx] = target[0, 0]
-        print('Test target shape:', target.shape)
+        # print('Test target shape:', target.shape)
 
         data = torch.FloatTensor(data)
         target = torch.LongTensor(target)
