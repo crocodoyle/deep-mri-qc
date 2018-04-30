@@ -300,7 +300,8 @@ if __name__ == '__main__':
     if args.ssd:
         new_data_filename = '/home/users/adoyle/IBIS/' + input_filename
         try:
-            copyfile(data_filename, new_data_filename)
+            if not os.path.isfile(new_data_filename):
+                copyfile(data_filename, new_data_filename)
         except SameFileError:
             print('Data file already exists at ' + new_data_filename)
         data_filename = new_data_filename
