@@ -153,7 +153,7 @@ def test(f, test_indices):
 
         target = np.zeros((data.shape[0], 1))
         target[:, 0] = labels[test_idx]
-        truth[test_idx] = target[0, 0]
+        truth[i] = target[0, 0]
         # print('Test target shape:', target.shape)
 
         data = torch.FloatTensor(data)
