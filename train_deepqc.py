@@ -151,7 +151,7 @@ def test(f2):
 
     for i, test_idx in enumerate(test_indices):
         data = np.zeros((20, 1, image_shape[1], image_shape[2]))
-        data[:, 0, ...] = images[test_idx, 0, image_shape[0] // 2 - 10 : image_shape[0] // 2 + 10, ...]
+        data[:, 0, ...] = images[test_idx, image_shape[0] // 2 - 10 : image_shape[0] // 2 + 10, ...]
         # print('Test input shape:', data.shape)
 
         target = np.zeros((data.shape[0], 1))
