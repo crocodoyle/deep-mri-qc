@@ -32,7 +32,7 @@ import matplotlib.pyplot as plt
 
 import matplotlib.cm as cm
 
-workdir = '/home/users/adoyle/deepqc/'
+workdir = '/data1/users/adoyle/deepqc/'
 
 abide_input_filename = 'abide.hdf5'
 ds030_input_filename = 'ds030.hdf5'
