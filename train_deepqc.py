@@ -311,6 +311,7 @@ if __name__ == '__main__':
     abide_indices = list(range(f['MRI'].shape[0]))
 
     labels = np.copy(f['qc_label'])
+    labels = np.argmax(labels, axis=-1)
 
     n_total = len(abide_indices)
 
