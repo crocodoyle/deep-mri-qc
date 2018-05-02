@@ -34,7 +34,7 @@ import matplotlib.cm as cm
 
 workdir = '/home/users/adoyle/deepqc/'
 
-abide_input_filename = 'ABIDE.hdf5'
+abide_input_filename = 'abide.hdf5'
 ds030_input_filename = 'ds030.hdf5'
 
 image_shape = (189, 233, 197)
