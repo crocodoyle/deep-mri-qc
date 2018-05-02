@@ -155,7 +155,7 @@ def test(f2):
         # print('Test input shape:', data.shape)
 
         target = np.zeros((data.shape[0], 1))
-        target[:, 0] = labels[test_idx]
+        target[:, 0] = np.argmax(labels[test_idx, :])
         truth[i] = target[0, 0]
         # print('Test target shape:', target.shape)
 
