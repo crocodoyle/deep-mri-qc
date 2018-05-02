@@ -480,7 +480,7 @@ if __name__ == '__main__':
     grad_cam = GradCam(model=model, target_layer_names=['output'], use_cuda=args.cuda)
     # example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam)
 
-    dummy_input = Variable(torch.randn(1, 1, 256, 224))
+    dummy_input = Variable(torch.randn(1, 1, image_shape[1], image_shape[2]))
 
     input_names = ["coronal_slice"]
     output_names = ["pass_fail"]
