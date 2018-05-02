@@ -281,8 +281,8 @@ if __name__ == '__main__':
                         help='random seed (default: 1)')
     parser.add_argument('--log-interval', type=int, default=5, metavar='N',
                         help='how many batches to wait before logging training status (default: 5)')
-    parser.add_argument('--ssd', type=bool, default=True, metavar='N',
-                        help='specifies to copy the input file to the home directory (default: True')
+    parser.add_argument('--ssd', type=bool, default=False, metavar='N',
+                        help='specifies to copy the input file to the home directory (default: False')
 
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
