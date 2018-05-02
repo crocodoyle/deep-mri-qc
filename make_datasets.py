@@ -17,7 +17,6 @@ from nipype.interfaces.ants import Registration
 data_dir = '/data1/users/adoyle/'
 output_dir = '/data1/users/adoyle/deepqc/'
 
-output_file = output_dir + 'deepqc-all-sets.hdf5'
 cores = 12
 
 import matplotlib as mpl
@@ -32,7 +31,7 @@ atlas_mask = data_dir + '/mni_icbm152_t1_tal_nlin_asym_09a_mask.mnc'
 mri_sites = ['IBIS', 'PING', 'PITT', 'OLIN', 'OHSU', 'SDSU', 'TRINITY', 'UM', 'USM', 'YALE', 'CMU', 'LEUVEN', 'KKI',
              'NYU', 'STANFORD', 'UCLA', 'MAX_MUN', 'CALTECH', 'SBL', 'ds030']
 
-target_size = ()
+target_size = (189, 233, 197)
 
 # taken from DLTK
 def normalise_zero_one(image):
@@ -298,7 +297,7 @@ def make_abide(input_path, f, label_file, subject_index):
 
         index = subject_index
         for line, input_path in zip(lines, input_paths):
-            returned_index = make_abide_subject(line, index, input_path, f , big_mask)
+            returned_index = make_abide_subject(line, index, input_path, f, big_mask)
             if not returned_index == -1:
                 index += 1
 
@@ -330,10 +329,10 @@ def make_abide_subject(line, subject_index, input_path, f, mask):
 
         one_hot = np.multiply(one_hot, 1 / total_labels)
 
-        for one in one_hot:
-            if one > 0.1 and one < 0.9:
-                print('Excluding ' + line[0] + ' because QC inconsistent')
-                return -1
+        # for one in one_hot:
+        #     if one > 0.1 and one < 0.9:
+        #         print('Excluding ' + line[0] + ' because QC inconsistent')
+        #         return -1
 
         f['qc_label'][subject_index, :] = one_hot
         # print(t1_filename, one_hot)
@@ -342,7 +341,7 @@ def make_abide_subject(line, subject_index, input_path, f, mask):
         if not t1_data.shape == target_size:
             t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
-        t1_data = equalize_hist(t1_data, mask=mask)
+        # t1_data = equalize_hist(t1_data, mask=mask)
 
         f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
         f['dataset'][subject_index] = line[1]
@@ -394,7 +393,7 @@ def make_ds030_subject(line, subject_index, input_path, f, mask):
                 print('resizing from', t1_data.shape)
                 t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
-            t1_data = equalize_hist(t1_data, mask=mask)
+            # t1_data = equalize_hist(t1_data, mask=mask)
 
             f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
 
@@ -681,45 +680,64 @@ if __name__ == "__main__":
     #         print filename
 
     n_abide = count_abide(data_dir + '/deep_abide/', 't1_qc.csv')
-    n_ibis = count_ibis(data_dir + '/IBIS/', 'ibis_t1_qc.csv')
-    n_ping = count_ping(data_dir + '/PING/', 't1_qc.csv')
+    # n_ibis = count_ibis(data_dir + '/IBIS/', 'ibis_t1_qc.csv')
+    # n_ping = count_ping(data_dir + '/PING/', 't1_qc.csv')
     n_ds030 = count_ds030(data_dir + '/ds030/', 'ds030_DB.csv')
 
     print('Subjects with QC labels:')
     print('ABIDE:', n_abide)
-    print('IBIS:', n_ibis)
-    print('PING:', n_ping)
+    # print('IBIS:', n_ibis)
+    # print('PING:', n_ping)
     print('ds030:', n_ds030)
 
-    total_subjects = n_abide + n_ibis + n_ping + n_ds030
+    # total_subjects = n_abide + n_ibis + n_ping + n_ds030
 
-    with h5py.File(output_file, 'w') as f:
-        f.create_dataset('MRI', (total_subjects, target_size[0], target_size[1], target_size[2]), dtype='float32')
-        f.create_dataset('qc_label', (total_subjects, 2), dtype='uint8')
-        dt = h5py.special_dtype(vlen=bytes)
-        f.create_dataset('filename', (total_subjects,), dtype=dt)
-        f.create_dataset('dataset', (total_subjects,), dtype=dt)
+    abide_output = output_dir + 'abide.hdf5'
+    ds030_output = output_dir + 'ds030.hdf5'
 
-        print('Starting PING...')
-        next_index = make_ping(data_dir + '/PING/', f, 't1_qc.csv', 0)
-        ping_indices = range(0, next_index)
-        print('Last PING index:', next_index - 1)
-        print('Starting ABIDE...')
-        next_index = make_abide(data_dir + '/deep_abide/', f, 't1_qc.csv', next_index)
-        abide_indices = range(ping_indices[-1] + 1, next_index)
-        print('Last ABIDE index:', next_index - 1)
-        print('Starting IBIS...')
-        next_index = make_ibis(data_dir + '/IBIS/', f, 'ibis_t1_qc.csv', next_index)
-        ibis_indices = range(abide_indices[-1] + 1, next_index)
-        print('Last IBIS index:', next_index - 1)
-        print('Starting ds030...')
-        next_index = make_ds030(data_dir + '/ds030/', f, 'ds030_DB.csv', next_index)
-        ds030_indices = range(ibis_indices[-1] + 1, next_index)
-        print('Last ds030 index:', next_index - 1)
+    dt = h5py.special_dtype(vlen=bytes)
 
-        pickle.dump(ping_indices, open(output_dir + 'ping_indices.pkl', 'wb'))
-        pickle.dump(ibis_indices, open(output_dir + 'ibis_indices.pkl', 'wb'))
+    with h5py.File(abide_output, 'w') as f:
+        f.create_dataset('MRI', (n_abide, target_size[0], target_size[1], target_size[2]), dtype='float32')
+        f.create_dataset('qc_label', (n_abide, 2), dtype='uint8')
+
+        f.create_dataset('filename', (n_abide,), dtype=dt)
+        f.create_dataset('dataset', (n_abide,), dtype=dt)
+
+        next_index = make_abide(data_dir + '/deep_abide/', f, 't1_qc.csv', 0)
+
+        abide_indices = list(range(0, next_index))
         pickle.dump(abide_indices, open(output_dir + 'abide_indices.pkl', 'wb'))
+
+    with h5py.File(ds030_output, 'w') as f:
+        f.create_dataset('MRI', (n_ds030, target_size[0], target_size[1], target_size[2]), dtype='float32')
+        f.create_dataset('qc_label', (n_ds030, 2), dtype='uint8')
+
+        f.create_dataset('filename', (n_ds030,), dtype=dt)
+        f.create_dataset('dataset', (n_ds030,), dtype=dt)
+
+        next_index = make_ds030(data_dir + '/ds030/', f, 'ds030_DB.csv', 0)
+
+        ds030_indices = list(range(0, next_index))
         pickle.dump(ds030_indices, open(output_dir + 'ds030_indices.pkl', 'wb'))
 
-        check_datasets()
+        # print('Starting PING...')
+        # next_index = make_ping(data_dir + '/PING/', f, 't1_qc.csv', 0)
+        # ping_indices = range(0, next_index)
+        # print('Last PING index:', next_index - 1)
+        # print('Starting ABIDE...')
+        # abide_indices = range(ping_indices[-1] + 1, next_index)
+        # print('Last ABIDE index:', next_index - 1)
+        # print('Starting IBIS...')
+        # next_index = make_ibis(data_dir + '/IBIS/', f, 'ibis_t1_qc.csv', next_index)
+        # ibis_indices = range(abide_indices[-1] + 1, next_index)
+        # print('Last IBIS index:', next_index - 1)
+        # print('Starting ds030...')
+        # ds030_indices = range(ibis_indices[-1] + 1, next_index)
+        # print('Last ds030 index:', next_index - 1)
+        #
+        # pickle.dump(ping_indices, open(output_dir + 'ping_indices.pkl', 'wb'))
+        # pickle.dump(ibis_indices, open(output_dir + 'ibis_indices.pkl', 'wb'))
+        #
+        #
+        # check_datasets()
