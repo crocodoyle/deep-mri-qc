@@ -472,15 +472,15 @@ if __name__ == '__main__':
     sens_plot = [best_sensitivity[:, 0], best_sensitivity[:, 1], best_sensitivity[:, 2]]
     spec_plot = [best_specificity[:, 0], best_specificity[:, 1], best_specificity[:, 2]]
 
-    pickle.dump(sens_plot, workdir + 'best_sens.pkl')
-    pickle.dump(spec_plot, workdir + 'best_spec.pkl')
+    pickle.dump(sens_plot, open(workdir + 'best_sens.pkl', 'w'))
+    pickle.dump(spec_plot, open(workdir + 'best_spec.pkl', 'w'))
 
     sens_spec_across_folds(sens_plot, spec_plot, results_dir)
 
     grad_cam = GradCam(model=model, target_layer_names=['output'], use_cuda=args.cuda)
     # example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam)
 
-    dummy_input = Variable(torch.randn(1, 1, image_shape[1], image_shape[2]))
+    dummy_input = Variable(torch.randn(20, 1, image_shape[1], image_shape[2]))
 
     input_names = ["coronal_slice"]
     output_names = ["pass_fail"]
