@@ -13,6 +13,9 @@ from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.sampler import WeightedRandomSampler
 from torch.autograd import Variable
 
+from torch.optim.lr_scheduler importReduceLROnPlateau
+
+
 from qc_pytorch_models import ConvolutionalQCNet
 
 import h5py, pickle, os, time, sys
@@ -437,10 +440,15 @@ if __name__ == '__main__':
 
             val_aucs[fold_idx, epoch_idx] = val_auc
 
+
+            print('Validation sensitivity/specificity:', validation_sensitivity[fold_idx, epoch_idx],
+                  validation_specificity[fold_idx, epoch_idx])
+            print('Test sensitivity/specificity:', test_sensitivity[fold_idx, epoch_idx],
+                  test_specificity[fold_idx, epoch_idx])
+            print('Test Entropies:', test_entropies)
+
             if val_auc + train_auc > best_auc_score[fold_idx]:
                 print('This epoch is the new best model on the train/validation set!')
-                print('Validation sensitivity/specificity:', validation_sensitivity[fold_idx, epoch_idx], validation_specificity[fold_idx, epoch_idx])
-                print('Test sensitivity/specificity:', test_sensitivity[fold_idx, epoch_idx], test_specificity[fold_idx, epoch_idx])
                 best_auc_score[fold_idx] = (val_auc + train_auc)
 
                 best_sensitivity[fold_idx, 0] = training_sensitivity[fold_idx, epoch_idx]
@@ -470,8 +478,8 @@ if __name__ == '__main__':
     sens_plot = [best_sensitivity[:, 0], best_sensitivity[:, 1], best_sensitivity[:, 2]]
     spec_plot = [best_specificity[:, 0], best_specificity[:, 1], best_specificity[:, 2]]
 
-    pickle.dump(sens_plot, open(workdir + 'best_sens.pkl', 'w'))
-    pickle.dump(spec_plot, open(workdir + 'best_spec.pkl', 'w'))
+    pickle.dump(sens_plot, open(workdir + 'best_sens.pkl', 'wb'))
+    pickle.dump(spec_plot, open(workdir + 'best_spec.pkl', 'wb'))
 
     sens_spec_across_folds(sens_plot, spec_plot, results_dir)
 
