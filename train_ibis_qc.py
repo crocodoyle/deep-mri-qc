@@ -134,9 +134,9 @@ def validate():
         truth[batch_idx * args.val_batch_size:(batch_idx + 1) * args.val_batch_size] = target.data.cpu().numpy()
         probabilities[batch_idx * args.val_batch_size:(batch_idx + 1) * args.val_batch_size] = output.data.cpu().numpy()
 
-    lr_scheduler.step(loss_val)
-
     validation_loss /= len(validation_loader.dataset)
+
+    lr_scheduler.step(validation_loss)
 
     print('Validation set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
         validation_loss, correct, len(validation_loader.dataset),
@@ -186,7 +186,7 @@ def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
     os.makedirs(results_dir + '/imgs/', exist_ok=True)
     for batch_idx, (data, target) in enumerate(train_loader):
 
-        data, target = Variable(data, volatile=True), Variable(target).type(torch.cuda.LongTensor)
+        data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
 
         target_batch = target.data.cpu().numpy()
         image_batch = data.data.cpu().numpy()
