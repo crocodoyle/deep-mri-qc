@@ -117,7 +117,7 @@ def validate():
         if args.cuda:
             data, target = data.cuda(), target.cuda()
 
-        data, target = Variable(data, volatile=True), Variable(target).type(torch.cuda.LongTensor)
+        data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
         output = model(data)
         loss_function = nn.NLLLoss()
 
@@ -161,7 +161,7 @@ def test(f, test_indices):
 
         if args.cuda:
             data, target = data.cuda(), target.cuda()
-        data, target = Variable(data, volatile=True), Variable(target).type(torch.cuda.LongTensor)
+        data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
         output = model(data)
 
         probabilities[i, :, :] = output.data.cpu().numpy()
