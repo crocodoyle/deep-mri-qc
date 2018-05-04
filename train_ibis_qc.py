@@ -13,7 +13,7 @@ from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.sampler import WeightedRandomSampler
 from torch.autograd import Variable
 
-from torch.optim.lr_scheduler importReduceLROnPlateau
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 
 from qc_pytorch_models import ConvolutionalQCNet
