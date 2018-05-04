@@ -275,7 +275,7 @@ if __name__ == '__main__':
                         help='input batch size for validation (default: 32')
     parser.add_argument('--test-batch-size', type=int, default=32, metavar='N',
                         help='input batch size for testing (default: 32)')
-    parser.add_argument('--epochs', type=int, default=75, metavar='N',
+    parser.add_argument('--epochs', type=int, default=200, metavar='N',
                         help='number of epochs to train (default: 100)')
     parser.add_argument('--folds', type=int, default=10, metavar='N',
                         help='number of folds to cross-validate over (default: 10)')
@@ -384,7 +384,7 @@ if __name__ == '__main__':
         optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
         # optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9, nesterov=True)
 
-        lr_scheduler = ReduceLROnPlateau(optimizer, 'min', verbose=True)
+        lr_scheduler = ReduceLROnPlateau(optimizer, 'min', factor=2, patience=5, verbose=True)
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             epoch_start = time.time()
