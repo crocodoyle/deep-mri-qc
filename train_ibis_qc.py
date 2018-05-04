@@ -124,13 +124,17 @@ def validate():
         output = model(data)
         loss_function = nn.NLLLoss()
 
-        validation_loss += loss_function(output, target).data[0]
+        loss_val = loss_function(output, target).data[0]
+
+        validation_loss += loss_val
         pred = output.data.max(1, keepdim=True)[1]
         correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
         # print('val batch shape:', output.data.cpu().numpy().shape)
         truth[batch_idx * args.val_batch_size:(batch_idx + 1) * args.val_batch_size] = target.data.cpu().numpy()
         probabilities[batch_idx * args.val_batch_size:(batch_idx + 1) * args.val_batch_size] = output.data.cpu().numpy()
+
+    lr_scheduler.step(loss_val)
 
     validation_loss /= len(validation_loader.dataset)
 
@@ -377,8 +381,10 @@ if __name__ == '__main__':
         #       str(len(validation_loader.dataset)), 'validation images and', str(len(test_loader.dataset)),
         #       'test images.')
 
-        optimizer = optim.Adam(model.parameters(), lr=0.0001, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
+        optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
         # optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9, nesterov=True)
+
+        lr_scheduler = ReduceLROnPlateau(optimizer, 'min', verbose=True)
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             epoch_start = time.time()
