@@ -451,7 +451,8 @@ if __name__ == '__main__':
                   validation_specificity[fold_idx, epoch_idx])
             print('Test sensitivity/specificity:', test_sensitivity[fold_idx, epoch_idx],
                   test_specificity[fold_idx, epoch_idx])
-            print('Test Entropies:', test_entropies)
+            print('Test Entropies:', test_entropies.flat())
+            print('Truth:', test_truth.flat())
 
             if val_auc + train_auc > best_auc_score[fold_idx]:
                 print('This epoch is the new best model on the train/validation set!')
