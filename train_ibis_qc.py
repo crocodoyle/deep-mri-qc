@@ -275,7 +275,7 @@ if __name__ == '__main__':
                         help='input batch size for validation (default: 32')
     parser.add_argument('--test-batch-size', type=int, default=32, metavar='N',
                         help='input batch size for testing (default: 32)')
-    parser.add_argument('--epochs', type=int, default=200, metavar='N',
+    parser.add_argument('--epochs', type=int, default=500, metavar='N',
                         help='number of epochs to train (default: 100)')
     parser.add_argument('--folds', type=int, default=10, metavar='N',
                         help='number of folds to cross-validate over (default: 10)')

@@ -34,21 +34,25 @@ class ConvolutionalQCNet(nn.Module):
             nn.MaxPool2d(2),
             nn.Conv2d(512, 1024, kernel_size=3),
             nn.ReLU(),
-            nn.Dropout(),
+            # nn.Dropout(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(1024, 1024, kernel_size=3),
+            nn.ReLU(),
+            # nn.Dropout(),
         )
 
         self.flat_features = self.get_flat_features(input_shape, self.features)
 
         self.classifier = nn.Sequential(
-            nn.Linear(self.flat_features, 256),
+            nn.Linear(self.flat_features, 512),
             nn.Dropout(),
             # nn.BatchNorm1d(256),
             nn.ReLU(),
-            nn.Linear(256, 256),
+            nn.Linear(512, 512),
             nn.Dropout(),
             # nn.BatchNorm1d(256),
             nn.ReLU(),
-            nn.Linear(256, 2),
+            nn.Linear(512, 2),
         )
 
         self.output = nn.LogSoftmax(dim=-1)
