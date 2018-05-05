@@ -66,6 +66,7 @@ def plot_roc(train_truth, train_probs, val_truth, val_probs, test_truth, test_pr
 
     return train_roc_auc, val_roc_auc, test_roc_auc
 
+
 def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_spec, results_dir, fold_num=-1):
     plt.figure(figsize=(8, 8))
 
@@ -95,8 +96,9 @@ def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_s
     plt.savefig(results_dir + 'results_fold_' + str(fold_num), bbox_inches='tight')
     plt.close()
 
+
 def sens_spec_across_folds(sens_to_plot, spec_to_plot, results_dir):
-    fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
+    fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True, figsize=(10, 4))
 
     bplot1 = ax1.boxplot(sens_to_plot, notch=True, patch_artist=True)
     bplot2 = ax2.boxplot(spec_to_plot, notch=True, patch_artist=True)
@@ -115,7 +117,9 @@ def sens_spec_across_folds(sens_to_plot, spec_to_plot, results_dir):
     ax1.set_title('Sensitivity', fontsize=24)
     ax2.set_title('Specificity', fontsize=24)
 
-    plt.savefig(results_dir + 'sensitivity_specificity_all_folds.png')
+    plt.grid(True)
+    plt.savefig(results_dir + 'sensitivity_specificity_all_folds.png', dpi=500)
+    plt.close()
 
 
 # code below here from https://github.com/jacobgil/pytorch-grad-cam/blob/master/grad-cam.py
