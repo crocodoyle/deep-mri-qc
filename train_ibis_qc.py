@@ -22,7 +22,7 @@ import h5py, pickle, os, time, sys
 import numpy as np
 
 from ml_experiment import setup_experiment
-from visualizations import plot_roc, plot_sens_spec, make_roc_gif, GradCam, sens_spec_across_folds
+from visualizations import plot_roc, plot_sens_spec, make_roc_gif, GradCam, sens_spec_across_folds, plot_entropy
 
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import StratifiedKFold, LeaveOneGroupOut
@@ -327,6 +327,9 @@ if __name__ == '__main__':
 
     best_auc_score, best_sensitivity, best_specificity = np.zeros(n_folds), np.zeros((n_folds, 3)), np.zeros((n_folds, 3))
 
+    all_test_probs = np.zeros((n_total), 20, 2)
+    all_test_truth = np.zeros((n_total))
+
     if args.cuda:
         model.cuda()
 
@@ -340,6 +343,8 @@ if __name__ == '__main__':
         pass_weight) + ' for PASS class')
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
+
+    test_idx = 0
 
     skf = StratifiedKFold(n_splits=n_folds)
     for fold_idx, (train_indices, other_indices) in enumerate(skf.split(ibis_indices, labels)):
@@ -412,6 +417,9 @@ if __name__ == '__main__':
             test_average_probs = np.mean(test_probabilities, axis=1)
             test_predictions = np.argmax(test_average_probs, axis=-1)
 
+            all_test_probs[test_idx:test_idx+len(test_indices), :, :] = test_probabilities
+            all_test_truth[test_idx:test_idx+len(test_indices), :, :] = test_truth
+
             train_auc, val_auc, test_auc = plot_roc(train_truth, train_probabilities, val_truth, val_probabilities,
                                                     test_truth, test_average_probs, results_dir, epoch, fold_num)
 
@@ -480,7 +488,11 @@ if __name__ == '__main__':
         except:
             print('ERROR could not save sensitivity/specificity plot for epoch', epoch)
 
+        test_idx += len(test_indices)
+
     # done training
+
+    plot_entropy(all_test_probs, all_test_truth, results_dir)
 
     sens_plot = [best_sensitivity[:, 0], best_sensitivity[:, 1], best_sensitivity[:, 2]]
     spec_plot = [best_specificity[:, 0], best_specificity[:, 1], best_specificity[:, 2]]

@@ -10,6 +10,8 @@ import torch
 from torch.autograd import Variable, Function
 
 import numpy as np
+from scipy.stats import entropy
+from sklearn.neighbors.kde import KernelDensity
 
 
 def make_roc_gif(results_dir, epochs, fold_num=1):
@@ -119,6 +121,61 @@ def sens_spec_across_folds(sens_to_plot, spec_to_plot, results_dir):
 
     plt.grid(True)
     plt.savefig(results_dir + 'sensitivity_specificity_all_folds.png', dpi=500)
+    plt.close()
+
+
+def plot_entropy(probabilities, truth, results_dir):
+    pass_entropies, fail_entropies = [], []
+    tp_entropies, fp_entropies, tn_entropies, fn_entropies = [], [], [], []
+
+    for i, y_true in enumerate(truth):
+        y_prob = np.mean(probabilities[i, :, 1])
+        if y_prob < 0.5:
+            y_predicted = 0
+        else:
+            y_predicted = 1
+
+        H_pass = entropy(probabilities[i, :, 1])
+        H_fail = entropy(probabilities[i, :, 0])
+
+        if y_true == 1:
+            pass_entropies.append(H_pass)
+            if y_predicted == 1:
+                tp_entropies.append(H_pass)
+            else:
+                fn_entropies.append(H_pass)
+        else:
+            fail_entropies.append(H_fail)
+            if y_predicted == 1:
+                fp_entropies.append(H_fail)
+            else:
+                tn_entropies.append(H_fail)
+
+
+    prob_space = np.linspace(0, 1, 200)
+
+    kde_pass = KernelDensity(kernel='gaussian', bandwidth=0.1).fit(pass_entropies)
+    kde_fail = KernelDensity(kernel='gaussian', bandwidth=0.1).fit(fail_entropies)
+
+    kde_tp = KernelDensity(kernel='gaussian', bandwidth=0.1).fit(tp_entropies)
+    kde_tn = KernelDensity(kernel='gaussian', bandwidth=0.1).fit(tn_entropies)
+    kde_fp = KernelDensity(kernel='gaussian', bandwidth=0.1).fit(fp_entropies)
+    kde_fn = KernelDensity(kernel='gaussian', bandwidth=0.1).fit(fn_entropies)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True, figsize=(10, 4))
+
+    ax1.plot(kde_pass.score_samples(prob_space), color='g', label='Pass')
+    ax1.plot(kde_fail.score_samples(prob_space), color='r', label='Fail')
+
+    ax2.plot(kde_tp.score_samples(prob_space), color='b', label='TP')
+    ax2.plot(kde_fn.score_samples(prob_space), color='r', label='FN')
+    ax2.plot(kde_fp.score_samples(prob_space), color='orange', label='FP')
+    ax2.plot(kde_tn.score_samples(prob_space), color='g', label='TN')
+
+    ax1.legend(loc='lower right', shadow=True)
+    ax2.legend(loc='lower right', shadow=True)
+
+    plt.savefig(results_dir + 'prediction_entropies.png', dpi=500)
     plt.close()
 
 
