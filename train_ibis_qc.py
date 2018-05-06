@@ -418,7 +418,7 @@ if __name__ == '__main__':
             test_predictions = np.argmax(test_average_probs, axis=-1)
 
             all_test_probs[test_idx:test_idx+len(test_indices), :, :] = test_probabilities
-            all_test_truth[test_idx:test_idx+len(test_indices), :, :] = test_truth
+            all_test_truth[test_idx:test_idx+len(test_indices)] = test_truth
 
             train_auc, val_auc, test_auc = plot_roc(train_truth, train_probabilities, val_truth, val_probabilities,
                                                     test_truth, test_average_probs, results_dir, epoch, fold_num)
