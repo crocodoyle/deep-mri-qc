@@ -327,7 +327,7 @@ if __name__ == '__main__':
 
     best_auc_score, best_sensitivity, best_specificity = np.zeros(n_folds), np.zeros((n_folds, 3)), np.zeros((n_folds, 3))
 
-    all_test_probs = np.zeros((n_total), 20, 2)
+    all_test_probs = np.zeros((n_total, 20, 2))
     all_test_truth = np.zeros((n_total))
 
     if args.cuda:
@@ -454,13 +454,14 @@ if __name__ == '__main__':
 
             val_aucs[fold_idx, epoch_idx] = val_auc
 
-
+            print('Train sensitivity/specificity:', training_sensitivity[fold_idx, epoch_idx],
+                  training_specificity[fold_idx, epoch_idx])
             print('Validation sensitivity/specificity:', validation_sensitivity[fold_idx, epoch_idx],
                   validation_specificity[fold_idx, epoch_idx])
             print('Test sensitivity/specificity:', test_sensitivity[fold_idx, epoch_idx],
                   test_specificity[fold_idx, epoch_idx])
-            print('Test Entropies:', test_entropies.flat())
-            print('Truth:', test_truth.flat())
+            # print('Test Entropies:', test_entropies.flat())
+            # print('Truth:', test_truth.flat())
 
             if val_auc + train_auc > best_auc_score[fold_idx]:
                 print('This epoch is the new best model on the train/validation set!')
