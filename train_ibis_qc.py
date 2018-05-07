@@ -389,7 +389,7 @@ if __name__ == '__main__':
         optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
         # optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9, nesterov=True)
 
-        lr_scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.5, patience=5, verbose=True)
+        lr_scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.1, patience=3, verbose=True)
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             epoch_start = time.time()
@@ -411,9 +411,9 @@ if __name__ == '__main__':
             val_predictions = np.argmax(val_probabilities, axis=-1)
 
             test_truth, test_probabilities = test(f, test_indices)
-            test_entropies = np.zeros((test_truth.shape[0], 1))
-            for idx in range(test_truth.shape[0]):
-                test_entropies[idx, 0] = entropy(test_probabilities[idx, :, 1]) / 20
+            # test_entropies = np.zeros((test_truth.shape[0], 1))
+            # for idx in range(test_truth.shape[0]):
+            #     test_entropies[idx, 0] = entropy(test_probabilities[idx, :, 1]) / 20
             test_average_probs = np.mean(test_probabilities, axis=1)
             test_predictions = np.argmax(test_average_probs, axis=-1)
 
@@ -478,6 +478,7 @@ if __name__ == '__main__':
 
                 torch.save(model.state_dict(), results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch')
 
+            test_idx += len(test_indices)
             epoch_elapsed = time.time() - epoch_start
             print('Epoch ' + str(epoch) + ' of fold ' + str(fold_num) + ' took ' + str(epoch_elapsed / 60) + ' minutes')
 
@@ -489,7 +490,7 @@ if __name__ == '__main__':
         except:
             print('ERROR could not save sensitivity/specificity plot for epoch', epoch)
 
-        test_idx += len(test_indices)
+
 
     # done training
 

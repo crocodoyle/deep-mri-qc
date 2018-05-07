@@ -102,8 +102,8 @@ def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_s
 def sens_spec_across_folds(sens_to_plot, spec_to_plot, results_dir):
     fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True, figsize=(10, 4))
 
-    bplot1 = ax1.boxplot(sens_to_plot, notch=True, patch_artist=True)
-    bplot2 = ax2.boxplot(spec_to_plot, notch=True, patch_artist=True)
+    bplot1 = ax1.boxplot(sens_to_plot, patch_artist=True)
+    bplot2 = ax2.boxplot(spec_to_plot, patch_artist=True)
 
     colors = ['pink', 'lightblue', 'lightgreen']
     for bplot in (bplot1, bplot2):
@@ -119,7 +119,8 @@ def sens_spec_across_folds(sens_to_plot, spec_to_plot, results_dir):
     ax1.set_title('Sensitivity', fontsize=24)
     ax2.set_title('Specificity', fontsize=24)
 
-    plt.grid(True)
+    ax1.grid()
+    ax2.grid()
     plt.savefig(results_dir + 'sensitivity_specificity_all_folds.png', dpi=500)
     plt.close()
 
@@ -135,6 +136,8 @@ def plot_entropy(probabilities, truth, results_dir):
         else:
             y_predicted = 1
 
+        print('pass probs:', probabilities[i, :, 1])
+
         pass_probs = probabilities[i, :, 1]
         fail_probs = probabilities[i, :, 0]
 
@@ -144,7 +147,6 @@ def plot_entropy(probabilities, truth, results_dir):
         H_pass = entropy(pass_probs) / pass_probs.shape[0]
         H_fail = entropy(fail_probs) / fail_probs.shape[0]
 
-        print('pass probs:', probabilities[i, :, 1])
         print('entropy:', H_pass, H_fail)
 
         if y_true == 1:
