@@ -135,8 +135,14 @@ def plot_entropy(probabilities, truth, results_dir):
         else:
             y_predicted = 1
 
-        H_pass = entropy(probabilities[i, :, 1]) / 20
-        H_fail = entropy(probabilities[i, :, 0]) / 20
+        pass_probs = probabilities[i, :, 1]
+        fail_probs = probabilities[i, :, 0]
+
+        pass_probs = pass_probs[pass_probs != 0]
+        fail_probs = fail_probs[fail_probs != 0]
+
+        H_pass = entropy(pass_probs) / pass_probs.shape[0]
+        H_fail = entropy(fail_probs) / fail_probs.shape[0]
 
         print('pass probs:', probabilities[i, :, 1])
         print('entropy:', H_pass, H_fail)
