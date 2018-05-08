@@ -417,8 +417,7 @@ if __name__ == '__main__':
             test_average_probs = np.mean(test_probabilities, axis=1)
             test_predictions = np.argmax(test_average_probs, axis=-1)
 
-            all_test_probs[test_idx:test_idx+len(test_indices), :, :] = test_probabilities
-            all_test_truth[test_idx:test_idx+len(test_indices)] = test_truth
+            print('test indices:', len(test_indices), test_probabilities.shape)
 
             train_auc, val_auc, test_auc = plot_roc(train_truth, train_probabilities, val_truth, val_probabilities,
                                                     test_truth, test_average_probs, results_dir, epoch, fold_num)
@@ -482,15 +481,16 @@ if __name__ == '__main__':
             epoch_elapsed = time.time() - epoch_start
             print('Epoch ' + str(epoch) + ' of fold ' + str(fold_num) + ' took ' + str(epoch_elapsed / 60) + ' minutes')
 
-            continue
-        try:
-            plot_sens_spec(training_sensitivity[fold_idx, :], training_specificity[fold_idx, :],
+        # test images using best model this fold
+        model.load_state_dict(torch.load(results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch'))
+        model.eval()
+
+        all_test_probs[test_idx:test_idx+len(test_indices), :, :] = test_probabilities
+        all_test_truth[test_idx:test_idx+len(test_indices)] = test_truth
+
+        plot_sens_spec(training_sensitivity[fold_idx, :], training_specificity[fold_idx, :],
                            validation_sensitivity[fold_idx, :], validation_specificity[fold_idx, :],
                            test_sensitivity[fold_idx, :], test_specificity[fold_idx, :], results_dir, fold_num)
-        except:
-            print('ERROR could not save sensitivity/specificity plot for epoch', epoch)
-
-
 
     # done training
 
