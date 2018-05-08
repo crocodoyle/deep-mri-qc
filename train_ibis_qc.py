@@ -477,7 +477,7 @@ if __name__ == '__main__':
 
                 torch.save(model.state_dict(), results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch')
 
-            test_idx += len(test_indices)
+
             epoch_elapsed = time.time() - epoch_start
             print('Epoch ' + str(epoch) + ' of fold ' + str(fold_num) + ' took ' + str(epoch_elapsed / 60) + ' minutes')
 
@@ -485,8 +485,12 @@ if __name__ == '__main__':
         model.load_state_dict(torch.load(results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch'))
         model.eval()
 
+        test_truth, test_probabilities = test(f, test_indices)
+
         all_test_probs[test_idx:test_idx+len(test_indices), :, :] = test_probabilities
         all_test_truth[test_idx:test_idx+len(test_indices)] = test_truth
+
+        test_idx += len(test_indices)
 
         plot_sens_spec(training_sensitivity[fold_idx, :], training_specificity[fold_idx, :],
                            validation_sensitivity[fold_idx, :], validation_specificity[fold_idx, :],
