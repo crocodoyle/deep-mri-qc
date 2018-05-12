@@ -126,6 +126,7 @@ def sens_spec_across_folds(sens_to_plot, spec_to_plot, results_dir):
 
 
 def plot_entropy(probabilities, truth, results_dir):
+    print('probabilities:', probabilities)
     pass_entropies, fail_entropies = [], []
     tp_entropies, fp_entropies, tn_entropies, fn_entropies = [], [], [], []
 
@@ -136,7 +137,7 @@ def plot_entropy(probabilities, truth, results_dir):
         else:
             y_predicted = 1
 
-        print('pass probs:', probabilities[i, :, 1])
+        # print('pass probs:', probabilities[i, :, 1])
 
         pass_probs = probabilities[i, :, 1]
         fail_probs = probabilities[i, :, 0]
@@ -147,7 +148,7 @@ def plot_entropy(probabilities, truth, results_dir):
         H_pass = entropy(pass_probs) / pass_probs.shape[0]
         H_fail = entropy(fail_probs) / fail_probs.shape[0]
 
-        print('entropy:', H_pass, H_fail)
+        # print('entropy:', H_pass, H_fail)
 
         if y_true == 1:
             pass_entropies.append(H_pass)

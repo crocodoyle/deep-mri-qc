@@ -389,7 +389,7 @@ if __name__ == '__main__':
         optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
         # optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9, nesterov=True)
 
-        lr_scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.1, patience=3, verbose=True)
+        lr_scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.1, threshold=1e-5, patience=5, verbose=True)
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             epoch_start = time.time()
@@ -486,6 +486,8 @@ if __name__ == '__main__':
         model.eval()
 
         test_truth, test_probabilities = test(f, test_indices)
+        print('last test this epoch:', test_probabilities)
+        print('prob shape:', test_probabilities.shape)
 
         all_test_probs[test_idx:test_idx+len(test_indices), :, :] = test_probabilities
         all_test_truth[test_idx:test_idx+len(test_indices)] = test_truth
