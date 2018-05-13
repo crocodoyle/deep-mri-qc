@@ -486,8 +486,8 @@ if __name__ == '__main__':
         model.eval()
 
         test_truth, test_probabilities = test(f, test_indices)
-        print('last test this epoch:', test_probabilities)
-        print('prob shape:', test_probabilities.shape)
+        # print('last test this epoch:', test_probabilities)
+        # print('prob shape:', test_probabilities.shape)
 
         all_test_probs[test_idx:test_idx+len(test_indices), :, :] = test_probabilities
         all_test_truth[test_idx:test_idx+len(test_indices)] = test_truth
@@ -500,10 +500,7 @@ if __name__ == '__main__':
 
     # done training
 
-    try:
-        plot_entropy(all_test_probs, all_test_truth, results_dir)
-    except Exception as e:
-        print(e)
+    plot_entropy(all_test_probs, all_test_truth, results_dir)
 
     sens_plot = [best_sensitivity[:, 0], best_sensitivity[:, 1], best_sensitivity[:, 2]]
     spec_plot = [best_specificity[:, 0], best_specificity[:, 1], best_specificity[:, 2]]
