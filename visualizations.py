@@ -126,6 +126,7 @@ def sens_spec_across_folds(sens_to_plot, spec_to_plot, results_dir):
 
 
 def plot_entropy(probabilities, truth, results_dir):
+    probabilities = np.exp(probabilities)
     print('probabilities:', probabilities)
     pass_entropies, fail_entropies = [], []
     tp_entropies, fp_entropies, tn_entropies, fn_entropies = [], [], [], []
