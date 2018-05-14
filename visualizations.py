@@ -167,26 +167,26 @@ def plot_entropy(probabilities, truth, results_dir):
 
     prob_space = np.reshape(np.linspace(0, 1, 200), (-1, 1))
 
-    kde_pass = KernelDensity(kernel='gaussian', bandwidth=0.1).fit(np.reshape(np.asarray(pass_entropies), (-1, 1)))
-    kde_fail = KernelDensity(kernel='gaussian', bandwidth=0.1).fit(np.reshape(np.asarray(fail_entropies), (-1, 1)))
+    kde_pass = KernelDensity(kernel='gaussian', bandwidth=0.001).fit(np.reshape(np.asarray(pass_entropies), (-1, 1)))
+    kde_fail = KernelDensity(kernel='gaussian', bandwidth=0.001).fit(np.reshape(np.asarray(fail_entropies), (-1, 1)))
 
-    kde_tp = KernelDensity(kernel='gaussian', bandwidth=0.1).fit(np.reshape(np.asarray(tp_entropies), (-1, 1)))
-    kde_tn = KernelDensity(kernel='gaussian', bandwidth=0.1).fit(np.reshape(np.asarray(tn_entropies), (-1, 1)))
-    kde_fp = KernelDensity(kernel='gaussian', bandwidth=0.1).fit(np.reshape(np.asarray(fp_entropies), (-1, 1)))
-    kde_fn = KernelDensity(kernel='gaussian', bandwidth=0.1).fit(np.reshape(np.asarray(fn_entropies), (-1, 1)))
+    kde_tp = KernelDensity(kernel='gaussian', bandwidth=0.001).fit(np.reshape(np.asarray(tp_entropies), (-1, 1)))
+    kde_tn = KernelDensity(kernel='gaussian', bandwidth=0.001).fit(np.reshape(np.asarray(tn_entropies), (-1, 1)))
+    kde_fp = KernelDensity(kernel='gaussian', bandwidth=0.001).fit(np.reshape(np.asarray(fp_entropies), (-1, 1)))
+    kde_fn = KernelDensity(kernel='gaussian', bandwidth=0.001).fit(np.reshape(np.asarray(fn_entropies), (-1, 1)))
 
     fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True, figsize=(10, 4))
 
-    ax1.plot(kde_pass.score_samples(prob_space), color='g', label='Pass')
-    ax1.plot(kde_fail.score_samples(prob_space), color='r', label='Fail')
+    ax1.plot(prob_space, kde_pass.score_samples(prob_space), color='g', label='Pass')
+    ax1.plot(prob_space, kde_fail.score_samples(prob_space), color='r', label='Fail')
 
-    ax2.plot(kde_tp.score_samples(prob_space), color='b', label='TP')
-    ax2.plot(kde_fn.score_samples(prob_space), color='r', label='FN')
-    ax2.plot(kde_fp.score_samples(prob_space), color='orange', label='FP')
-    ax2.plot(kde_tn.score_samples(prob_space), color='g', label='TN')
+    ax2.plot(prob_space, kde_tp.score_samples(prob_space), color='b', label='TP')
+    ax2.plot(prob_space, kde_fn.score_samples(prob_space), color='r', label='FN')
+    ax2.plot(prob_space, kde_fp.score_samples(prob_space), color='orange', label='FP')
+    ax2.plot(prob_space, kde_tn.score_samples(prob_space), color='g', label='TN')
 
-    ax1.legend(loc='lower right', shadow=True)
-    ax2.legend(loc='lower right', shadow=True)
+    ax1.legend(loc='upper right', shadow=True)
+    ax2.legend(loc='upper right', shadow=True)
 
     plt.savefig(results_dir + 'prediction_entropies.png', dpi=500)
     plt.close()
