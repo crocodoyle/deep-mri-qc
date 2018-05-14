@@ -165,7 +165,7 @@ def plot_entropy(probabilities, truth, results_dir):
                 tn_entropies.append(H_fail)
 
 
-    prob_space = np.linspace(0, 1, 200)
+    prob_space = np.reshape(np.linspace(0, 1, 200), (-1, 1))
 
     kde_pass = KernelDensity(kernel='gaussian', bandwidth=0.1).fit(np.reshape(np.asarray(pass_entropies), (-1, 1)))
     kde_fail = KernelDensity(kernel='gaussian', bandwidth=0.1).fit(np.reshape(np.asarray(fail_entropies), (-1, 1)))
