@@ -356,7 +356,7 @@ if __name__ == '__main__':
         optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
         # optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9, nesterov=True)
 
-        lr_scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.1, threshold=1e-5, patience=5, verbose=True)
+        lr_scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.8, threshold=1e-5, patience=5, verbose=True)
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             epoch_start = time.time()
@@ -421,9 +421,11 @@ if __name__ == '__main__':
             # print('Test Entropies:', test_entropies.flat())
             # print('Truth:', test_truth.flat())
 
-            if val_auc + train_auc > best_auc_score[fold_idx]:
+            auc_score = (val_auc / len(validation_indices)) + (train_auc / len(train_indices))
+
+            if auc_score > best_auc_score[fold_idx]:
                 print('This epoch is the new best model on the train/validation set!')
-                best_auc_score[fold_idx] = (val_auc + train_auc)
+                best_auc_score[fold_idx] = auc_score
 
                 best_sensitivity[fold_idx, 0] = training_sensitivity[fold_idx, epoch_idx]
                 best_specificity[fold_idx, 0] = training_specificity[fold_idx, epoch_idx]
