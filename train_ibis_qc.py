@@ -423,7 +423,8 @@ if __name__ == '__main__':
             # print('Test Entropies:', test_entropies.flat())
             # print('Truth:', test_truth.flat())
 
-            auc_score = (val_auc / len(validation_indices)) + (train_auc / len(train_indices))
+            # auc_score = (val_auc / len(validation_indices)) + (train_auc / len(train_indices))
+            auc_score = (val_auc / len(validation_indices))
 
             if auc_score > best_auc_score[fold_idx]:
                 print('This epoch is the new best model on the train/validation set!')
