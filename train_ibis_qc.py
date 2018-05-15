@@ -353,10 +353,10 @@ if __name__ == '__main__':
         #       str(len(validation_loader.dataset)), 'validation images and', str(len(test_loader.dataset)),
         #       'test images.')
 
-        optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
+        optimizer = optim.Adam(model.parameters(), lr=0.002, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
         # optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9, nesterov=True)
 
-        lr_scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.8, threshold=1e-5, patience=5, verbose=True)
+        lr_scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.1, threshold=1e-5, patience=10, verbose=True)
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             epoch_start = time.time()
@@ -378,7 +378,9 @@ if __name__ == '__main__':
             test_average_probs = np.mean(test_probabilities, axis=1)
             test_predictions = np.argmax(test_average_probs, axis=-1)
 
-            train_auc, val_auc, test_auc = plot_roc(train_truth, train_probabilities, val_truth, val_probabilities,
+            print('probs shape:', test_probabilities.shape, val_probabilities.shape)
+
+            train_auc, val_auc, test_auc = plot_roc(train_truth, train_probabilities, val_truth, val_average_probs,
                                                     test_truth, test_average_probs, results_dir, epoch, fold_num)
 
             try:
