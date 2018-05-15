@@ -167,13 +167,15 @@ def plot_entropy(probabilities, truth, results_dir):
 
     prob_space = np.reshape(np.linspace(0, 1, 200), (-1, 1))
 
-    kde_pass = KernelDensity(kernel='gaussian', bandwidth=0.001).fit(np.reshape(np.asarray(pass_entropies), (-1, 1)))
-    kde_fail = KernelDensity(kernel='gaussian', bandwidth=0.001).fit(np.reshape(np.asarray(fail_entropies), (-1, 1)))
+    bw = 0.00001
 
-    kde_tp = KernelDensity(kernel='gaussian', bandwidth=0.001).fit(np.reshape(np.asarray(tp_entropies), (-1, 1)))
-    kde_tn = KernelDensity(kernel='gaussian', bandwidth=0.001).fit(np.reshape(np.asarray(tn_entropies), (-1, 1)))
-    kde_fp = KernelDensity(kernel='gaussian', bandwidth=0.001).fit(np.reshape(np.asarray(fp_entropies), (-1, 1)))
-    kde_fn = KernelDensity(kernel='gaussian', bandwidth=0.001).fit(np.reshape(np.asarray(fn_entropies), (-1, 1)))
+    kde_pass = KernelDensity(kernel='gaussian', bandwidth=bw).fit(np.reshape(np.asarray(pass_entropies), (-1, 1)))
+    kde_fail = KernelDensity(kernel='gaussian', bandwidth=bw).fit(np.reshape(np.asarray(fail_entropies), (-1, 1)))
+
+    kde_tp = KernelDensity(kernel='gaussian', bandwidth=bw).fit(np.reshape(np.asarray(tp_entropies), (-1, 1)))
+    kde_tn = KernelDensity(kernel='gaussian', bandwidth=bw).fit(np.reshape(np.asarray(tn_entropies), (-1, 1)))
+    kde_fp = KernelDensity(kernel='gaussian', bandwidth=bw).fit(np.reshape(np.asarray(fp_entropies), (-1, 1)))
+    kde_fn = KernelDensity(kernel='gaussian', bandwidth=bw).fit(np.reshape(np.asarray(fn_entropies), (-1, 1)))
 
     fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True, figsize=(10, 4))
 

@@ -110,41 +110,6 @@ def train(epoch):
     return truth, probabilities
 
 
-def validate():
-    model.eval()
-    validation_loss, correct = 0, 0
-
-    truth, probabilities = np.zeros((len(validation_loader.dataset))), np.zeros((len(validation_loader.dataset), 2))
-
-    for batch_idx, (data, target) in enumerate(validation_loader):
-        if args.cuda:
-            data, target = data.cuda(), target.cuda()
-
-        data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
-        output = model(data)
-        loss_function = nn.NLLLoss()
-
-        loss_val = loss_function(output, target).data[0]
-
-        validation_loss += loss_val
-        pred = output.data.max(1, keepdim=True)[1]
-        correct += pred.eq(target.data.view_as(pred)).cpu().sum()
-
-        # print('val batch shape:', output.data.cpu().numpy().shape)
-        truth[batch_idx * args.val_batch_size:(batch_idx + 1) * args.val_batch_size] = target.data.cpu().numpy()
-        probabilities[batch_idx * args.val_batch_size:(batch_idx + 1) * args.val_batch_size] = output.data.cpu().numpy()
-
-    validation_loss /= len(validation_loader.dataset)
-
-    lr_scheduler.step(validation_loss)
-
-    print('Validation set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
-        validation_loss, correct, len(validation_loader.dataset),
-        100. * correct / len(validation_loader.dataset)))
-
-    return truth, probabilities
-
-
 def test(f, test_indices):
     model.eval()
 
@@ -329,6 +294,8 @@ if __name__ == '__main__':
 
     all_test_probs = np.zeros((n_total, 20, 2))
     all_test_truth = np.zeros((n_total))
+    all_val_probs = np.zeros((n_total, 20, 2))
+    all_val_truth = np.zeros((n_total))
 
     if args.cuda:
         model.cuda()
@@ -344,7 +311,7 @@ if __name__ == '__main__':
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
-    test_idx = 0
+    test_idx, val_idx = 0, 0
 
     skf = StratifiedKFold(n_splits=n_folds)
     for fold_idx, (train_indices, other_indices) in enumerate(skf.split(ibis_indices, labels)):
@@ -403,21 +370,13 @@ if __name__ == '__main__':
             train_truth, train_probabilities = train(epoch)
             train_predictions = np.argmax(train_probabilities, axis=-1)
 
-            validation_dataset = QCDataset(f, validation_indices, random_slice=True)
-            validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=args.val_batch_size,
-                                                            shuffle=False, **kwargs)
-
-            val_truth, val_probabilities = validate()
-            val_predictions = np.argmax(val_probabilities, axis=-1)
+            val_truth, val_probabilities = test(f, validation_indices)
+            val_average_probs = np.mean(val_probabilities, axis=1)
+            val_predictions = np.argmax(val_average_probs, axis=-1)
 
             test_truth, test_probabilities = test(f, test_indices)
-            # test_entropies = np.zeros((test_truth.shape[0], 1))
-            # for idx in range(test_truth.shape[0]):
-            #     test_entropies[idx, 0] = entropy(test_probabilities[idx, :, 1]) / 20
             test_average_probs = np.mean(test_probabilities, axis=1)
             test_predictions = np.argmax(test_average_probs, axis=-1)
-
-            print('test indices:', len(test_indices), test_probabilities.shape)
 
             train_auc, val_auc, test_auc = plot_roc(train_truth, train_probabilities, val_truth, val_probabilities,
                                                     test_truth, test_average_probs, results_dir, epoch, fold_num)
@@ -485,14 +444,18 @@ if __name__ == '__main__':
         model.load_state_dict(torch.load(results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch'))
         model.eval()
 
+        val_truth, val_probabilities = test(f, validation_indices)
         test_truth, test_probabilities = test(f, test_indices)
         # print('last test this epoch:', test_probabilities)
         # print('prob shape:', test_probabilities.shape)
 
+        all_val_probs[val_idx:val_idx+len(validation_indices), :, :] = val_probabilities
+        all_val_truth[val_idx:val_idx+len(validation_indices)] = val_truth
         all_test_probs[test_idx:test_idx+len(test_indices), :, :] = test_probabilities
         all_test_truth[test_idx:test_idx+len(test_indices)] = test_truth
 
         test_idx += len(test_indices)
+        val_idx += len(validation_indices)
 
         plot_sens_spec(training_sensitivity[fold_idx, :], training_specificity[fold_idx, :],
                            validation_sensitivity[fold_idx, :], validation_specificity[fold_idx, :],
