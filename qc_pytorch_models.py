@@ -10,45 +10,45 @@ class ConvolutionalQCNet(nn.Module):
         super(ConvolutionalQCNet, self).__init__()
 
         self.features = nn.Sequential(
-            nn.Conv2d(1, 16, kernel_size=3),
+            nn.Conv2d(1, 16, kernel_size=5),
             nn.BatchNorm2d(16),
             nn.ReLU(),
             nn.MaxPool2d(2),
-            nn.Conv2d(16, 32, kernel_size=3),
+            nn.Conv2d(16, 32, kernel_size=5),
             # nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.MaxPool2d(2),
-            nn.Conv2d(32, 64, kernel_size=3),
+            nn.Conv2d(32, 64, kernel_size=5),
             # nn.BatchNorm2d(32),
             # nn.Dropout(),
             nn.ReLU(),
             nn.MaxPool2d(2),
-            nn.Conv2d(64, 128, kernel_size=3),
+            nn.Conv2d(64, 128, kernel_size=5),
             # nn.BatchNorm2d(64),
             # nn.Dropout(),
             nn.ReLU(),
             nn.MaxPool2d(2),
-            nn.Conv2d(128, 256, kernel_size=3),
+            nn.Conv2d(128, 256, kernel_size=5),
             # nn.Dropout(),
             nn.ReLU(),
             nn.MaxPool2d(2),
-            nn.Conv2d(256, 512, kernel_size=3),
+            nn.Conv2d(256, 512, kernel_size=5),
             nn.ReLU(),
-            nn.Dropout(0.3),
+            # nn.Dropout(0.3),
         )
 
         self.flat_features = self.get_flat_features(input_shape, self.features)
 
         self.classifier = nn.Sequential(
-            nn.Linear(self.flat_features, 64),
+            nn.Linear(self.flat_features, 256),
             nn.Dropout(),
             # nn.BatchNorm1d(256),
             nn.ReLU(),
-            nn.Linear(64, 64),
+            nn.Linear(256, 256),
             nn.Dropout(),
             # nn.BatchNorm1d(256),
             nn.ReLU(),
-            nn.Linear(64, 2),
+            nn.Linear(256, 2),
         )
 
         self.output = nn.LogSoftmax(dim=-1)
