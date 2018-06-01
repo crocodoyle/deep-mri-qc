@@ -77,19 +77,19 @@ def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_s
     lw = 2
 
     if not train_sens is None:
-        plt.plot(epoch_number, train_sens, color='darkorange', linestyle=':', lw=lw, label='Train Sensitivity')
+        plt.plot(epoch_number, train_sens, color='blue', linestyle=':', lw=lw, label='Train Sensitivity')
     if not train_spec is None:
-        plt.plot(epoch_number, train_spec, color='gold', linestyle=':', lw=lw, label='Train Specificity')
+        plt.plot(epoch_number, train_spec, color='salmon', linestyle=':', lw=lw, label='Train Specificity')
 
     if not val_sens is None:
-        plt.plot(epoch_number, val_sens, color='darkred', linestyle='--', lw=lw, label='Validation Sensitivity')
+        plt.plot(epoch_number, val_sens, color='mediumblue', linestyle='--', lw=lw, label='Validation Sensitivity')
     if not val_spec is None:
-        plt.plot(epoch_number, val_spec, color='salmon', linestyle='--', lw=lw, label='Validation Specificity')
+        plt.plot(epoch_number, val_spec, color='red', linestyle='--', lw=lw, label='Validation Specificity')
 
     if not test_sens is None:
         plt.plot(epoch_number, test_sens, color='darkblue', lw=lw, label='Test Sensitivity')
     if not test_spec is None:
-        plt.plot(epoch_number, test_spec, color='mediumblue', lw=lw, label='Test Specificity')
+        plt.plot(epoch_number, test_spec, color='darkred', lw=lw, label='Test Specificity')
 
     plt.xlabel('Epoch #', fontsize=20)
     plt.ylabel('Metric Value', fontsize=20)
