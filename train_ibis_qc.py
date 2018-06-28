@@ -157,7 +157,7 @@ def set_temperature(model, f, validation_indices):
         input_var = Variable(data).cuda()
         logits_var = model(input_var)
         logits_list.append(logits_var.data)
-        labels_list.append(label)
+        labels_list.append(target)
     logits = torch.cat(logits_list).cuda()
     labels = torch.cat(labels_list).cuda()
     logits_var = Variable(logits)
