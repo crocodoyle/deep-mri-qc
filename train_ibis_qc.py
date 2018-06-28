@@ -14,7 +14,7 @@ from torch.utils.data.sampler import WeightedRandomSampler
 from torch.autograd import Variable
 
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-
+from temperature_scaling import ModelWithTemperature, ModelWithSoftmax, ECELoss
 
 from qc_pytorch_models import ConvolutionalQCNet
 
@@ -27,7 +27,6 @@ from visualizations import plot_roc, plot_sens_spec, make_roc_gif, GradCam, sens
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import StratifiedKFold, LeaveOneGroupOut
 
-from scipy.stats import entropy
 
 import matplotlib as mpl
 mpl.use('Agg')
@@ -98,15 +97,6 @@ def train(epoch):
         truth[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = target.data.cpu().numpy()
         probabilities[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = output.data.cpu().numpy()
 
-        # train_loss += loss_val.data[0]  # sum up batch loss
-        # pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
-        # correct += pred.eq(target.data.view_as(pred)).cpu().sum()
-
-    # train_loss /= len(train_loader.dataset)
-    # print('Train set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
-    #     train_loss, correct, len(train_loader.dataset),
-    #     100. * correct / len(train_loader.dataset)))
-
     return truth, probabilities
 
 
@@ -141,92 +131,63 @@ def test(f, test_indices):
     return truth, probabilities
 
 
-def example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam):
-    model.eval()
+def set_temperature(model, f, validation_indices):
+    """
+    Tune the tempearature of the model (using the validation set).
+    We're going to set it to optimize NLL.
+    valid_loader (DataLoader): validation set loader
+    """
+    model.cuda()
+    nll_criterion = nn.CrossEntropyLoss().cuda()
+    ece_criterion = ECELoss().cuda()
 
-    histogram = np.zeros((256))
+    images = f['MRI']
+    labels = f['qc_label']
 
-    bins = np.linspace(0.0, 1.0, 257)
 
-    os.makedirs(results_dir + '/imgs/', exist_ok=True)
-    for batch_idx, (data, target) in enumerate(train_loader):
+    # First: collect all the logits and labels for the validation set
+    logits_list = []
+    labels_list = []
+    for i, val_idx in enumerate(validation_indices):
+        data = np.zeros((20, 1, image_shape[1], image_shape[2]))
+        data[:, 0, ...] = images[val_idx, 0, image_shape[0] // 2 - 10: image_shape[0] // 2 + 10, ...]
 
-        data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
+        target = np.zeros((data.shape[0], 1))
+        target[:, 0] = labels[val_idx]
+        # print('Test target shape:', target.shape)
 
-        target_batch = target.data.cpu().numpy()
-        image_batch = data.data.cpu().numpy()
+        data = torch.FloatTensor(data)
+        target = torch.LongTensor(target)
 
-        for img in image_batch:
+        input_var = Variable(data).cuda()
+        logits_var = model(input_var)
+        logits_list.append(logits_var.data)
+        labels_list.append(label)
+    logits = torch.cat(logits_list).cuda()
+    labels = torch.cat(labels_list).cuda()
+    logits_var = Variable(logits)
+    labels_var = Variable(labels)
 
-            try:
-                histo = np.histogram(img, bins=bins)
-                histogram += histo[0]
-            except KeyError:
-                print('Site missing')
+    # Calculate NLL and ECE before temperature scaling
+    before_temperature_nll = nll_criterion(logits_var, labels_var).data[0]
+    before_temperature_ece = ece_criterion(logits_var, labels_var).data[0]
+    print('Before temperature - NLL: %.3f, ECE: %.3f' % (before_temperature_nll, before_temperature_ece))
 
-        if batch_idx == 0:
-            print(target_batch.shape, image_batch.shape)
+    # Next: optimize the temperature w.r.t. NLL
+    optimizer = optim.LBFGS([model.temperature], lr=0.01, max_iter=50)
+    def eval():
+        loss = nll_criterion(model.temperature_scale(logits_var), labels_var)
+        loss.backward()
+        return loss
+    optimizer.step(eval)
 
-        try:
-            for i in range(data.shape[0]):
-                if target_batch[i] == 0:
-                    qc_decision = 'FAIL'
-                else:
-                    qc_decision = 'PASS'
+    # Calculate NLL and ECE after temperature scaling
+    after_temperature_nll = nll_criterion(model.temperature_scale(logits_var), labels_var).data[0]
+    after_temperature_ece = ece_criterion(model.temperature_scale(logits_var), labels_var).data[0]
+    print('Optimal temperature: %.3f' % model.temperature.data[0])
+    print('After temperature - NLL: %.3f, ECE: %.3f' % (after_temperature_nll, after_temperature_ece))
 
-                plt.close()
-                plt.imshow(image_batch[i, 0, :, :], cmap='gray', origin='lower')
-                plt.axis('off')
-                filename = results_dir + '/imgs/' + qc_decision + '_' + str(batch_idx) + '_img_' + str(
-                    i) + '.png'
-                plt.savefig(filename, bbox_inches='tight')
-        except IndexError as e:
-            print('Couldnt save one file')
-
-    for batch_idx, (data, target) in enumerate(test_loader):
-        data, target = Variable(data, volatile=True), Variable(target).type(torch.cuda.LongTensor)
-
-        target_batch = target.data.cpu().numpy()
-        image_batch = data.data.cpu().numpy()
-
-        for img in image_batch:
-            try:
-                histo = np.histogram(img, bins=bins)
-                histogram += histo[0]
-            except KeyError:
-                print('Site missing')
-
-        if batch_idx == 0:
-            print(target_batch.shape, image_batch.shape)
-
-        try:
-            for i in range(data.shape[0]):
-                if target_batch[i] == 0:
-                    qc_decision = 'FAIL'
-                else:
-                    qc_decision = 'PASS'
-
-                    # mask = grad_cam(data[i, ...][np.newaxis, ...], target[i, ...][np.newaxis, ...])
-                    #
-                    # heatmap = np.uint8(cm.jet(mask)[:,:,0,:3]*255)
-                    # gray = np.uint8(cm.gray(data[i, ...]))
-                    #
-                    # fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 4.5), tight_layout=True)
-                    # ax1.imshow(image_batch[i, 0, :, :], cmap='gray', origin='lower')
-                    # ax2.imshow(gray, origin='lower')
-                    # ax2.imshow(heatmap, alpha=0.2, origin='lower')
-                    #
-                    # plt.savefig(results_dir + '/imgs/' + qc_decision + '_ds030_batch_' + str(batch_idx) + '_img_' + str(i) + '.png', bbox_inches='tight')
-        except IndexError as e:
-            pass
-
-    plt.figure()
-    plt.plot(bins[:-1], histogram, lw=2)
-
-    plt.title('histogram of grey values', fontsize='24')
-    plt.tight_layout()
-    plt.savefig(results_dir + 'histograms.png', bbox_inches='tight')
-
+    return model
 
 if __name__ == '__main__':
     print('PyTorch implementation of DeepMRIQC.')
@@ -240,8 +201,8 @@ if __name__ == '__main__':
                         help='input batch size for validation (default: 32')
     parser.add_argument('--test-batch-size', type=int, default=32, metavar='N',
                         help='input batch size for testing (default: 32)')
-    parser.add_argument('--epochs', type=int, default=100, metavar='N',
-                        help='number of epochs to train (default: 100)')
+    parser.add_argument('--epochs', type=int, default=120, metavar='N',
+                        help='number of epochs to train (default: 120)')
     parser.add_argument('--folds', type=int, default=10, metavar='N',
                         help='number of folds to cross-validate over (default: 10)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
@@ -251,7 +212,7 @@ if __name__ == '__main__':
     parser.add_argument('--log-interval', type=int, default=5, metavar='N',
                         help='how many batches to wait before logging training status (default: 5)')
     parser.add_argument('--ssd', type=bool, default=False, metavar='N',
-                        help='specifies to copy the input file to the home directory (default: True')
+                        help='specifies to copy the input data to the home directory (default: True')
 
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -261,8 +222,8 @@ if __name__ == '__main__':
         torch.cuda.manual_seed(args.seed)
 
     model = ConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
-    print("Convolutional QC Model")
-    print(model)
+    # print("Convolutional QC Model")
+    # print(model)
 
     results_dir, experiment_number = setup_experiment(workdir)
 
@@ -349,7 +310,7 @@ if __name__ == '__main__':
 
         train_sample_weights = torch.DoubleTensor(train_sample_weights)
 
-            # print('This fold has', str(len(train_loader.dataset)), 'training images and',
+        # print('This fold has', str(len(train_loader.dataset)), 'training images and',
         #       str(len(validation_loader.dataset)), 'validation images and', str(len(test_loader.dataset)),
         #       'test images.')
 
@@ -402,7 +363,7 @@ if __name__ == '__main__':
                 print('ERROR: couldnt calculate confusion matrix in testing, probably only one class predicted/present in ground truth.')
 
             print('Calculating sensitivity/specificity...')
-            epsilon = 1e-5
+            epsilon = 1e-6
             training_sensitivity[fold_idx, epoch_idx] = train_tp / (train_tp + train_fn + epsilon)
             training_specificity[fold_idx, epoch_idx] = train_tn / (train_tn + train_fp + epsilon)
 
@@ -420,11 +381,8 @@ if __name__ == '__main__':
                   validation_specificity[fold_idx, epoch_idx])
             print('Test sensitivity/specificity:', test_sensitivity[fold_idx, epoch_idx],
                   test_specificity[fold_idx, epoch_idx])
-            # print('Test Entropies:', test_entropies.flat())
-            # print('Truth:', test_truth.flat())
 
-            # auc_score = (val_auc / len(validation_indices)) + (train_auc / len(train_indices))
-            auc_score = (val_auc / len(validation_indices))
+            auc_score = (val_auc / len(validation_indices)) / 2 + (train_auc / len(train_indices)) / 2
 
             if auc_score > best_auc_score[fold_idx]:
                 print('This epoch is the new best model on the train/validation set!')
@@ -462,9 +420,19 @@ if __name__ == '__main__':
         test_idx += len(test_indices)
         val_idx += len(validation_indices)
 
-        plot_sens_spec(training_sensitivity[fold_idx, :], training_specificity[fold_idx, :],
-                           validation_sensitivity[fold_idx, :], validation_specificity[fold_idx, :],
-                           test_sensitivity[fold_idx, :], test_specificity[fold_idx, :], results_dir, fold_num)
+        model_without_softmax = nn.Sequential(*list(model.children())[:-1])
+        model_with_temperature = ModelWithTemperature(model_without_softmax)
+
+        model_with_temperature.set_temperature(f, validation_indices)
+
+        model = ModelWithSoftmax(model_with_temperature)
+
+        model_filename = os.path.join(results_dir, 'calibrated_qc_fold_' + str(fold_num) + '.tch')
+        torch.save(model.state_dict(), model_filename)
+
+    plot_sens_spec(training_sensitivity, training_specificity,
+                           validation_sensitivity, validation_specificity,
+                           test_sensitivity, test_specificity, results_dir)
 
     # done training
 
@@ -472,6 +440,15 @@ if __name__ == '__main__':
 
     sens_plot = [best_sensitivity[:, 0], best_sensitivity[:, 1], best_sensitivity[:, 2]]
     spec_plot = [best_specificity[:, 0], best_specificity[:, 1], best_specificity[:, 2]]
+
+    print('Sensitivity')
+    print('Average:', np.mean(best_sensitivity[:, 0]), np.mean(best_sensitivity[:, 1]), np.mean(best_sensitivity[:, 2]))
+    print('Best:', np.max(best_sensitivity[:, 0]), np.max(best_sensitivity[:, 1]), np.max(best_sensitivity[:, 2]))
+
+    print('Specificity')
+    print('Average:', np.mean(best_specificity[:, 0]), np.mean(best_specificity[:, 1]), np.mean(best_specificity[:, 2]))
+    print('Best:', np.max(best_specificity[:, 0]), np.max(best_specificity[:, 1]), np.max(best_specificity[:, 2]))
+    print('(train, val, test)')
 
     pickle.dump(sens_plot, open(workdir + 'best_sens.pkl', 'wb'))
     pickle.dump(spec_plot, open(workdir + 'best_spec.pkl', 'wb'))
@@ -497,6 +474,5 @@ if __name__ == '__main__':
 
     time_elapsed = time.time() - start_time
     print('Whole experiment took', time_elapsed / (60*60), 'hours')
-
     print('This experiment was brought to you by the number:', experiment_number)
 

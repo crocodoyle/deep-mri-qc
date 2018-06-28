@@ -69,33 +69,43 @@ def plot_roc(train_truth, train_probs, val_truth, val_probs, test_truth, test_pr
     return train_roc_auc, val_roc_auc, test_roc_auc
 
 
-def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_spec, results_dir, fold_num=-1):
-    plt.figure(figsize=(8, 8))
+def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_spec, results_dir):
+    f, (sens_ax, spec_ax) = plt.subplots(2, 1, sharex=True, figsize=(12, 6))
 
-    epoch_number = range(len(train_sens))
+    n_folds = train_sens.shape[0]
+    epoch_number = range(train_sens.shape[-1])
 
-    lw = 2
+    lw = 1
 
-    if not train_sens is None:
-        plt.plot(epoch_number, train_sens, color='blue', linestyle=':', lw=lw, label='Train Sensitivity')
-    if not train_spec is None:
-        plt.plot(epoch_number, train_spec, color='salmon', linestyle=':', lw=lw, label='Train Specificity')
+    for fold_num in range(n_folds):
+        if fold_num == 0:
+            sens_ax.plot(epoch_number, train_sens[fold_num, :], color='darkred', linestyle=':', lw=lw, label='Train Sensitivity')
+            spec_ax.plot(epoch_number, train_spec[fold_num, :], color='pink', linestyle=':', lw=lw, label='Train Specificity')
 
-    if not val_sens is None:
-        plt.plot(epoch_number, val_sens, color='mediumblue', linestyle='--', lw=lw, label='Validation Sensitivity')
-    if not val_spec is None:
-        plt.plot(epoch_number, val_spec, color='red', linestyle='--', lw=lw, label='Validation Specificity')
+            sens_ax.plot(epoch_number, val_sens[fold_num, :], color='darkblue', linestyle='--', lw=lw, label='Validation Sensitivity')
+            spec_ax.plot(epoch_number, val_spec[fold_num, :], color='lightblue', linestyle='--', lw=lw, label='Validation Specificity')
 
-    if not test_sens is None:
-        plt.plot(epoch_number, test_sens, color='darkblue', lw=lw, label='Test Sensitivity')
-    if not test_spec is None:
-        plt.plot(epoch_number, test_spec, color='darkred', lw=lw, label='Test Specificity')
+            sens_ax.plot(epoch_number, test_sens[fold_num, :], color='darkgreen', lw=lw*2, label='Test Sensitivity')
+            spec_ax.plot(epoch_number, test_spec[fold_num, :], color='lightgreen', lw=lw*2, label='Test Specificity')
+        else:
+            sens_ax.plot(epoch_number, train_sens[fold_num, :], color='darkred', linestyle=':', lw=lw)
+            spec_ax.plot(epoch_number, train_spec[fold_num, :], color='pink', linestyle=':', lw=lw)
 
-    plt.xlabel('Epoch #', fontsize=20)
-    plt.ylabel('Metric Value', fontsize=20)
+            sens_ax.plot(epoch_number, val_sens[fold_num, :], color='darkblue', linestyle='--', lw=lw)
+            spec_ax.plot(epoch_number, val_spec[fold_num, :], color='lightblue', linestyle='--', lw=lw)
+
+            sens_ax.plot(epoch_number, test_sens[fold_num, :], color='darkgreen', lw=lw * 2)
+            spec_ax.plot(epoch_number, test_spec[fold_num, :], color='lightgreen', lw=lw * 2)
+
+    spec_ax.set_xlabel('Epoch #', fontsize=20)
+    sens_ax.set_ylabel('Metric Value', fontsize=20)
+    spec_ax.set_ylabel('Metric Value', fontsize=20)
 
     plt.legend(shadow=True, fontsize=20, loc='center left', bbox_to_anchor=(1, 0.5))
-    plt.savefig(results_dir + 'results_fold_' + str(fold_num), bbox_inches='tight')
+
+
+    plt.tight_layout()
+    plt.savefig(results_dir + 'sens_spec.png', bbox_inches='tight')
     plt.close()
 
 
