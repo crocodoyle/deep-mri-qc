@@ -50,7 +50,7 @@ class ConvolutionalQCNet(nn.Module):
             nn.Linear(256, 2),
         )
 
-        self.output = nn.LogSoftmax(dim=-1)
+        # self.output = nn.LogSoftmax(dim=-1)
 
         # print('ConvolutionalQC structure:')
         # print(self.features)
@@ -70,5 +70,5 @@ class ConvolutionalQCNet(nn.Module):
         # print('flattened features:', self.flat_features)
         x = self.classifier(x)
         # print('classifier shape:', x.shape)
-        x = self.output(x)
+        # x = self.output(x)
         return x

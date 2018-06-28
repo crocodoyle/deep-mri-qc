@@ -81,19 +81,14 @@ def train(epoch):
         data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
         optimizer.zero_grad()
         output = model(data)
-        # print('output', output.shape)
-        # print('P(qc|mri):', np.exp(output.data.cpu().numpy()))
-        # loss = nn.NLLLoss(weight=class_weight)
-        loss = nn.NLLLoss()
+
+        loss = nn.CrossEntropyLoss()
         loss_val = loss(output, target)
         loss_val.backward()
         optimizer.step()
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch, batch_idx * args.batch_size, len(train_loader.dataset), 100. * batch_idx * args.batch_size / len(train_loader.dataset), loss_val.data[0]))
 
-        # print('output shape', output.shape)
-        # print('batch size', args.batch_size)
-        # print('indices: ', batch_idx * args.batch_size, (batch_idx + 1) * args.batch_size)
         truth[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = target.data.cpu().numpy()
         probabilities[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = output.data.cpu().numpy()
 
@@ -420,9 +415,7 @@ if __name__ == '__main__':
         test_idx += len(test_indices)
         val_idx += len(validation_indices)
 
-        model_without_softmax = nn.Sequential(*list(model.children())[:-1])
-        model_with_temperature = ModelWithTemperature(model_without_softmax)
-
+        model_with_temperature = ModelWithTemperature(model)
         model_with_temperature = set_temperature(model_with_temperature, f, validation_indices)
 
         model = ModelWithSoftmax(model_with_temperature)
