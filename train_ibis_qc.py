@@ -423,7 +423,7 @@ if __name__ == '__main__':
         model_without_softmax = nn.Sequential(*list(model.children())[:-1])
         model_with_temperature = ModelWithTemperature(model_without_softmax)
 
-        model_with_temperature.set_temperature(f, validation_indices)
+        model_with_temperature = set_temperature(model_with_temperature, f, validation_indices)
 
         model = ModelWithSoftmax(model_with_temperature)
 
