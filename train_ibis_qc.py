@@ -144,20 +144,15 @@ def set_temperature(model, f, validation_indices):
     logits_list = []
     labels_list = []
     for i, val_idx in enumerate(validation_indices):
-        data = np.zeros((20, 1, image_shape[1], image_shape[2]))
-        data[:, 0, ...] = images[val_idx, 0, image_shape[0] // 2 - 10: image_shape[0] // 2 + 10, ...]
+        target = torch.LongTensor(labels[val_idx])
 
-        target = np.zeros((data.shape[0], 1))
-        target[:, 0] = labels[val_idx]
-        # print('Test target shape:', target.shape)
+        for j in range(20):
+            data = torch.FloatTensor(images[val_idx, 0, image_shape[0] // 2 - 10 + j, ...][np.newaxis, ...])
+            input_var = Variable(data).cuda()
+            logits_var = model(input_var)
+            logits_list.append(logits_var.data)
+            labels_list.append(target)
 
-        data = torch.FloatTensor(data)
-        target = torch.LongTensor(target)
-
-        input_var = Variable(data).cuda()
-        logits_var = model(input_var)
-        logits_list.append(logits_var.data)
-        labels_list.append(target)
     logits = torch.cat(logits_list).cuda()
     labels = torch.cat(labels_list).cuda()
     logits_var = Variable(logits)
