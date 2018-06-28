@@ -158,7 +158,7 @@ def set_temperature(model, f, validation_indices):
     labels = torch.cat(labels_list).cuda()
     logits_var = Variable(logits)
     labels_var = Variable(labels)
-    print('logits, labels', logits_var, labels_var)
+    # print('logits, labels', logits_var, labels_var)
 
     # Calculate NLL and ECE before temperature scaling
     before_temperature_nll = nll_criterion(logits_var, labels_var).data[0]
