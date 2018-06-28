@@ -153,6 +153,7 @@ def set_temperature(model, f, validation_indices):
             logits_list.append(logits_var.data)
             labels_list.append(target)
 
+    print('logits, labels', len(logits_list), len(labels_list))
     logits = torch.cat(logits_list).cuda()
     labels = torch.cat(labels_list).cuda()
     logits_var = Variable(logits)
@@ -411,6 +412,8 @@ if __name__ == '__main__':
         val_idx += len(validation_indices)
 
         model_with_temperature = ModelWithTemperature(model)
+        print(model_with_temperature)
+
         model_with_temperature = set_temperature(model_with_temperature, f, validation_indices)
 
         model = ModelWithSoftmax(model_with_temperature)
