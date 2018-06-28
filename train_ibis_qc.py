@@ -144,7 +144,7 @@ def set_temperature(model, f, validation_indices):
     logits_list = []
     labels_list = []
     for i, val_idx in enumerate(validation_indices):
-        target = torch.LongTensor(int(labels[val_idx]))
+        target = torch.LongTensor([int(labels[val_idx])])
 
         for j in range(20):
             data = torch.FloatTensor(images[val_idx, 0, image_shape[0] // 2 - 10 + j, ...][np.newaxis, np.newaxis, ...])
@@ -158,6 +158,7 @@ def set_temperature(model, f, validation_indices):
     labels = torch.cat(labels_list).cuda()
     logits_var = Variable(logits)
     labels_var = Variable(labels)
+    print('logits, labels', logits_var, labels_var)
 
     # Calculate NLL and ECE before temperature scaling
     before_temperature_nll = nll_criterion(logits_var, labels_var).data[0]
