@@ -69,7 +69,7 @@ class ECELoss(nn.Module):
         n_bins (int): number of confidence interval bins
         """
         super(ECELoss, self).__init__()
-        bin_boundaries = torch.linspace(0, 1, n_bins + 1)
+        bin_boundaries = torch.linspace(0, 1, n_bins + 1).cuda()
         self.bin_lowers = bin_boundaries[:-1]
         self.bin_uppers = bin_boundaries[1:]
 
