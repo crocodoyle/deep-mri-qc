@@ -77,8 +77,6 @@ class ECELoss(nn.Module):
         softmaxes = F.softmax(logits)
         confidences, predictions = torch.max(softmaxes, 1)
         accuracies = predictions.eq(labels)
-        print(confidences)
-        print(accuracies)
 
         ece = Variable(torch.zeros(1)).type_as(logits)
         for bin_lower, bin_upper in zip(self.bin_lowers, self.bin_uppers):

@@ -134,7 +134,7 @@ def set_temperature(model, f, validation_indices):
     """
     model.cuda()
     nll_criterion = nn.CrossEntropyLoss().cuda()
-    ece_criterion = ECELoss().cuda()
+    ece_criterion = ECELoss(n_bins=4).cuda()
 
     images = f['MRI']
     labels = f['qc_label']
@@ -153,7 +153,6 @@ def set_temperature(model, f, validation_indices):
             logits_list.append(logits_var.data)
             labels_list.append(target)
 
-    print('logits, labels', len(logits_list), len(labels_list))
     logits = torch.cat(logits_list).cuda()
     labels = torch.cat(labels_list).cuda()
     logits_var = Variable(logits)
