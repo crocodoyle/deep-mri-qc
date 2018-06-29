@@ -134,7 +134,7 @@ def set_temperature(model, f, validation_indices):
     """
     model.cuda()
     nll_criterion = nn.CrossEntropyLoss().cuda()
-    ece_criterion = ECELoss(n_bins=4).cuda()
+    ece_criterion = ECELoss().cuda()
 
     images = f['MRI']
     labels = f['qc_label']
@@ -446,7 +446,7 @@ if __name__ == '__main__':
 
     sens_spec_across_folds(sens_plot, spec_plot, results_dir)
 
-    grad_cam = GradCam(model=model, target_layer_names=['output'], use_cuda=args.cuda)
+    # grad_cam = GradCam(model=model, target_layer_names=['output'], use_cuda=args.cuda)
     # example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam)
 
     dummy_input = Variable(torch.randn(20, 1, image_shape[1], image_shape[2]))
