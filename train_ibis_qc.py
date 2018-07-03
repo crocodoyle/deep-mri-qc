@@ -22,7 +22,7 @@ import h5py, pickle, os, time, sys
 import numpy as np
 
 from ml_experiment import setup_experiment
-from visualizations import plot_roc, plot_sens_spec, make_roc_gif, GradCam, sens_spec_across_folds, plot_entropy
+from visualizations import plot_roc, plot_sens_spec, make_roc_gif, GradCam, sens_spec_across_folds, plot_confidence
 
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import StratifiedKFold, LeaveOneGroupOut
@@ -442,7 +442,7 @@ if __name__ == '__main__':
 
     # done training
 
-    plot_entropy(all_test_probs, all_test_truth, results_dir)
+    plot_confidence(all_test_probs, all_test_truth, results_dir)
 
     sens_plot = [best_sensitivity[:, 0], best_sensitivity[:, 1], best_sensitivity[:, 2]]
     spec_plot = [best_specificity[:, 0], best_specificity[:, 1], best_specificity[:, 2]]

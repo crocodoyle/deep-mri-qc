@@ -138,70 +138,60 @@ def sens_spec_across_folds(sens_to_plot, spec_to_plot, results_dir):
     plt.close()
 
 
-def plot_entropy(probabilities, truth, results_dir):
+def plot_confidence(probabilities, truth, results_dir):
     probabilities = np.exp(probabilities) # probs are actually log probs
 
-    pass_entropies, fail_entropies = [], []
-    tp_entropies, fp_entropies, tn_entropies, fn_entropies = [], [], [], []
+    pass_confidence, fail_confidence = []
+    tp_confidence, tn_confidence, fp_confidence, fn_confidence = [], [], [], []
+
+    f, (confidence_ax, confusion_ax) = plt.subplots(1, 2, sharey=True, figsize=(12, 6))
 
     for i, y_true in enumerate(truth):
         y_prob = np.mean(probabilities[i, :, 1])
+        y_conf = np.sum(np.where(probabilities[i, :, 1] > 0.5)) / probabilities.shape[1]
+
         if y_prob < 0.5:
             y_predicted = 0
+            y_conf = 1 - y_conf
         else:
             y_predicted = 1
 
-        # print('pass probs:', probabilities[i, :, 1])
-
-        pass_probs = probabilities[i, :, 1]
-        fail_probs = probabilities[i, :, 0]
-
-        pass_probs = pass_probs[pass_probs != 0]
-        fail_probs = fail_probs[fail_probs != 0]
-
-        H_pass = entropy(pass_probs) / pass_probs.shape[0]
-        H_fail = entropy(fail_probs) / fail_probs.shape[0]
-
-        # print('entropy:', H_pass, H_fail)
-
         if y_true == 1:
-            pass_entropies.append(H_pass)
+            pass_confidence.append(y_conf)
             if y_predicted == 1:
-                tp_entropies.append(H_pass)
+                tp_confidence.append(y_conf)
             else:
-                fn_entropies.append(H_pass)
+                fn_confidence.append(y_conf)
         else:
-            fail_entropies.append(H_fail)
+            fail_confidence.append(y_conf)
             if y_predicted == 1:
-                fp_entropies.append(H_fail)
+                fp_confidence.append(y_conf)
             else:
-                tn_entropies.append(H_fail)
+                tn_confidence.append(y_conf)
 
+    bins = np.linspace(0, 1, num=20, endpoint=True)
 
-    prob_space = np.reshape(np.linspace(0, 1, 200), (-1, 1))
+    pass_hist, bin_edges = np.hist(pass_confidence, bins)
+    fail_hist, bin_edges = np.hist(fail_confidence, bins)
 
-    bw = 0.00001
+    tp_hist, bin_edges = np.hist(tp_confidence, bins)
+    fn_hist, bin_edges = np.hist(fn_confidence, bins)
+    fp_hist, bin_edges = np.hist(fp_confidence, bins)
+    tn_hist, bin_edges = np.hist(tn_confidence, bins)
 
-    kde_pass = KernelDensity(kernel='gaussian', bandwidth=bw).fit(np.reshape(np.asarray(pass_entropies), (-1, 1)))
-    kde_fail = KernelDensity(kernel='gaussian', bandwidth=bw).fit(np.reshape(np.asarray(fail_entropies), (-1, 1)))
+    confidence_ax.bar(pass_hist, bin_edges[:-1], color='darkgreen')
+    confidence_ax.bar(fail_hist, bin_edges[:-1], color='darkred')
 
-    kde_tp = KernelDensity(kernel='gaussian', bandwidth=bw).fit(np.reshape(np.asarray(tp_entropies), (-1, 1)))
-    kde_tn = KernelDensity(kernel='gaussian', bandwidth=bw).fit(np.reshape(np.asarray(tn_entropies), (-1, 1)))
-    kde_fp = KernelDensity(kernel='gaussian', bandwidth=bw).fit(np.reshape(np.asarray(fp_entropies), (-1, 1)))
-    kde_fn = KernelDensity(kernel='gaussian', bandwidth=bw).fit(np.reshape(np.asarray(fn_entropies), (-1, 1)))
+    confusion_ax.bar(tp_hist, bin_edges[:-1], color='darkgreen')
+    confusion_ax.bar(tn_hist, bin_edges[:-1], color='darkred')
+    confusion_ax.bar(fn_hist, bin_edges[:-1], color='purple')
+    confusion_ax.bar(fp_hist, bin_edges[:-1], color='darkorange')
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True, figsize=(10, 4))
+    confidence_ax.set_xlabel('Confidence')
+    confidence_ax.set_ylabel('# Images')
 
-    ax1.plot(prob_space, kde_pass.score_samples(prob_space), color='g', label='Pass')
-    ax1.plot(prob_space, kde_fail.score_samples(prob_space), color='r', label='Fail')
-
-    ax2.plot(prob_space, kde_tp.score_samples(prob_space), color='b', label='TP')
-    ax2.plot(prob_space, kde_fn.score_samples(prob_space), color='r', label='FN')
-    ax2.plot(prob_space, kde_fp.score_samples(prob_space), color='orange', label='FP')
-    ax2.plot(prob_space, kde_tn.score_samples(prob_space), color='g', label='TN')
-
-    ax1.legend(loc='upper right', shadow=True)
-    ax2.legend(loc='upper right', shadow=True)
+    confusion_ax.set_xlabel('Confidence')
+    confusion_ax.set_ylabel('# Images')
 
     plt.savefig(results_dir + 'prediction_entropies.png', dpi=500)
     plt.close()
