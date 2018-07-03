@@ -56,10 +56,7 @@ class QCDataset(Dataset):
     def __getitem__(self, index):
         good_index = self.indices[index]
 
-        if self.random_slice:
-            slice_modifier = np.random.randint(-self.n_slices, self.n_slices)
-        else:
-            slice_modifier = 0
+        slice_modifier = np.random.randint(-self.n_slices, self.n_slices)
 
         label = self.labels[good_index]
         image_slice = self.images[good_index, :, image_shape[0] // 2 + slice_modifier, :, :]
