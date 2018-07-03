@@ -141,8 +141,7 @@ def set_temperature(model, f, validation_indices):
 
 
     # First: collect all the logits and labels for the validation set
-    logits_list = []
-    labels_list = []
+    logits_list, labels_list = [], []
     for i, val_idx in enumerate(validation_indices):
         target = torch.LongTensor([int(labels[val_idx])])
 
@@ -202,8 +201,8 @@ if __name__ == '__main__':
                         help='random seed (default: 1)')
     parser.add_argument('--log-interval', type=int, default=5, metavar='N',
                         help='how many batches to wait before logging training status (default: 5)')
-    parser.add_argument('--ssd', type=bool, default=False, metavar='N',
-                        help='specifies to copy the input data to the home directory (default: True')
+    parser.add_argument('--ssd', action='store_true', default=False,
+                        help='specifies to copy the input data to the home directory (default: False')
 
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -430,8 +429,6 @@ if __name__ == '__main__':
         val_idx += len(validation_indices)
 
         model_with_temperature = ModelWithTemperature(model)
-        print(model_with_temperature)
-
         model_with_temperature = set_temperature(model_with_temperature, f, validation_indices)
 
         model = ModelWithSoftmax(model_with_temperature)

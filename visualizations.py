@@ -97,8 +97,8 @@ def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_s
             sens_ax.plot(epoch_number, test_sens[fold_num, :], color='darkgreen', lw=lw * 2)
             spec_ax.plot(epoch_number, test_spec[fold_num, :], color='lightgreen', lw=lw * 2)
 
-        sens_ax.plot(best_epoch_idx[fold_num], val_sens[fold_num, int(best_epoch_idx[fold_num])], color='r', markerstyle='o')
-        spec_ax.plot(best_epoch_idx[fold_num], val_spec[fold_num, int(best_epoch_idx[fold_num])], color='r', markerstyle='o')
+        sens_ax.plot(best_epoch_idx[fold_num], val_sens[fold_num, int(best_epoch_idx[fold_num])], color='k', marker='o')
+        spec_ax.plot(best_epoch_idx[fold_num], val_spec[fold_num, int(best_epoch_idx[fold_num])], color='k', marker='o')
 
     spec_ax.set_xlabel('Epoch #', fontsize=20)
     sens_ax.set_ylabel('Metric Value', fontsize=20)
