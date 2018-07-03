@@ -69,7 +69,7 @@ def plot_roc(train_truth, train_probs, val_truth, val_probs, test_truth, test_pr
     return train_roc_auc, val_roc_auc, test_roc_auc
 
 
-def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_spec, results_dir):
+def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_spec, best_epoch_idx, results_dir):
     f, (sens_ax, spec_ax) = plt.subplots(2, 1, sharex=True, figsize=(12, 6))
 
     n_folds = train_sens.shape[0]
@@ -97,12 +97,15 @@ def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_s
             sens_ax.plot(epoch_number, test_sens[fold_num, :], color='darkgreen', lw=lw * 2)
             spec_ax.plot(epoch_number, test_spec[fold_num, :], color='lightgreen', lw=lw * 2)
 
+        sens_ax.plot(best_epoch_idx[fold_num], val_sens[fold_num, best_epoch_idx[fold_num]], color='r', markerstyle='o')
+        spec_ax.plot(best_epoch_idx[fold_num], val_spec[fold_num, best_epoch_idx[fold_num]], color='r', markerstyle='o')
+
     spec_ax.set_xlabel('Epoch #', fontsize=20)
     sens_ax.set_ylabel('Metric Value', fontsize=20)
     spec_ax.set_ylabel('Metric Value', fontsize=20)
 
-    plt.legend(shadow=True, fontsize=20, loc='center left', bbox_to_anchor=(1, 0.5))
-
+    sens_ax.legend(shadow=True, fontsize=20, loc='center left', bbox_to_anchor=(1, 0.5))
+    spec_ax.legend(shadow=True, fontsize=20, loc='center left', bbox_to_anchor=(1, 0.5))
 
     plt.tight_layout()
     plt.savefig(results_dir + 'sens_spec.png', bbox_inches='tight')

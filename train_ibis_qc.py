@@ -231,6 +231,8 @@ if __name__ == '__main__':
     f = h5py.File(data_filename, 'r')
     ibis_indices = list(range(f['MRI'].shape[0]))
 
+    wrong_fails = []
+
     labels = np.copy(f['qc_label'])
 
     n_total = len(ibis_indices)
@@ -271,6 +273,7 @@ if __name__ == '__main__':
     for fold_idx, (train_indices, other_indices) in enumerate(skf.split(ibis_indices, labels)):
         fold_num = fold_idx + 1
 
+        current_wrong_fails = []
         model = ConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
         if args.cuda:
             model.cuda()
@@ -332,7 +335,7 @@ if __name__ == '__main__':
             test_average_probs = np.mean(test_probabilities, axis=1)
             test_predictions = np.argmax(test_average_probs, axis=-1)
 
-            print('probs shape:', test_probabilities.shape, val_probabilities.shape)
+            # print('probs shape:', test_probabilities.shape, val_probabilities.shape)
 
             train_auc, val_auc, test_auc = plot_roc(train_truth, train_probabilities, val_truth, val_average_probs,
                                                     test_truth, test_average_probs, results_dir, epoch, fold_num)
@@ -355,7 +358,7 @@ if __name__ == '__main__':
             except:
                 print('ERROR: couldnt calculate confusion matrix in testing, probably only one class predicted/present in ground truth.')
 
-            print('Calculating sensitivity/specificity...')
+            # print('Calculating sensitivity/specificity...')
             epsilon = 1e-6
             training_sensitivity[fold_idx, epoch_idx] = train_tp / (train_tp + train_fn + epsilon)
             training_specificity[fold_idx, epoch_idx] = train_tn / (train_tn + train_fp + epsilon)
@@ -376,7 +379,10 @@ if __name__ == '__main__':
                   test_specificity[fold_idx, epoch_idx])
 
             auc_score = (val_auc / len(validation_indices)) / 2 + (train_auc / len(train_indices)) / 2
-            sens_spec_score = 0.5*(0.9*validation_sensitivity[fold_idx, epoch_idx] + 0.1*training_sensitivity[fold_idx, epoch_idx]) + 0.5*(0.9*validation_specificity[fold_idx, epoch_idx] + 0.1*training_specificity[fold_idx, epoch_idx])
+
+            sens_score = 0.1*validation_sensitivity[fold_idx, epoch_idx] + 0.9*training_sensitivity[fold_idx, epoch_idx]
+            spec_score = 0.1*validation_specificity[fold_idx, epoch_idx] + 0.9*training_specificity[fold_idx, epoch_idx]
+            sens_spec_score = 0.5*sens_score + 0.5*spec_score - 0.1*np.abs(sens_score - spec_score)
 
             if sens_spec_score > best_sens_spec_score[fold_idx]:
                 print('This epoch is the new best model on the train/validation set!')
@@ -396,10 +402,16 @@ if __name__ == '__main__':
 
                 torch.save(model.state_dict(), results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch')
 
+                current_wrong_fails = []
+                for prediction, truth, idx in zip(test_predictions, test_truth, test_indices):
+                    if truth == 0 and prediction == 1:
+                        current_wrong_fails.append(f['filename'][idx, ...])
 
             epoch_elapsed = time.time() - epoch_start
             print('Epoch ' + str(epoch) + ' of fold ' + str(fold_num) + ' took ' + str(epoch_elapsed / 60) + ' minutes')
 
+
+        wrong_fails += current_wrong_fails
         # test images using best model this fold
         model.load_state_dict(torch.load(results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch'))
         model.eval()
@@ -429,7 +441,7 @@ if __name__ == '__main__':
 
     plot_sens_spec(training_sensitivity, training_specificity,
                            validation_sensitivity, validation_specificity,
-                           test_sensitivity, test_specificity, results_dir)
+                           test_sensitivity, test_specificity, best_epoch_idx, results_dir)
 
     # done training
 
@@ -468,6 +480,10 @@ if __name__ == '__main__':
 
     for fold in range(skf.get_n_splits()):
         make_roc_gif(results_dir, args.epochs, fold + 1)
+
+
+    for wrong_fail in wrong_fails:
+        print(wrong_fail)
 
     time_elapsed = time.time() - start_time
     print('Whole experiment took', time_elapsed / (60*60), 'hours')
