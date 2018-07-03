@@ -244,6 +244,7 @@ if __name__ == '__main__':
         results_shape), np.zeros(results_shape), np.zeros(results_shape)
 
     best_auc_score, best_sensitivity, best_specificity = np.zeros(n_folds), np.zeros((n_folds, 3)), np.zeros((n_folds, 3))
+    best_sens_spec_score = np.zeros((n_folds))
 
     all_test_probs = np.zeros((n_total, 20, 2))
     all_test_truth = np.zeros((n_total))
@@ -265,6 +266,7 @@ if __name__ == '__main__':
     kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
     test_idx, val_idx = 0, 0
+    best_epoch_idx = np.empty((n_folds))
 
     skf = StratifiedKFold(n_splits=n_folds)
     for fold_idx, (train_indices, other_indices) in enumerate(skf.split(ibis_indices, labels)):
@@ -375,10 +377,14 @@ if __name__ == '__main__':
                   test_specificity[fold_idx, epoch_idx])
 
             auc_score = (val_auc / len(validation_indices)) / 2 + (train_auc / len(train_indices)) / 2
+            sens_spec_score = 0.5*(0.9*validation_sensitivity[fold_idx, epoch_idx] + 0.1*training_sensitivity[fold_idx, epoch_idx]) + 0.5*(0.9*validation_specificity[fold_idx, epoch_idx] + 0.1*training_specificity[fold_idx, epoch_idx])
 
-            if auc_score > best_auc_score[fold_idx]:
+            if sens_spec_score > best_sens_spec_score[fold_idx]:
                 print('This epoch is the new best model on the train/validation set!')
                 best_auc_score[fold_idx] = auc_score
+                best_sens_spec_score[fold_idx] = sens_spec_score
+
+                best_epoch_idx[fold_idx] = epoch_idx
 
                 best_sensitivity[fold_idx, 0] = training_sensitivity[fold_idx, epoch_idx]
                 best_specificity[fold_idx, 0] = training_specificity[fold_idx, epoch_idx]
