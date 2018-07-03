@@ -141,7 +141,7 @@ def sens_spec_across_folds(sens_to_plot, spec_to_plot, results_dir):
 def plot_confidence(probabilities, truth, results_dir):
     probabilities = np.exp(probabilities) # probs are actually log probs
 
-    pass_confidence, fail_confidence = []
+    pass_confidence, fail_confidence = [], []
     tp_confidence, tn_confidence, fp_confidence, fn_confidence = [], [], [], []
 
     f, (confidence_ax, confusion_ax) = plt.subplots(1, 2, sharey=True, figsize=(12, 6))

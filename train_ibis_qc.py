@@ -202,7 +202,9 @@ if __name__ == '__main__':
     parser.add_argument('--log-interval', type=int, default=5, metavar='N',
                         help='how many batches to wait before logging training status (default: 5)')
     parser.add_argument('--ssd', action='store_true', default=False,
-                        help='specifies to copy the input data to the home directory (default: False')
+                        help='specifies to copy the input data to the home directory (default: False)')
+    parser.add_argument('--single-slice', action='store_true', default=False,
+                        help='specifies to test classifier using only center slice (default: False)')
 
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -212,8 +214,6 @@ if __name__ == '__main__':
         torch.cuda.manual_seed(args.seed)
 
     model = ConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
-    # print("Convolutional QC Model")
-    # print(model)
 
     results_dir, experiment_number = setup_experiment(workdir)
 
@@ -257,7 +257,7 @@ if __name__ == '__main__':
     n_pass = np.sum(labels)
     n_fail = len(ibis_indices) - n_pass
 
-    print('Whole dataset has ' + str(len(ibis_indices)) + ' images ('+ str(n_pass) + ' PASS, ' + str(n_fail) + ' FAIL)')
+    print('Whole dataset has ' + str(len(ibis_indices)) + ' images (' + str(n_pass) + ' PASS, ' + str(n_fail) + ' FAIL)')
     fail_weight = (n_pass / n_total)
     pass_weight = n_fail / n_total
     print('Setting class weighting to ' + str(fail_weight) + ' for FAIL class and ' + str(
@@ -440,8 +440,6 @@ if __name__ == '__main__':
                            validation_sensitivity, validation_specificity,
                            test_sensitivity, test_specificity, best_epoch_idx, results_dir)
 
-    # done training
-
     plot_confidence(all_test_probs, all_test_truth, results_dir)
 
     sens_plot = [best_sensitivity[:, 0], best_sensitivity[:, 1], best_sensitivity[:, 2]]
@@ -456,13 +454,12 @@ if __name__ == '__main__':
     print('Best:', np.max(best_specificity[:, 0]), np.max(best_specificity[:, 1]), np.max(best_specificity[:, 2]))
     print('(train, val, test)')
 
-    pickle.dump(sens_plot, open(workdir + 'best_sens.pkl', 'wb'))
-    pickle.dump(spec_plot, open(workdir + 'best_spec.pkl', 'wb'))
+    pickle.dump(sens_plot, open(results_dir + 'best_sens.pkl', 'wb'))
+    pickle.dump(spec_plot, open(results_dir + 'best_spec.pkl', 'wb'))
 
     sens_spec_across_folds(sens_plot, spec_plot, results_dir)
 
     # grad_cam = GradCam(model=model, target_layer_names=['output'], use_cuda=args.cuda)
-    # example_pass_fails(model, train_loader, test_loader, results_dir, grad_cam)
 
     dummy_input = Variable(torch.randn(20, 1, image_shape[1], image_shape[2]))
 
@@ -478,9 +475,11 @@ if __name__ == '__main__':
     for fold in range(skf.get_n_splits()):
         make_roc_gif(results_dir, args.epochs, fold + 1)
 
-
+    print('Fails where classifier made wrong prediction:')
     for wrong_fail in wrong_fails:
         print(wrong_fail)
+
+    pickle.dump(wrong_fails, open(results_dir + 'wrong_fails.pkl', 'wb'))
 
     time_elapsed = time.time() - start_time
     print('Whole experiment took', time_elapsed / (60*60), 'hours')
