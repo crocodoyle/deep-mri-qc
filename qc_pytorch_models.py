@@ -14,7 +14,7 @@ class ConvolutionalQCNet(nn.Module):
             nn.BatchNorm2d(16),
             nn.ReLU(),
             nn.MaxPool2d(2),
-            nn.Conv2d(16, 32, kernel_size=3),
+            nn.Conv2d(16, 32, kernel_size=5),
             # nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.MaxPool2d(2),

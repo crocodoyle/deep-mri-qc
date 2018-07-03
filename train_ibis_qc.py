@@ -267,7 +267,7 @@ if __name__ == '__main__':
     kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
     test_idx, val_idx = 0, 0
-    best_epoch_idx = np.empty((n_folds))
+    best_epoch_idx = np.empty((n_folds), dtype='uint8')
 
     skf = StratifiedKFold(n_splits=n_folds)
     for fold_idx, (train_indices, other_indices) in enumerate(skf.split(ibis_indices, labels)):
