@@ -41,14 +41,14 @@ input_filename = 'IBIS_QC.hdf5'
 image_shape = (160, 256, 224)
 
 class QCDataset(Dataset):
-    def __init__(self, f, all_indices, random_slice=False):
+    def __init__(self, f, all_indices, n_slices=10):
         self.images = f['MRI']
         self.labels = f['qc_label']
 
         self.n_subjects = len(all_indices)
         self.indices = np.zeros((self.n_subjects))
 
-        self.random_slice = random_slice
+        self.n_slices = n_slices
 
         for i, index in enumerate(all_indices):
             self.indices[i] = index
@@ -57,7 +57,7 @@ class QCDataset(Dataset):
         good_index = self.indices[index]
 
         if self.random_slice:
-            slice_modifier = np.random.randint(-10, 10)
+            slice_modifier = np.random.randint(-self.n_slices, self.n_slices)
         else:
             slice_modifier = 0
 
@@ -95,17 +95,17 @@ def train(epoch):
     return truth, probabilities
 
 
-def test(f, test_indices):
+def test(f, test_indices, n_slices):
     model.eval()
 
-    truth, probabilities = np.zeros((len(test_indices))), np.zeros((len(test_indices), 20, 2))
+    truth, probabilities = np.zeros((len(test_indices))), np.zeros((len(test_indices), n_slices*2, 2))
 
     images = f['MRI']
     labels = f['qc_label']
 
     for i, test_idx in enumerate(test_indices):
         data = np.zeros((20, 1, image_shape[1], image_shape[2]))
-        data[:, 0, ...] = images[test_idx, 0, image_shape[0] // 2 - 10 : image_shape[0] // 2 + 10, ...]
+        data[:, 0, ...] = images[test_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...]
         # print('Test input shape:', data.shape)
 
         target = np.zeros((data.shape[0], 1))
@@ -126,7 +126,7 @@ def test(f, test_indices):
     return truth, probabilities
 
 
-def set_temperature(model, f, validation_indices):
+def set_temperature(model, f, validation_indices, n_slices):
     """
     Tune the tempearature of the model (using the validation set).
     We're going to set it to optimize NLL.
@@ -139,14 +139,13 @@ def set_temperature(model, f, validation_indices):
     images = f['MRI']
     labels = f['qc_label']
 
-
     # First: collect all the logits and labels for the validation set
     logits_list, labels_list = [], []
     for i, val_idx in enumerate(validation_indices):
         target = torch.LongTensor([int(labels[val_idx])])
 
-        for j in range(20):
-            data = torch.FloatTensor(images[val_idx, 0, image_shape[0] // 2 - 10 + j, ...][np.newaxis, np.newaxis, ...])
+        for j in range(n_slices*2):
+            data = torch.FloatTensor(images[val_idx, 0, image_shape[0] // 2 - n_slices + j, ...][np.newaxis, np.newaxis, ...])
             input_var = Variable(data).cuda()
             logits_var = model(input_var)
             logits_list.append(logits_var.data)
@@ -203,8 +202,8 @@ if __name__ == '__main__':
                         help='how many batches to wait before logging training status (default: 5)')
     parser.add_argument('--ssd', action='store_true', default=False,
                         help='specifies to copy the input data to the home directory (default: False)')
-    parser.add_argument('--single-slice', action='store_true', default=False,
-                        help='specifies to test classifier using only center slice (default: False)')
+    parser.add_argument('--n-slices', type=int, default=10, metavar='N',
+                        help='specifies how many slices to include about the centre for testing (default: 10)')
 
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -237,6 +236,8 @@ if __name__ == '__main__':
     n_total = len(ibis_indices)
 
     n_folds = args.folds
+    n_slices = args.n_slices
+
     results_shape = (args.folds, args.epochs)
 
     training_sensitivity, training_specificity, validation_sensitivity, validation_specificity, test_sensitivity, test_specificity, val_aucs = np.zeros(
@@ -246,9 +247,9 @@ if __name__ == '__main__':
     best_auc_score, best_sensitivity, best_specificity = np.zeros(n_folds), np.zeros((n_folds, 3)), np.zeros((n_folds, 3))
     best_sens_spec_score = np.zeros((n_folds))
 
-    all_test_probs = np.zeros((n_total, 20, 2))
+    all_test_probs = np.zeros((n_total, n_slices*2, 2))
     all_test_truth = np.zeros((n_total))
-    all_val_probs = np.zeros((n_total, 20, 2))
+    all_val_probs = np.zeros((n_total, n_slices*2, 2))
     all_val_truth = np.zeros((n_total))
 
     if args.cuda:
@@ -326,11 +327,11 @@ if __name__ == '__main__':
             train_truth, train_probabilities = train(epoch)
             train_predictions = np.argmax(train_probabilities, axis=-1)
 
-            val_truth, val_probabilities = test(f, validation_indices)
+            val_truth, val_probabilities = test(f, validation_indices, n_slices)
             val_average_probs = np.mean(val_probabilities, axis=1)
             val_predictions = np.argmax(val_average_probs, axis=-1)
 
-            test_truth, test_probabilities = test(f, test_indices)
+            test_truth, test_probabilities = test(f, test_indices, n_slices)
             test_average_probs = np.mean(test_probabilities, axis=1)
             test_predictions = np.argmax(test_average_probs, axis=-1)
 
@@ -429,7 +430,7 @@ if __name__ == '__main__':
         val_idx += len(validation_indices)
 
         model_with_temperature = ModelWithTemperature(model)
-        model_with_temperature = set_temperature(model_with_temperature, f, validation_indices)
+        model_with_temperature = set_temperature(model_with_temperature, f, validation_indices, n_slices)
 
         model = ModelWithSoftmax(model_with_temperature)
 
@@ -461,7 +462,7 @@ if __name__ == '__main__':
 
     # grad_cam = GradCam(model=model, target_layer_names=['output'], use_cuda=args.cuda)
 
-    dummy_input = Variable(torch.randn(20, 1, image_shape[1], image_shape[2]))
+    dummy_input = Variable(torch.randn(n_slices*2, 1, image_shape[1], image_shape[2]))
 
     input_names = ["coronal_slice"]
     output_names = ["pass_fail"]

@@ -73,7 +73,8 @@ def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_s
     f, (sens_ax, spec_ax) = plt.subplots(2, 1, sharex=True, figsize=(12, 6))
 
     n_folds = train_sens.shape[0]
-    epoch_number = range(train_sens.shape[-1])
+    n_epochs = train_sens.shape[-1]
+    epoch_number = range(n_epochs)
 
     lw = 1
 
@@ -85,8 +86,8 @@ def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_s
             sens_ax.plot(epoch_number, val_sens[fold_num, :], color='darkblue', linestyle='--', lw=lw, label='Validation Sensitivity')
             spec_ax.plot(epoch_number, val_spec[fold_num, :], color='lightblue', linestyle='--', lw=lw, label='Validation Specificity')
 
-            sens_ax.plot(epoch_number, test_sens[fold_num, :], color='darkgreen', lw=lw*2, label='Test Sensitivity')
-            spec_ax.plot(epoch_number, test_spec[fold_num, :], color='lightgreen', lw=lw*2, label='Test Specificity')
+            sens_ax.plot(epoch_number, test_sens[fold_num, :], color='darkgreen', lw=lw, label='Test Sensitivity')
+            spec_ax.plot(epoch_number, test_spec[fold_num, :], color='lightgreen', lw=lw, label='Test Specificity')
         else:
             sens_ax.plot(epoch_number, train_sens[fold_num, :], color='darkred', linestyle=':', lw=lw)
             spec_ax.plot(epoch_number, train_spec[fold_num, :], color='pink', linestyle=':', lw=lw)
@@ -94,11 +95,14 @@ def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_s
             sens_ax.plot(epoch_number, val_sens[fold_num, :], color='darkblue', linestyle='--', lw=lw)
             spec_ax.plot(epoch_number, val_spec[fold_num, :], color='lightblue', linestyle='--', lw=lw)
 
-            sens_ax.plot(epoch_number, test_sens[fold_num, :], color='darkgreen', lw=lw * 2)
-            spec_ax.plot(epoch_number, test_spec[fold_num, :], color='lightgreen', lw=lw * 2)
+            sens_ax.plot(epoch_number, test_sens[fold_num, :], color='darkgreen', lw=lw)
+            spec_ax.plot(epoch_number, test_spec[fold_num, :], color='lightgreen', lw=lw)
 
-        sens_ax.plot(best_epoch_idx[fold_num], val_sens[fold_num, int(best_epoch_idx[fold_num])], color='k', marker='o')
-        spec_ax.plot(best_epoch_idx[fold_num], val_spec[fold_num, int(best_epoch_idx[fold_num])], color='k', marker='o')
+        sens_ax.plot(best_epoch_idx[fold_num], val_sens[fold_num, int(best_epoch_idx[fold_num])], color='k', marker='o', mfc='none')
+        spec_ax.plot(best_epoch_idx[fold_num], val_spec[fold_num, int(best_epoch_idx[fold_num])], color='k', marker='o', mfc='none')
+
+    sens_ax.set_xlim([0, n_epochs])
+    spec_ax.set_xlim([0, n_epochs])
 
     spec_ax.set_xlabel('Epoch #', fontsize=20)
     sens_ax.set_ylabel('Metric Value', fontsize=20)
@@ -141,6 +145,8 @@ def sens_spec_across_folds(sens_to_plot, spec_to_plot, results_dir):
 def plot_confidence(probabilities, truth, results_dir):
     probabilities = np.exp(probabilities) # probs are actually log probs
 
+    n_slices = probabilities.shape[1]
+
     pass_confidence, fail_confidence = [], []
     tp_confidence, tn_confidence, fp_confidence, fn_confidence = [], [], [], []
 
@@ -148,7 +154,7 @@ def plot_confidence(probabilities, truth, results_dir):
 
     for i, y_true in enumerate(truth):
         y_prob = np.mean(probabilities[i, :, 1])
-        y_conf = np.sum(np.where(probabilities[i, :, 1] > 0.5)) / probabilities.shape[1]
+        y_conf = np.sum(np.where(probabilities[i, :, 1] > 0.5)) / n_slices
 
         if y_prob < 0.5:
             y_predicted = 0
@@ -169,15 +175,15 @@ def plot_confidence(probabilities, truth, results_dir):
             else:
                 tn_confidence.append(y_conf)
 
-    bins = np.linspace(0, 1, num=20, endpoint=True)
+    bins = np.linspace(0, 1, num=n_slices, endpoint=True)
 
-    pass_hist, bin_edges = np.hist(pass_confidence, bins)
-    fail_hist, bin_edges = np.hist(fail_confidence, bins)
+    pass_hist, bin_edges = np.histogram(pass_confidence, bins)
+    fail_hist, bin_edges = np.histogram(fail_confidence, bins)
 
-    tp_hist, bin_edges = np.hist(tp_confidence, bins)
-    fn_hist, bin_edges = np.hist(fn_confidence, bins)
-    fp_hist, bin_edges = np.hist(fp_confidence, bins)
-    tn_hist, bin_edges = np.hist(tn_confidence, bins)
+    tp_hist, bin_edges = np.histogram(tp_confidence, bins)
+    fn_hist, bin_edges = np.histogram(fn_confidence, bins)
+    fp_hist, bin_edges = np.histogram(fp_confidence, bins)
+    tn_hist, bin_edges = np.histogram(tn_confidence, bins)
 
     confidence_ax.bar(pass_hist, bin_edges[:-1], color='darkgreen')
     confidence_ax.bar(fail_hist, bin_edges[:-1], color='darkred')
