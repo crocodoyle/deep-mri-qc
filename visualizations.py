@@ -10,8 +10,8 @@ import torch
 from torch.autograd import Variable, Function
 
 import numpy as np
-from scipy.stats import entropy
-from sklearn.neighbors.kde import KernelDensity
+
+from sklearn.calibration import calibration_curve
 
 
 def make_roc_gif(results_dir, epochs, fold_num=1):
@@ -142,8 +142,10 @@ def sens_spec_across_folds(sens_to_plot, spec_to_plot, results_dir):
     plt.close()
 
 
-def plot_confidence(probabilities, truth, results_dir):
-    probabilities = np.exp(probabilities) # probs are actually log probs
+def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir):
+    # probs are actually log probs
+    probabilities = np.exp(probabilities)
+    probabilities_calibrated = np.exp(probabilities_calibrated)
 
     n_slices = probabilities.shape[1]
 
@@ -175,7 +177,7 @@ def plot_confidence(probabilities, truth, results_dir):
             else:
                 tn_confidence.append(y_conf)
 
-    bins = np.linspace(0, 1, num=n_slices, endpoint=True)
+    bins = np.linspace(0, 1, num=n_slices+1, endpoint=True)
 
     pass_hist, bin_edges = np.histogram(pass_confidence, bins)
     fail_hist, bin_edges = np.histogram(fail_confidence, bins)
@@ -185,13 +187,13 @@ def plot_confidence(probabilities, truth, results_dir):
     fp_hist, bin_edges = np.histogram(fp_confidence, bins)
     tn_hist, bin_edges = np.histogram(tn_confidence, bins)
 
-    b1 = confidence_ax.bar(bin_edges[:-1], pass_hist, color='darkgreen')
-    b2 = confidence_ax.bar(bin_edges[:-1], fail_hist, color='darkred')
+    b1 = confidence_ax.bar(bin_edges[:-1]-0.0125, pass_hist, color='darkgreen')
+    b2 = confidence_ax.bar(bin_edges[:-1]+0.0125, fail_hist, color='darkred')
 
-    b3 = confusion_ax.bar(bin_edges[:-1], tp_hist, color='green')
-    b4 = confusion_ax.bar(bin_edges[:-1], tn_hist, color='red')
-    b5 = confusion_ax.bar(bin_edges[:-1], fn_hist, color='purple')
-    b6 = confusion_ax.bar(bin_edges[:-1], fp_hist, color='darkorange')
+    b3 = confusion_ax.bar(bin_edges[:-1]-0.025, tp_hist, color='green')
+    b4 = confusion_ax.bar(bin_edges[:-1]-0.0125, tn_hist, color='red')
+    b5 = confusion_ax.bar(bin_edges[:-1]+0.0125, fn_hist, color='purple')
+    b6 = confusion_ax.bar(bin_edges[:-1]+0.025, fp_hist, color='darkorange')
 
     confidence_ax.set_xlabel('Confidence', fontsize=20)
     confidence_ax.set_ylabel('# Images', fontsize=20)
@@ -204,8 +206,33 @@ def plot_confidence(probabilities, truth, results_dir):
 
     plt.legend([b1, b2, b3, b4, b5, b6], ['Pass', 'Fail', 'True Positive', 'True Negative', 'False Negative', 'False Positive'], shadow=True, fontsize=20, loc='center left', bbox_to_anchor=(1, 0.5))
 
+    plt.tight_layout()
     plt.savefig(results_dir + 'confidence.png', dpi=500)
     plt.close()
+
+    confidence_bins = np.linspace(0, 1, num=10 + 1, endpoint=True)
+
+    f, (calib_ax) = plt.subplots(1, 1, sharey=True, figsize=(8, 6))
+
+    y_prob, y_calib = [], []
+
+    for i, y_true in enumerate(truth):
+        y_prob.append(np.mean(probabilities[i, :, 1]))
+        y_calib.append(np.mean(probabilities_calibrated[i, :, 1]))
+
+    fraction_of_positives, mean_predicted_value = calibration_curve(truth, y_prob, n_bins=10)
+    fraction_of_positives_calibrated, mean_predicted_value_calibrated = calibration_curve(truth, y_prob, n_bins=10)
+
+    calib_ax.plot(mean_predicted_value, fraction_of_positives, "s-", label='Uncalibrated')
+    calib_ax.plot(mean_predicted_value_calibrated, fraction_of_positives_calibrated, "s-", label='Temperature Scaled')
+
+    calib_ax.set_ylabel('Accuracy', fontsize=20)
+    calib_ax.set_xlabel('Confidence', fontsize=20)
+
+    calib_ax.legend(shadow=True, fontsize=20, loc='center left', bbox_to_anchor=(1, 0.5))
+
+    plt.savefig(results_dir + 'reliability.png', dpi=500)
+
 
 
 # code below here from https://github.com/jacobgil/pytorch-grad-cam/blob/master/grad-cam.py

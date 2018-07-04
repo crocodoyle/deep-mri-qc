@@ -244,10 +244,13 @@ if __name__ == '__main__':
     best_auc_score, best_sensitivity, best_specificity = np.zeros(n_folds), np.zeros((n_folds, 3)), np.zeros((n_folds, 3))
     best_sens_spec_score = np.zeros((n_folds))
 
-    all_test_probs = np.zeros((n_total, n_slices*2, 2))
-    all_test_truth = np.zeros((n_total))
-    all_val_probs = np.zeros((n_total, n_slices*2, 2))
-    all_val_truth = np.zeros((n_total))
+    all_test_probs = np.empty((n_total, n_slices*2, 2))
+    all_test_truth = np.empty((n_total))
+    all_val_probs = np.empty((n_total, n_slices*2, 2))
+    all_val_truth = np.empty((n_total))
+
+    all_test_probs_calibrated = np.empty((n_total, n_slices*2, 2))
+    all_val_probs_calibrated = np.empty((n_total, n_slices*2, 2))
 
     if args.cuda:
         model.cuda()
@@ -423,22 +426,28 @@ if __name__ == '__main__':
         all_test_probs[test_idx:test_idx+len(test_indices), :, :] = test_probabilities
         all_test_truth[test_idx:test_idx+len(test_indices)] = test_truth
 
-        test_idx += len(test_indices)
-        val_idx += len(validation_indices)
-
+        #calibrate model probability on validation set
         model_with_temperature = ModelWithTemperature(model)
         model_with_temperature = set_temperature(model_with_temperature, f, validation_indices, n_slices)
-
         model = ModelWithSoftmax(model_with_temperature)
+
+        val_truth, val_probabilities_calibrated = test(f, validation_indices, n_slices)
+        test_truth, test_probabilities_calibrated = test(f, test_indices, n_slices)
+
+        all_val_probs_calibrated[val_idx:val_idx + len(validation_indices), :, :] = val_probabilities_calibrated
+        all_test_probs_calibrated[test_idx:test_idx + len(test_indices), :, :] = test_probabilities_calibrated
 
         model_filename = os.path.join(results_dir, 'calibrated_qc_fold_' + str(fold_num) + '.tch')
         torch.save(model.state_dict(), model_filename)
+
+        test_idx += len(test_indices)
+        val_idx += len(validation_indices)
 
     plot_sens_spec(training_sensitivity, training_specificity,
                            validation_sensitivity, validation_specificity,
                            test_sensitivity, test_specificity, best_epoch_idx, results_dir)
 
-    plot_confidence(all_test_probs, all_test_truth, results_dir)
+    plot_confidence(all_test_probs, all_test_probs_calibrated, all_test_truth, results_dir)
 
     sens_plot = [best_sensitivity[:, 0], best_sensitivity[:, 1], best_sensitivity[:, 2]]
     spec_plot = [best_specificity[:, 0], best_specificity[:, 1], best_specificity[:, 2]]
@@ -473,7 +482,7 @@ if __name__ == '__main__':
     for fold in range(skf.get_n_splits()):
         make_roc_gif(results_dir, args.epochs, fold + 1)
 
-    print('Fails where classifier made wrong prediction:')
+    print('FAILs where classifier made wrong prediction:')
     for wrong_fail in wrong_fails:
         print(wrong_fail)
 

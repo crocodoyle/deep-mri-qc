@@ -74,7 +74,7 @@ class ECELoss(nn.Module):
         self.bin_uppers = bin_boundaries[1:]
 
     def forward(self, logits, labels):
-        softmaxes = F.softmax(logits)
+        softmaxes = F.softmax(logits, dim=-1)
         confidences, predictions = torch.max(softmaxes, 1)
         accuracies = predictions.eq(labels)
 
@@ -86,6 +86,6 @@ class ECELoss(nn.Module):
             if prop_in_bin.data[0] > 0:
                 accuracy_in_bin = accuracies[in_bin].float().mean()
                 avg_confidence_in_bin = confidences[in_bin].mean()
-                ece += torch.abs(avg_confidence_in_bin- accuracy_in_bin) * prop_in_bin
+                ece += torch.abs(avg_confidence_in_bin - accuracy_in_bin) * prop_in_bin
 
         return ece
