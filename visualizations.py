@@ -146,6 +146,7 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
 
     print('probs range:', np.min(probabilities), np.max(probabilities))
     print('calibrated probs range:', np.min(probabilities_calibrated), np.max(probabilities_calibrated))
+    print(probabilities.shape, probabilities_calibrated.shape)
 
     n_slices = probabilities.shape[1]
 
