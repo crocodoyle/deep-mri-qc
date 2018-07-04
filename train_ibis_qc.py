@@ -434,8 +434,8 @@ if __name__ == '__main__':
 
         #calibrate model probability on validation set
         model_with_temperature = ModelWithTemperature(model)
-        model_with_temperature = set_temperature(model_with_temperature, f, validation_indices, n_slices)
-        model = ModelWithSoftmax(model_with_temperature)
+        model = set_temperature(model_with_temperature, f, validation_indices, n_slices)
+        model.eval()
 
         val_truth, val_probabilities_calibrated = test(f, validation_indices, n_slices)
         test_truth, test_probabilities_calibrated = test(f, test_indices, n_slices)

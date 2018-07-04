@@ -204,6 +204,9 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     confusion_ax.set_xlabel('Confidence', fontsize=20)
     # confusion_ax.set_ylabel('# Images', fontsize=20)
 
+    confidence_ax.set_xlim([0, 1])
+    confusion_ax.set_xlim([0, 1])
+
     confidence_ax.set_xticklabels(['%s' % float('%.2g' % bin_edge) for bin_edge in bins[:-1]])
     confusion_ax.set_xticklabels(['%s' % float('%.2g' % bin_edge) for bin_edge in bins[:-1]])
 
@@ -212,8 +215,6 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     plt.tight_layout()
     plt.savefig(results_dir + 'confidence.png', dpi=500)
     plt.close()
-
-    confidence_bins = np.linspace(0, 1, num=10 + 1, endpoint=True)
 
     f, (calib_ax) = plt.subplots(1, 1, sharey=True, figsize=(8, 6))
 
