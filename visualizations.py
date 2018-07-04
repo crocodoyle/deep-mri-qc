@@ -187,22 +187,24 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     fp_hist, bin_edges = np.histogram(fp_confidence, bins)
     tn_hist, bin_edges = np.histogram(tn_confidence, bins)
 
-    b1 = confidence_ax.bar(bin_edges[:-1]-0.0125, pass_hist, color='darkgreen')
-    b2 = confidence_ax.bar(bin_edges[:-1]+0.0125, fail_hist, color='darkred')
+    width = 0.025
 
-    b3 = confusion_ax.bar(bin_edges[:-1]-0.025, tp_hist, color='green')
-    b4 = confusion_ax.bar(bin_edges[:-1]-0.0125, tn_hist, color='red')
-    b5 = confusion_ax.bar(bin_edges[:-1]+0.0125, fn_hist, color='purple')
-    b6 = confusion_ax.bar(bin_edges[:-1]+0.025, fp_hist, color='darkorange')
+    b1 = confidence_ax.bar(bin_edges[:-1]-0.0125, pass_hist, width, color='darkgreen')
+    b2 = confidence_ax.bar(bin_edges[:-1]+0.0125, fail_hist, width, color='darkred')
+
+    b3 = confusion_ax.bar(bin_edges[:-1]-0.025, tp_hist, width/2, color='green')
+    b4 = confusion_ax.bar(bin_edges[:-1]-0.0125, tn_hist, width/2, color='red')
+    b5 = confusion_ax.bar(bin_edges[:-1]+0.0125, fn_hist, width/2, color='purple')
+    b6 = confusion_ax.bar(bin_edges[:-1]+0.025, fp_hist, width/2, color='darkorange')
 
     confidence_ax.set_xlabel('Confidence', fontsize=20)
     confidence_ax.set_ylabel('# Images', fontsize=20)
 
     confusion_ax.set_xlabel('Confidence', fontsize=20)
-    confusion_ax.set_ylabel('# Images', fontsize=20)
+    # confusion_ax.set_ylabel('# Images', fontsize=20)
 
-    confidence_ax.set_xticklabels(bins[:-1])
-    confusion_ax.set_xticklabels(bins[:-1])
+    confidence_ax.set_xticklabels(['%s' % float('%.2g' % bin_edge) for bin_edge in bins[:-1]])
+    confusion_ax.set_xticklabels(['%s' % float('%.2g' % bin_edge) for bin_edge in bins[:-1]])
 
     plt.legend([b1, b2, b3, b4, b5, b6], ['Pass', 'Fail', 'True Positive', 'True Negative', 'False Negative', 'False Positive'], shadow=True, fontsize=20, loc='center left', bbox_to_anchor=(1, 0.5))
 
@@ -221,7 +223,7 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
         y_calib.append(np.mean(probabilities_calibrated[i, :, 1]))
 
     fraction_of_positives, mean_predicted_value = calibration_curve(truth, y_prob, n_bins=10)
-    fraction_of_positives_calibrated, mean_predicted_value_calibrated = calibration_curve(truth, y_prob, n_bins=10)
+    fraction_of_positives_calibrated, mean_predicted_value_calibrated = calibration_curve(truth, y_calib, n_bins=10)
 
     calib_ax.plot([0, 1], [0, 1], "k:", label="Perfectly calibrated")
     calib_ax.plot(mean_predicted_value, fraction_of_positives, "s-", label='Uncalibrated')
