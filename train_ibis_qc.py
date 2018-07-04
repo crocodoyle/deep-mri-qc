@@ -71,6 +71,7 @@ def train(epoch):
     model.train()
 
     truth, probabilities = np.zeros((len(train_loader.dataset))), np.zeros((len(train_loader.dataset), 2))
+    m = torch.nn.Softmax(dim=-1)
 
     for batch_idx, (data, target) in enumerate(train_loader):
         if args.cuda:
@@ -86,6 +87,8 @@ def train(epoch):
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch, batch_idx * args.batch_size, len(train_loader.dataset), 100. * batch_idx * args.batch_size / len(train_loader.dataset), loss_val.data[0]))
 
+        output = m(output)
+
         truth[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = target.data.cpu().numpy()
         probabilities[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = output.data.cpu().numpy()
 
@@ -96,6 +99,7 @@ def test(f, test_indices, n_slices):
     model.eval()
 
     truth, probabilities = np.zeros((len(test_indices))), np.zeros((len(test_indices), n_slices*2, 2))
+    m = torch.nn.Softmax(dim=-1)
 
     images = f['MRI']
     labels = f['qc_label']
@@ -118,7 +122,6 @@ def test(f, test_indices, n_slices):
         data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
         output = model(data)
 
-        m = torch.nn.Softmax(dim=-1)
         output = m(output)
 
         probabilities[i, :, :] = output.data.cpu().numpy()
@@ -128,7 +131,7 @@ def test(f, test_indices, n_slices):
 
 def set_temperature(model, f, validation_indices, n_slices):
     """
-    Tune the tempearature of the model (using the validation set).
+    Tune the temperature of the model (using the validation set).
     We're going to set it to optimize NLL.
     valid_loader (DataLoader): validation set loader
     """
@@ -385,7 +388,7 @@ if __name__ == '__main__':
 
             sens_score = 0.1*validation_sensitivity[fold_idx, epoch_idx] + 0.9*training_sensitivity[fold_idx, epoch_idx]
             spec_score = 0.1*validation_specificity[fold_idx, epoch_idx] + 0.9*training_specificity[fold_idx, epoch_idx]
-            sens_spec_score = 0.5*sens_score + 0.5*spec_score - 0.1*np.abs(sens_score - spec_score)
+            sens_spec_score = 0.5*sens_score + 0.5*spec_score - 0.2*np.abs(sens_score - spec_score)
 
             if sens_spec_score > best_sens_spec_score[fold_idx]:
                 print('This epoch is the new best model on the train/validation set!')
