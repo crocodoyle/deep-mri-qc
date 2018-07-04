@@ -413,8 +413,8 @@ if __name__ == '__main__':
         model.load_state_dict(torch.load(results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch'))
         model.eval()
 
-        val_truth, val_probabilities = test(f, validation_indices)
-        test_truth, test_probabilities = test(f, test_indices)
+        val_truth, val_probabilities = test(f, validation_indices, n_slices)
+        test_truth, test_probabilities = test(f, test_indices, n_slices)
         # print('last test this epoch:', test_probabilities)
         # print('prob shape:', test_probabilities.shape)
 
