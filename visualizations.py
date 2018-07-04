@@ -216,11 +216,11 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
 
     f, (calib_ax) = plt.subplots(1, 1, sharey=True, figsize=(8, 6))
 
-    y_prob, y_calib = [], []
-
-    for i, y_true in enumerate(truth):
-        y_prob.append(np.mean(probabilities[i, :, 1]))
-        y_calib.append(np.mean(probabilities_calibrated[i, :, 1]))
+    print('ground truth shape', truth.shape)
+    y_prob = np.mean(probabilities[:, :, 1], axis=1)
+    print('probs shape', y_prob.shape)
+    y_calib = np.mean(probabilities_calibrated[:, : 1], axis=1)
+    print('calib probs shape', y_calib)
 
     fraction_of_positives, mean_predicted_value = calibration_curve(truth, y_prob, n_bins=10)
     fraction_of_positives_calibrated, mean_predicted_value_calibrated = calibration_curve(truth, y_calib, n_bins=10)
