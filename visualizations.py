@@ -143,9 +143,9 @@ def sens_spec_across_folds(sens_to_plot, spec_to_plot, results_dir):
 
 
 def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir):
-    # probs are actually log probs
-    probabilities = np.exp(probabilities)
-    probabilities_calibrated = np.exp(probabilities_calibrated)
+
+    print('probs range:', np.min(probabilities), np.max(probabilities))
+    print('calibrated probs range:', np.min(probabilities_calibrated), np.max(probabilities_calibrated))
 
     n_slices = probabilities.shape[1]
 
