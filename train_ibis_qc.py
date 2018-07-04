@@ -118,6 +118,9 @@ def test(f, test_indices, n_slices):
         data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
         output = model(data)
 
+        m = torch.nn.Softmax(dim=-1)
+        output = m(output)
+
         probabilities[i, :, :] = output.data.cpu().numpy()
 
     return truth, probabilities
