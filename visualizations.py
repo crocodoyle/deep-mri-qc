@@ -223,6 +223,7 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     fraction_of_positives, mean_predicted_value = calibration_curve(truth, y_prob, n_bins=10)
     fraction_of_positives_calibrated, mean_predicted_value_calibrated = calibration_curve(truth, y_prob, n_bins=10)
 
+    calib_ax.plot([0, 1], [0, 1], "k:", label="Perfectly calibrated")
     calib_ax.plot(mean_predicted_value, fraction_of_positives, "s-", label='Uncalibrated')
     calib_ax.plot(mean_predicted_value_calibrated, fraction_of_positives_calibrated, "s-", label='Temperature Scaled')
 
