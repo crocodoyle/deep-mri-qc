@@ -223,9 +223,11 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     y_prob = np.mean(probabilities[:, :, 1], axis=1)
     print('probs shape', y_prob.shape)
     print(y_prob)
-    y_calib = np.mean(probabilities_calibrated[:, : 1], axis=1)
+    y_calib = np.mean(probabilities_calibrated[:, :, 1], axis=1)
     print('calib probs shape', y_calib.shape)
     print(y_calib)
+
+    truth = np.asarray(truth, dtype='uint8')
 
     fraction_of_positives, mean_predicted_value = calibration_curve(truth, y_prob, n_bins=10)
     fraction_of_positives_calibrated, mean_predicted_value_calibrated = calibration_curve(truth, y_calib, n_bins=10)
