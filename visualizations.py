@@ -185,21 +185,26 @@ def plot_confidence(probabilities, truth, results_dir):
     fp_hist, bin_edges = np.histogram(fp_confidence, bins)
     tn_hist, bin_edges = np.histogram(tn_confidence, bins)
 
-    confidence_ax.bar(pass_hist, bin_edges[:-1], color='darkgreen')
-    confidence_ax.bar(fail_hist, bin_edges[:-1], color='darkred')
+    b1 = confidence_ax.bar(bin_edges[:-1], pass_hist, color='darkgreen')
+    b2 = confidence_ax.bar(bin_edges[:-1], fail_hist, color='darkred')
 
-    confusion_ax.bar(tp_hist, bin_edges[:-1], color='darkgreen')
-    confusion_ax.bar(tn_hist, bin_edges[:-1], color='darkred')
-    confusion_ax.bar(fn_hist, bin_edges[:-1], color='purple')
-    confusion_ax.bar(fp_hist, bin_edges[:-1], color='darkorange')
+    b3 = confusion_ax.bar(bin_edges[:-1], tp_hist, color='green')
+    b4 = confusion_ax.bar(bin_edges[:-1], tn_hist, color='red')
+    b5 = confusion_ax.bar(bin_edges[:-1], fn_hist, color='purple')
+    b6 = confusion_ax.bar(bin_edges[:-1], fp_hist, color='darkorange')
 
-    confidence_ax.set_xlabel('Confidence')
-    confidence_ax.set_ylabel('# Images')
+    confidence_ax.set_xlabel('Confidence', fontsize=20)
+    confidence_ax.set_ylabel('# Images', fontsize=20)
 
-    confusion_ax.set_xlabel('Confidence')
-    confusion_ax.set_ylabel('# Images')
+    confusion_ax.set_xlabel('Confidence', fontsize=20)
+    confusion_ax.set_ylabel('# Images', fontsize=20)
 
-    plt.savefig(results_dir + 'prediction_entropies.png', dpi=500)
+    confidence_ax.set_xticklabels(bins[:-1])
+    confusion_ax.set_xticklabels(bins[:-1])
+
+    plt.legend([b1, b2, b3, b4, b5, b6], ['Pass', 'Fail', 'True Positive', 'True Negative', 'False Negative', 'False Positive'], shadow=True, fontsize=20, loc='center left', bbox_to_anchor=(1, 0.5))
+
+    plt.savefig(results_dir + 'confidence.png', dpi=500)
     plt.close()
 
 
