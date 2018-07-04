@@ -153,7 +153,7 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     pass_confidence, fail_confidence = [], []
     tp_confidence, tn_confidence, fp_confidence, fn_confidence = [], [], [], []
 
-    f, (confidence_ax, confusion_ax) = plt.subplots(1, 2, sharey=True, figsize=(12, 6))
+    f, (confidence_ax, confusion_ax) = plt.subplots(1, 2, sharey=True, figsize=(10, 4))
 
     for i, y_true in enumerate(truth):
         y_prob = np.mean(probabilities[i, :, 1])
@@ -204,11 +204,15 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     confusion_ax.set_xlabel('Confidence', fontsize=20)
     # confusion_ax.set_ylabel('# Images', fontsize=20)
 
-    confidence_ax.set_xlim([0, 1])
-    confusion_ax.set_xlim([0, 1])
+    confidence_ax.set_xlim([-0.05, 1.05])
+    confusion_ax.set_xlim([-0.05, 1.05])
 
-    confidence_ax.set_xticklabels(['%s' % float('%.2g' % bin_edge) for bin_edge in bins[:-1]])
-    confusion_ax.set_xticklabels(['%s' % float('%.2g' % bin_edge) for bin_edge in bins[:-1]])
+    bins_display = np.linspace(0, 1, num=8+1, endpoint=True)
+
+    confidence_ax.set_xticks(bins_display)
+    confusion_ax.set_xticks(bins_display)
+    # confidence_ax.set_xticklabels(['%s' % float('%.2g' % bin_edge) for bin_edge in bins[:-1]])
+    # confusion_ax.set_xticklabels(['%s' % float('%.2g' % bin_edge) for bin_edge in bins[:-1]])
 
     plt.legend([b1, b2, b3, b4, b5, b6], ['Pass', 'Fail', 'True Positive', 'True Negative', 'False Negative', 'False Positive'], shadow=True, fontsize=20, loc='center left', bbox_to_anchor=(1, 0.5))
 
@@ -216,7 +220,7 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     plt.savefig(results_dir + 'confidence.png', dpi=500)
     plt.close()
 
-    f, (calib_ax) = plt.subplots(1, 1, sharey=True, figsize=(8, 6))
+    f, (calib_ax) = plt.subplots(1, 1, sharey=True, figsize=(8, 4))
 
     print('ground truth shape', truth.shape)
     print(truth)
@@ -241,6 +245,7 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
 
     calib_ax.legend(shadow=True, fontsize=20, loc='center left', bbox_to_anchor=(1, 0.5))
 
+    plt.tight_layout()
     plt.savefig(results_dir + 'reliability.png', dpi=500)
 
 
