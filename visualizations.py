@@ -149,35 +149,48 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     # print('calibrated probs range:', np.min(probabilities_calibrated), np.max(probabilities_calibrated))
     # print(probabilities.shape, probabilities_calibrated.shape)
 
+    n_subjects = probabilities.shape[0]
     n_slices = probabilities.shape[1]
 
     pass_confidence, fail_confidence = [], []
     tp_confidence, tn_confidence, fp_confidence, fn_confidence = [], [], [], []
 
-    f, (confidence_ax, confusion_ax) = plt.subplots(1, 2, sharey=True, figsize=(10, 4))
+    f, (passfail_ax, confidence_ax, confusion_ax) = plt.subplots(1, 3, sharey=True, figsize=(10, 4), gridspec_kw = {'width_ratios':[1, 3, 3]})
 
-    for i, y_true in enumerate(truth):
-        y_prob = np.mean(probabilities[i, :, 1])
-        y_conf = np.sum(np.where(probabilities[i, :, 1] > 0.5)) / n_slices
+    y_prob = np.mean(probabilities[:, :, 1], axis=1)
+    y_conf = []
 
-        if y_prob < 0.5:
-            y_predicted = 0
-            y_conf = 1 - y_conf
+    for i in range(n_subjects):
+        confidence = 0
+        for j in range(n_slices):
+            if probabilities[i, j, 1] > 0.5:
+                confidence += 1 / n_slices
+
+        if y_prob[i] < 0.5:
+            y_conf.append(1 - confidence)
         else:
-            y_predicted = 1
+            y_conf.append(confidence)
 
-        if y_true == 1:
-            pass_confidence.append(y_conf)
-            if y_predicted == 1:
+        print('Truth, Prob, Conf:', truth[i], y_prob[i], y_conf[i])
+        if truth[i] > 0.5:
+            if y_prob[i] > 0.5:
                 tp_confidence.append(y_conf)
             else:
                 fn_confidence.append(y_conf)
         else:
-            fail_confidence.append(y_conf)
-            if y_predicted == 1:
+            if y_prob[i] > 0.5:
                 fp_confidence.append(y_conf)
             else:
                 tn_confidence.append(y_conf)
+
+    n_pass = np.sum(truth)
+    n_fail = len(truth) - n_pass
+
+    passfail_ax.bar([0], [n_fail], width=0.85, color='darkred')
+    passfail_ax.bar([1], [n_pass], width=0.85, color='darkgreen')
+
+    passfail_ax.set_xticklabels(['FAIL', 'PASS'], fontsize=20)
+    passfail_ax.set_xlabel('QC Label')
 
     bins = np.linspace(0, 1, num=n_slices+1, endpoint=True)
 
