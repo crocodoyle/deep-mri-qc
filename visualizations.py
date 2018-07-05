@@ -145,8 +145,8 @@ def sens_spec_across_folds(sens_to_plot, spec_to_plot, results_dir):
 def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir):
     truth = np.asarray(truth, dtype='uint8')
 
-    # print('probs range:', np.min(probabilities), np.max(probabilities))
-    # print('calibrated probs range:', np.min(probabilities_calibrated), np.max(probabilities_calibrated))
+    print('probs range:', np.min(probabilities), np.max(probabilities))
+    print('calibrated probs range:', np.min(probabilities_calibrated), np.max(probabilities_calibrated))
     # print(probabilities.shape, probabilities_calibrated.shape)
 
     n_subjects = probabilities.shape[0]
@@ -171,7 +171,8 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
         else:
             y_conf.append(confidence)
 
-        print('Truth, Prob, Conf:', truth[i], y_prob[i], y_conf[i])
+        print('Truth, Pass Prob, Fail Prob, Conf:', truth[i], y_prob[i], np.mean(probabilities[i, :, 0]), y_conf[i])
+
         if truth[i] > 0.5:
             if y_prob[i] > 0.5:
                 tp_confidence.append(y_conf)
