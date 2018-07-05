@@ -122,6 +122,7 @@ def test(f, test_indices, n_slices):
         truth[i] = target.data.cpu()[0, 0]
         probabilities[i, :, :] = output.data.cpu().numpy()
 
+    print('ground truth values', set(truth))
     return truth, probabilities
 
 
@@ -415,9 +416,6 @@ if __name__ == '__main__':
         # print('last test this epoch:', test_probabilities)
         # print('prob shape:', test_probabilities.shape)
 
-        print('Validation truth:', val_truth)
-        print('Validation probs:', np.mean(val_probabilities, axis=1))
-
         all_val_probs[val_idx:val_idx+len(validation_indices), :, :] = val_probabilities
         all_val_truth[val_idx:val_idx+len(validation_indices)] = val_truth
         all_test_probs[test_idx:test_idx+len(test_indices), :, :] = test_probabilities
@@ -426,7 +424,6 @@ if __name__ == '__main__':
         #calibrate model probability on validation set
         model_with_temperature = ModelWithTemperature(model)
         model = set_temperature(model_with_temperature, f, validation_indices, n_slices)
-        model.eval()
 
         val_truth, val_probabilities_calibrated = test(f, validation_indices, n_slices)
         test_truth, test_probabilities_calibrated = test(f, test_indices, n_slices)
