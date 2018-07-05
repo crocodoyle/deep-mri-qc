@@ -105,25 +105,21 @@ def test(f, test_indices, n_slices):
     images = f['MRI']
     labels = f['qc_label']
 
-    data = np.zeros((n_slices*2, 1, image_shape[1], image_shape[2]))
-    target = np.zeros((data.shape[0], 1))
+    data = torch.zeros((n_slices*2, 1, image_shape[1], image_shape[2]), dtype=torch.float32)
+    target = torch.zeros((data.shape[0], 1), dtype=torch.int64)
 
     for i, test_idx in enumerate(test_indices):
-        data[:, 0, ...] = images[test_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...]
-
-        target[:, 0] = labels[test_idx]
-        truth[i] = target[0, 0]
-
-        data = torch.FloatTensor(data)
-        target = torch.LongTensor(target)
+        data[:, 0, ...] = torch.FloatTensor(images[test_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
+        target[:, 0] = torch.LongTensor(labels[test_idx])
 
         if args.cuda:
             data, target = data.cuda(), target.cuda()
         data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
-        output = model(data)
 
+        output = model(data)
         output = m(output)
 
+        truth[i] = target.data.cpu()[0, 0]
         probabilities[i, :, :] = output.data.cpu().numpy()
 
     return truth, probabilities
