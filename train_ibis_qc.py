@@ -74,6 +74,7 @@ def train(epoch):
     m = torch.nn.Softmax(dim=-1)
 
     for batch_idx, (data, target) in enumerate(train_loader):
+        n_in_batch = data.shape[0]
         if args.cuda:
             data, target = data.cuda(), target.cuda()
         data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
@@ -89,8 +90,8 @@ def train(epoch):
 
         output = m(output)
 
-        truth[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = target.data.cpu().numpy()
-        probabilities[batch_idx * args.batch_size:(batch_idx + 1) * args.batch_size] = output.data.cpu().numpy()
+        truth[batch_idx * args.batch_size:batch_idx * args.batch_size + n_in_batch] = target.data.cpu().numpy()
+        probabilities[batch_idx * args.batch_size:batch_idx * args.batch_size + n_in_batch] = output.data.cpu().numpy()
 
     return truth, probabilities
 
@@ -98,21 +99,20 @@ def train(epoch):
 def test(f, test_indices, n_slices):
     model.eval()
 
-    truth, probabilities = np.zeros((len(test_indices))), np.zeros((len(test_indices), n_slices*2, 2))
+    truth, probabilities = np.zeros(len(test_indices), dtype='uint8'), np.zeros((len(test_indices), n_slices*2, 2))
     m = torch.nn.Softmax(dim=-1)
 
     images = f['MRI']
     labels = f['qc_label']
 
-    for i, test_idx in enumerate(test_indices):
-        data = np.zeros((20, 1, image_shape[1], image_shape[2]))
-        data[:, 0, ...] = images[test_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...]
-        # print('Test input shape:', data.shape)
+    data = np.zeros((n_slices*2, 1, image_shape[1], image_shape[2]))
+    target = np.zeros((data.shape[0], 1))
 
-        target = np.zeros((data.shape[0], 1))
+    for i, test_idx in enumerate(test_indices):
+        data[:, 0, ...] = images[test_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...]
+
         target[:, 0] = labels[test_idx]
         truth[i] = target[0, 0]
-        # print('Test target shape:', target.shape)
 
         data = torch.FloatTensor(data)
         target = torch.LongTensor(target)
@@ -346,23 +346,14 @@ if __name__ == '__main__':
             train_auc, val_auc, test_auc = plot_roc(train_truth, train_probabilities, val_truth, val_average_probs,
                                                     test_truth, test_average_probs, results_dir, epoch, fold_num)
 
-            try:
-                train_tn, train_fp, train_fn, train_tp = confusion_matrix(np.asarray(train_truth, dtype='uint8'), np.asarray(train_predictions, dtype='uint8')).ravel()
-                print('Training TP:', train_tp, 'TN:', train_tn, 'FP:', train_fp, 'FN:', train_fn)
-            except:
-                print('ERROR: couldnt calculate confusion matrix in training, probably only one class predicted/present in ground truth.')
+            train_tn, train_fp, train_fn, train_tp = confusion_matrix(np.asarray(train_truth, dtype='uint8'), np.asarray(train_predictions, dtype='uint8')).ravel()
+            print('Training TP:', train_tp, 'TN:', train_tn, 'FP:', train_fp, 'FN:', train_fn)
 
-            try:
-                val_tn, val_fp, val_fn, val_tp = confusion_matrix(np.asarray(val_truth, dtype='uint8'), np.asarray(val_predictions, dtype='uint8')).ravel()
-                print('Validation TP:', val_tp, 'TN:', val_tn, 'FP:', val_fp, 'FN:', val_fn)
-            except:
-                print('ERROR: couldnt calculate confusion matrix in validation, probably only one class predicted/present in ground truth.')
+            val_tn, val_fp, val_fn, val_tp = confusion_matrix(np.asarray(val_truth, dtype='uint8'), np.asarray(val_predictions, dtype='uint8')).ravel()
+            print('Validation TP:', val_tp, 'TN:', val_tn, 'FP:', val_fp, 'FN:', val_fn)
 
-            try:
-                test_tn, test_fp, test_fn, test_tp = confusion_matrix(np.asarray(test_truth, dtype='uint8'), np.asarray(test_predictions, dtype='uint8')).ravel()
-                print('Testing TP:', test_tp, 'TN:', test_tn, 'FP:', test_fp, 'FN:', test_fn)
-            except:
-                print('ERROR: couldnt calculate confusion matrix in testing, probably only one class predicted/present in ground truth.')
+            test_tn, test_fp, test_fn, test_tp = confusion_matrix(np.asarray(test_truth, dtype='uint8'), np.asarray(test_predictions, dtype='uint8')).ravel()
+            print('Testing TP:', test_tp, 'TN:', test_tn, 'FP:', test_fp, 'FN:', test_fn)
 
             # print('Calculating sensitivity/specificity...')
             epsilon = 1e-6
@@ -386,8 +377,8 @@ if __name__ == '__main__':
 
             auc_score = (val_auc / len(validation_indices)) / 2 + (train_auc / len(train_indices)) / 2
 
-            sens_score = 0.2*validation_sensitivity[fold_idx, epoch_idx] + 0.8*training_sensitivity[fold_idx, epoch_idx]
-            spec_score = 0.2*validation_specificity[fold_idx, epoch_idx] + 0.8*training_specificity[fold_idx, epoch_idx]
+            sens_score = 0.8*validation_sensitivity[fold_idx, epoch_idx] + 0.2*training_sensitivity[fold_idx, epoch_idx]
+            spec_score = 0.8*validation_specificity[fold_idx, epoch_idx] + 0.2*training_specificity[fold_idx, epoch_idx]
 
             sens_spec_score = 0.25*sens_score + 0.75*spec_score - 0.2*np.abs(sens_score - spec_score)
 
@@ -427,6 +418,9 @@ if __name__ == '__main__':
         test_truth, test_probabilities = test(f, test_indices, n_slices)
         # print('last test this epoch:', test_probabilities)
         # print('prob shape:', test_probabilities.shape)
+
+        print('Validation truth:', val_truth)
+        print('Validation probs:', np.mean(val_probabilities, axis=1))
 
         all_val_probs[val_idx:val_idx+len(validation_indices), :, :] = val_probabilities
         all_val_truth[val_idx:val_idx+len(validation_indices)] = val_truth

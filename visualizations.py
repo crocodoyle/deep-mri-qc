@@ -187,11 +187,13 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     n_pass = np.sum(truth)
     n_fail = len(truth) - n_pass
 
+    print('n_pass, n_fail', n_pass, n_fail)
+
     passfail_ax.bar([0], [n_fail], width=0.85, color='darkred')
     passfail_ax.bar([1], [n_pass], width=0.85, color='darkgreen')
 
-    passfail_ax.set_xticklabels(['FAIL', 'PASS'], fontsize=20)
-    passfail_ax.set_xlabel('QC Label')
+    passfail_ax.set_xticklabels(['FAIL', 'PASS'], fontsize=16)
+    # passfail_ax.set_xlabel('QC Label')
 
     bins = np.linspace(0, 1, num=n_slices+1, endpoint=True)
 

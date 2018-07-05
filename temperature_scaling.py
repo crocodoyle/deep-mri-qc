@@ -18,10 +18,12 @@ class ModelWithTemperature(nn.Module):
         super(ModelWithTemperature, self).__init__()
         self.model = model
         self.temperature = nn.Parameter(torch.ones(1) * 1.5)
+        self.output = nn.Softmax(dim=-1)
 
     def forward(self, input):
         logits = self.model(input)
-        return self.temperature_scale(logits)
+        logits_scaled = self.temperature_scale(logits)
+        return self.output(logits_scaled)
 
     def temperature_scale(self, logits):
         """
