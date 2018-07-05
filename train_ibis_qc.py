@@ -386,9 +386,10 @@ if __name__ == '__main__':
 
             auc_score = (val_auc / len(validation_indices)) / 2 + (train_auc / len(train_indices)) / 2
 
-            sens_score = 0.1*validation_sensitivity[fold_idx, epoch_idx] + 0.9*training_sensitivity[fold_idx, epoch_idx]
-            spec_score = 0.1*validation_specificity[fold_idx, epoch_idx] + 0.9*training_specificity[fold_idx, epoch_idx]
-            sens_spec_score = 0.5*sens_score + 0.5*spec_score - 0.2*np.abs(sens_score - spec_score)
+            sens_score = 0.2*validation_sensitivity[fold_idx, epoch_idx] + 0.8*training_sensitivity[fold_idx, epoch_idx]
+            spec_score = 0.2*validation_specificity[fold_idx, epoch_idx] + 0.8*training_specificity[fold_idx, epoch_idx]
+
+            sens_spec_score = 0.25*sens_score + 0.75*spec_score - 0.2*np.abs(sens_score - spec_score)
 
             if sens_spec_score > best_sens_spec_score[fold_idx]:
                 print('This epoch is the new best model on the train/validation set!')

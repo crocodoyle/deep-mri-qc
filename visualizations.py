@@ -143,10 +143,11 @@ def sens_spec_across_folds(sens_to_plot, spec_to_plot, results_dir):
 
 
 def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir):
+    truth = np.asarray(truth, dtype='uint8')
 
-    print('probs range:', np.min(probabilities), np.max(probabilities))
-    print('calibrated probs range:', np.min(probabilities_calibrated), np.max(probabilities_calibrated))
-    print(probabilities.shape, probabilities_calibrated.shape)
+    # print('probs range:', np.min(probabilities), np.max(probabilities))
+    # print('calibrated probs range:', np.min(probabilities_calibrated), np.max(probabilities_calibrated))
+    # print(probabilities.shape, probabilities_calibrated.shape)
 
     n_slices = probabilities.shape[1]
 
@@ -214,24 +215,22 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     # confidence_ax.set_xticklabels(['%s' % float('%.2g' % bin_edge) for bin_edge in bins[:-1]])
     # confusion_ax.set_xticklabels(['%s' % float('%.2g' % bin_edge) for bin_edge in bins[:-1]])
 
-    plt.legend([b1, b2, b3, b4, b5, b6], ['Pass', 'Fail', 'True Positive', 'True Negative', 'False Negative', 'False Positive'], shadow=True, fontsize=20, loc='center left', bbox_to_anchor=(1, 0.5))
+    lgd = plt.legend([b1, b2, b3, b4, b5, b6], ['Pass', 'Fail', 'True Positive', 'True Negative', 'False Negative', 'False Positive'], shadow=True, fontsize=20, loc='center left', bbox_to_anchor=(1, 0.5))
 
     plt.tight_layout()
-    plt.savefig(results_dir + 'confidence.png', dpi=500)
+    plt.savefig(results_dir + 'confidence.png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=500)
     plt.close()
 
     f, (calib_ax) = plt.subplots(1, 1, sharey=True, figsize=(8, 4))
 
-    print('ground truth shape', truth.shape)
-    print(truth)
+    # print('ground truth shape', truth.shape)
+    # print(truth)
     y_prob = np.mean(probabilities[:, :, 1], axis=1)
-    print('probs shape', y_prob.shape)
-    print(y_prob)
+    # print('probs shape', y_prob.shape)
+    # print(y_prob)
     y_calib = np.mean(probabilities_calibrated[:, :, 1], axis=1)
-    print('calib probs shape', y_calib.shape)
-    print(y_calib)
-
-    truth = np.asarray(truth, dtype='uint8')
+    # print('calib probs shape', y_calib.shape)
+    # print(y_calib)
 
     fraction_of_positives, mean_predicted_value = calibration_curve(truth, y_prob, n_bins=10)
     fraction_of_positives_calibrated, mean_predicted_value_calibrated = calibration_curve(truth, y_calib, n_bins=10)
@@ -243,10 +242,10 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     calib_ax.set_ylabel('Accuracy', fontsize=20)
     calib_ax.set_xlabel('Confidence', fontsize=20)
 
-    calib_ax.legend(shadow=True, fontsize=20, loc='center left', bbox_to_anchor=(1, 0.5))
+    lgd = calib_ax.legend(shadow=True, fontsize=20, loc='center left', bbox_to_anchor=(1, 0.5))
 
     plt.tight_layout()
-    plt.savefig(results_dir + 'reliability.png', dpi=500)
+    plt.savefig(results_dir + 'reliability.png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=500)
 
 
 
