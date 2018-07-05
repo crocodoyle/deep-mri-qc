@@ -110,7 +110,7 @@ def test(f, test_indices, n_slices):
 
     for i, test_idx in enumerate(test_indices):
         data[:, 0, ...] = torch.FloatTensor(images[test_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
-        target[:, 0] = torch.LongTensor(labels[test_idx])
+        target[:, 0] = torch.LongTensor(int(labels[test_idx]))
 
         if args.cuda:
             data, target = data.cuda(), target.cuda()
