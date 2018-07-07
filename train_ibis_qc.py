@@ -415,7 +415,7 @@ if __name__ == '__main__':
         # print('last test this epoch:', test_probabilities)
         # print('prob shape:', test_probabilities.shape)
 
-        print('test prob (uncal)', test_probabilities)
+        # print('test prob (uncal)', test_probabilities)
 
         all_val_probs[val_idx:val_idx+len(validation_indices), :, :] = val_probabilities
         all_val_truth[val_idx:val_idx+len(validation_indices)] = val_truth
@@ -429,7 +429,10 @@ if __name__ == '__main__':
         val_truth, val_probabilities_calibrated = test(f, validation_indices, n_slices)
         test_truth, test_probabilities_calibrated = test(f, test_indices, n_slices)
 
-        print('test prob (calib)', test_probabilities)
+        # print('test prob (calib)', test_probabilities)
+
+        print('val_ indices:', val_idx, val_idx + len(validation_indices))
+        print('test indices:', test_idx, test_idx + len(test_indices))
 
         all_val_probs_calibrated[val_idx:val_idx + len(validation_indices), :, :] = val_probabilities_calibrated
         all_test_probs_calibrated[test_idx:test_idx + len(test_indices), :, :] = test_probabilities_calibrated
