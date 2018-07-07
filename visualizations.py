@@ -195,7 +195,7 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     passfail_ax.bar([0], [n_fail], width=0.85, color='darkred')
     passfail_ax.bar([1], [n_pass], width=0.85, color='darkgreen')
 
-    passfail_ax.set_xticks([0, 1], ['FAIL', 'PASS'], fontsize=16)
+    passfail_ax.set_xticks([0, 1], ['FAIL', 'PASS'])
     # passfail_ax.set_xticklabels(['FAIL', 'PASS'], fontsize=16)
     # passfail_ax.set_xlabel('QC Label')
 
