@@ -246,13 +246,13 @@ if __name__ == '__main__':
     best_auc_score, best_sensitivity, best_specificity = np.zeros(n_folds), np.zeros((n_folds, 3)), np.zeros((n_folds, 3))
     best_sens_spec_score = np.zeros((n_folds))
 
-    all_test_probs = np.empty((n_total, n_slices*2, 2))
-    all_test_truth = np.empty((n_total))
-    all_val_probs = np.empty((n_total, n_slices*2, 2))
-    all_val_truth = np.empty((n_total))
+    all_test_probs = np.empty((n_total, n_slices*2, 2), dtype='float32')
+    all_test_truth = np.empty((n_total), dtype='uint8')
+    all_val_probs = np.empty((n_total, n_slices*2, 2), dtype='float32')
+    all_val_truth = np.empty((n_total), dtype='uint8')
 
-    all_test_probs_calibrated = np.empty((n_total, n_slices*2, 2))
-    all_val_probs_calibrated = np.empty((n_total, n_slices*2, 2))
+    all_test_probs_calibrated = np.empty((n_total, n_slices*2, 2), dtype='float32')
+    all_val_probs_calibrated = np.empty((n_total, n_slices*2, 2), dtype='float32')
 
     if args.cuda:
         model.cuda()

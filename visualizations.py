@@ -152,6 +152,8 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     n_subjects = probabilities.shape[0]
     n_slices = probabilities.shape[1]
 
+    print('We have', n_subjects, 'subjects and are testing', n_slices, 'slices')
+
     pass_confidence, fail_confidence = [], []
     tp_confidence, tn_confidence, fp_confidence, fn_confidence = [], [], [], []
 
@@ -171,7 +173,8 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
         else:
             y_conf.append(confidence)
 
-        print('Truth, Pass Prob, Fail Prob, Conf:', truth[i], y_prob[i], np.mean(probabilities[i, :, 0]), y_conf[i])
+        if i%100 == 0:
+            print('Truth, Pass Prob, Fail Prob, Conf:', truth[i], y_prob[i], np.mean(probabilities[i, :, 0]), y_conf[i])
 
         if truth[i] > 0.5:
             if y_prob[i] > 0.5:
@@ -192,7 +195,8 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     passfail_ax.bar([0], [n_fail], width=0.85, color='darkred')
     passfail_ax.bar([1], [n_pass], width=0.85, color='darkgreen')
 
-    passfail_ax.set_xticklabels(['FAIL', 'PASS'], fontsize=16)
+    passfail_ax.set_xticks([0, 1], ['FAIL', 'PASS'], fontsize=16)
+    # passfail_ax.set_xticklabels(['FAIL', 'PASS'], fontsize=16)
     # passfail_ax.set_xlabel('QC Label')
 
     bins = np.linspace(0, 1, num=n_slices+1, endpoint=True)
