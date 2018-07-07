@@ -99,7 +99,7 @@ def train(epoch):
 def test(f, test_indices, n_slices):
     model.eval()
 
-    truth, probabilities = np.zeros(len(test_indices), dtype='uint8'), np.zeros((len(test_indices), n_slices*2, 2))
+    truth, probabilities = np.zeros(len(test_indices), dtype='uint8'), np.zeros((len(test_indices), n_slices*2, 2), dtype='float32')
     m = torch.nn.Softmax(dim=-1)
 
     images = f['MRI']
@@ -399,7 +399,7 @@ if __name__ == '__main__':
                 current_wrong_fails = []
                 for prediction, truth, idx in zip(test_predictions, test_truth, test_indices):
                     if truth == 0 and prediction == 1:
-                        current_wrong_fails.append(f['filename'][idx, ...])
+                        current_wrong_fails.append((f['filename'][idx, ...], fold_num))
 
             epoch_elapsed = time.time() - epoch_start
             print('Epoch ' + str(epoch) + ' of fold ' + str(fold_num) + ' took ' + str(epoch_elapsed / 60) + ' minutes')
@@ -415,7 +415,7 @@ if __name__ == '__main__':
         # print('last test this epoch:', test_probabilities)
         # print('prob shape:', test_probabilities.shape)
 
-        print('test truth (uncal)', test_truth)
+        print('test prob (uncal)', test_probabilities)
 
         all_val_probs[val_idx:val_idx+len(validation_indices), :, :] = val_probabilities
         all_val_truth[val_idx:val_idx+len(validation_indices)] = val_truth
@@ -429,7 +429,7 @@ if __name__ == '__main__':
         val_truth, val_probabilities_calibrated = test(f, validation_indices, n_slices)
         test_truth, test_probabilities_calibrated = test(f, test_indices, n_slices)
 
-        print('test truth (calib)', test_truth)
+        print('test prob (calib)', test_probabilities)
 
         all_val_probs_calibrated[val_idx:val_idx + len(validation_indices), :, :] = val_probabilities_calibrated
         all_test_probs_calibrated[test_idx:test_idx + len(test_indices), :, :] = test_probabilities_calibrated
