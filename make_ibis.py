@@ -93,7 +93,7 @@ def ibis_bids(source_dir, label_file):
     for participant_level in os.listdir(ibis_dir):
         if os.path.isdir(ibis_dir + participant_level):
             for session_level in os.listdir(ibis_dir + participant_level):
-                if os.path.isdir(ibis_dir + participant_level + '/' + session_level) and not 'sub' in session_level:
+                if os.path.exists(ibis_dir + participant_level + '/' + session_level + '/mri/native/') and not 'sub' in session_level:
                     # print(session_level)
                     for filename in os.listdir(ibis_dir + participant_level + '/' + session_level + '/mri/native/'):
                         if '.mnc' in filename and not 'phantom' in filename.lower():
