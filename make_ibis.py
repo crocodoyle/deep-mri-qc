@@ -114,14 +114,14 @@ def ibis_bids(source_dir, label_file):
 
         tokens = ibis_img.split('_')
         subj_id = tokens[1]
-        session = tokens[2].upper()
+        session = tokens[2]
         run = tokens[4][:-4]
 
-        full_path = ibis_dir + '/BIDS/sub-' + subj_id + '/ses-' + session + '/anat/'
+        full_path = ibis_dir + '/BIDS/sub-' + subj_id + '/ses-' + session.upper() + '/anat/'
 
         os.makedirs(full_path, exist_ok=True)
 
-        new_filename = 'sub-' + subj_id + '_ses-' + session + '_run-' + run + '_T1w.nii.gz'
+        new_filename = 'sub-' + subj_id + '_ses-' + session.upper() + '_run-' + run + '_T1w.nii.gz'
 
         subprocess.run(['mnc2nii', '-nii', ibis_img, full_path + new_filename], shell=True, check=True)
 
