@@ -123,7 +123,7 @@ def ibis_bids(source_dir, label_file):
 
         new_filename = 'sub-' + subj_id + '_ses-' + session.upper() + '_run-' + run + '_T1w.nii.gz'
 
-        subprocess.run(['mnc2nii', '-nii', ibis_img, full_path + new_filename], shell=True, check=True)
+        subprocess.run('mnc2nii -nii' + ibis_img + full_path + new_filename, shell=True, check=True)
 
 
 
