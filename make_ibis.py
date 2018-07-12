@@ -13,7 +13,9 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
-from make_datasets import normalise_zero_one, resize_image_with_crop_or_pad
+import subprocess
+
+# from make_datasets import normalise_zero_one, resize_image_with_crop_or_pad
 
 data_dir = '/data1/users/adoyle/IBIS/'
 
@@ -77,7 +79,60 @@ def make_ibis_qc():
 
             print(str(i+1), 'of', total_subjects, data_point['candidate_id'])
 
+def ibis_bids(source_dir, label_file):
+
+    ibis_dir = '/data1/users/adoyle/ibis'
+    # sample_nifti_file = 'E:/brains/MRBrainS18/training/1/orig/FLAIR.nii.gz'
+    #
+    # sample_nii = nib.load(sample_nifti_file)
+    #
+    # sample_header = sample_nii.get_header()
+
+    ibis_files = []
+
+    for participant_level in os.listdir(ibis_dir):
+        if os.path.isdir(ibis_dir + participant_level):
+            for session_level in os.listdir(ibis_dir + participant_level):
+                if os.path.isdir(ibis_dir + participant_level + '/' + session_level) and not 'sub' in session_level:
+                    # print(session_level)
+                    for filename in os.listdir(ibis_dir + participant_level + '/' + session_level + '/mri/native/'):
+                        if '.mnc' in filename and not 'phantom' in filename.lower():
+                            minc_filepath = ibis_dir + participant_level + '/' + session_level + '/mri/native/' + filename
+                            ibis_files.append(minc_filepath)
+                            # print(minc_filepath)
+
+    for ibis_img in ibis_files:
+
+        # img = nib.load(ibis_img)
+        # data = img.dataobj
+        # aff = img.affine
+        #
+        # new_header = nib.Nifti1Header()
+        # new_header.set_data_shape(data.shape)
+        #
+        # new_img = nib.Nifti1Image(data, aff, header=new_header)
+
+        tokens = ibis_img.split('_')
+        subj_id = tokens[1]
+        session = tokens[2].upper()
+        run = tokens[4][:-4]
+
+        full_path = ibis_dir + '/BIDS/sub-' + subj_id + '/ses-' + session + '/anat/'
+
+        os.makedirs(full_path, exist_ok=True)
+
+        new_filename = 'sub-' + subj_id + '_ses-' + session + '_run-' + run + '_T1w.nii.gz'
+
+        subprocess.run(['mnc2nii', '-nii', ibis_img, full_path + new_filename], shell=True, check=True)
+
+
+
 if __name__ == '__main__':
     print('Creating IBIS HDF5 file for quality control training')
-    make_ibis_qc()
+
+    source_dir = 'E:/brains/IBIS/'
+    label_file = 'ibis_t1_qc.csv'
+
+    ibis_bids(source_dir, label_file)
+    # make_ibis_qc()
     print('Done!')
