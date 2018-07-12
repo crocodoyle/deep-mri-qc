@@ -81,7 +81,7 @@ def make_ibis_qc():
 
 def ibis_bids(source_dir, label_file):
 
-    ibis_dir = '/data1/users/adoyle/ibis'
+    ibis_dir = '/data1/users/adoyle/IBIS/'
     # sample_nifti_file = 'E:/brains/MRBrainS18/training/1/orig/FLAIR.nii.gz'
     #
     # sample_nii = nib.load(sample_nifti_file)
