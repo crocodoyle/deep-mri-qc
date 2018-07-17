@@ -246,13 +246,15 @@ if __name__ == '__main__':
     best_auc_score, best_sensitivity, best_specificity = np.zeros(n_folds), np.zeros((n_folds, 3)), np.zeros((n_folds, 3))
     best_sens_spec_score = np.zeros((n_folds))
 
-    all_test_probs = np.empty((n_total, n_slices*2, 2), dtype='float32')
-    all_test_truth = np.empty((n_total), dtype='uint8')
-    all_val_probs = np.empty((n_total, n_slices*2, 2), dtype='float32')
-    all_val_truth = np.empty((n_total), dtype='uint8')
+    # all_test_probs = np.empty((n_total, n_slices*2, 2), dtype='float32')
+    # all_val_probs = np.empty((n_total, n_slices*2, 2), dtype='float32')
+    #
+    # all_test_truth = np.empty((n_total), dtype='uint8')
+    # all_val_truth = np.empty((n_total), dtype='uint8')
+    # all_test_probs_calibrated = np.empty((n_total, n_slices*2, 2), dtype='float32')
+    # all_val_probs_calibrated = np.empty((n_total, n_slices*2, 2), dtype='float32')
 
-    all_test_probs_calibrated = np.empty((n_total, n_slices*2, 2), dtype='float32')
-    all_val_probs_calibrated = np.empty((n_total, n_slices*2, 2), dtype='float32')
+    all_test_truth, all_val_truth, all_test_probs, all_val_probs, all_test_probs_cal, all_val_probs_cal = [], [], [], [], [], []
 
     if args.cuda:
         model.cuda()
@@ -412,15 +414,6 @@ if __name__ == '__main__':
 
         val_truth, val_probabilities = test(f, validation_indices, n_slices)
         test_truth, test_probabilities = test(f, test_indices, n_slices)
-        # print('last test this epoch:', test_probabilities)
-        # print('prob shape:', test_probabilities.shape)
-
-        # print('test prob (uncal)', test_probabilities)
-
-        all_val_probs[val_idx:val_idx+len(validation_indices), :, :] = val_probabilities
-        all_val_truth[val_idx:val_idx+len(validation_indices)] = val_truth
-        all_test_probs[test_idx:test_idx+len(test_indices), :, :] = test_probabilities
-        all_test_truth[test_idx:test_idx+len(test_indices)] = test_truth
 
         #calibrate model probability on validation set
         model_with_temperature = ModelWithTemperature(model)
@@ -429,13 +422,26 @@ if __name__ == '__main__':
         val_truth, val_probabilities_calibrated = test(f, validation_indices, n_slices)
         test_truth, test_probabilities_calibrated = test(f, test_indices, n_slices)
 
-        # print('test prob (calib)', test_probabilities)
+        for i, val_idx in enumerate(validation_indices):
+            all_val_probs.append(val_probabilities[i, ...])
+            all_val_truth.append(val_truth[i, ...])
+            all_val_probs_cal.append(val_probabilities_calibrated[i, ...])
 
-        print('val_ indices:', val_idx, val_idx + len(validation_indices))
-        print('test indices:', test_idx, test_idx + len(test_indices))
+        for i, test_idx in enumerate(test_indices):
+            all_test_probs.append(test_probabilities[i, ...])
+            all_test_truth.append(test_truth[i, ...])
+            all_test_probs_cal.append(test_probabilities_calibrated[i, ...])
 
-        all_val_probs_calibrated[val_idx:val_idx + len(validation_indices), :, :] = val_probabilities_calibrated
-        all_test_probs_calibrated[test_idx:test_idx + len(test_indices), :, :] = test_probabilities_calibrated
+        # all_val_probs[val_idx:val_idx+len(validation_indices), :, :] = val_probabilities
+        # all_val_truth[val_idx:val_idx+len(validation_indices)] = val_truth
+        # all_test_probs[test_idx:test_idx+len(test_indices), :, :] = test_probabilities
+        # all_test_truth[test_idx:test_idx+len(test_indices)] = test_truth
+
+        # print('val_ indices:', val_idx, val_idx + len(validation_indices))
+        # print('test indices:', test_idx, test_idx + len(test_indices))
+
+        # all_val_probs_calibrated[val_idx:val_idx + len(validation_indices), :, :] = val_probabilities_calibrated
+        # all_test_probs_calibrated[test_idx:test_idx + len(test_indices), :, :] = test_probabilities_calibrated
 
         model_filename = os.path.join(results_dir, 'calibrated_qc_fold_' + str(fold_num) + '.tch')
         torch.save(model.state_dict(), model_filename)
@@ -447,7 +453,7 @@ if __name__ == '__main__':
                            validation_sensitivity, validation_specificity,
                            test_sensitivity, test_specificity, best_epoch_idx, results_dir)
 
-    plot_confidence(all_test_probs, all_test_probs_calibrated, all_test_truth, results_dir)
+    plot_confidence(np.asarray(all_test_probs, dtype='float32'), np.asarray(all_test_probs_cal, dtype='float32'), np.asarray(all_test_truth, dtype='uint8'), results_dir)
 
     sens_plot = [best_sensitivity[:, 0], best_sensitivity[:, 1], best_sensitivity[:, 2]]
     spec_plot = [best_specificity[:, 0], best_specificity[:, 1], best_specificity[:, 2]]

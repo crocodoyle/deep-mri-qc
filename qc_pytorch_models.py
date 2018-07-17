@@ -11,7 +11,8 @@ class ConvolutionalQCNet(nn.Module):
 
         self.features = nn.Sequential(
             nn.Conv2d(1, 16, kernel_size=5),
-            nn.BatchNorm2d(16),
+            # nn.BatchNorm2d(16),
+            nn.InstanceNorm2d(16),
             nn.ReLU(),
             nn.MaxPool2d(2),
             nn.Conv2d(16, 32, kernel_size=5),
