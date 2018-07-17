@@ -103,15 +103,6 @@ def ibis_bids(source_dir, label_file):
 
     for ibis_img in ibis_files:
 
-        # img = nib.load(ibis_img)
-        # data = img.dataobj
-        # aff = img.affine
-        #
-        # new_header = nib.Nifti1Header()
-        # new_header.set_data_shape(data.shape)
-        #
-        # new_img = nib.Nifti1Image(data, aff, header=new_header)
-
         tokens = ibis_img.split('_')
         subj_id = tokens[1]
         session = tokens[2]
@@ -121,10 +112,20 @@ def ibis_bids(source_dir, label_file):
 
         os.makedirs(full_path, exist_ok=True)
 
-        new_filename = 'sub-' + subj_id + '_ses-' + session.upper() + '_run-' + run + '_T1w.nii.gz'
+        new_filename = 'sub-' + subj_id + '_ses-' + session.upper() + '_run-' + run + '_T1w'
 
         subprocess.run('mnc2nii -nii ' + ibis_img + ' ' + full_path + new_filename, shell=True, check=True)
 
+
+def redo_extension():
+    ibis_dir = '/data1/users/adoyle/IBIS/BIDS/'
+
+    for subject_level in os.listdir(ibis_dir):
+        if 'sub' in subject_level:
+            for session_level in os.listdir(ibis_dir + subject_level):
+                for t1_filename in os.listdir(ibis_dir + subject_level + '/' + session_level + '/anat/'):
+                    if '.nii.gz.nii' in t1_filename:
+                        os.rename(ibis_dir + subject_level + '/' + session_level + '/anat/' + t1_filename, ibis_dir + subject_level + '/' + session_level + '/anat/' + t1_filename[:-7])
 
 
 if __name__ == '__main__':
