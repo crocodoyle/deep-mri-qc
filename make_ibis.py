@@ -134,6 +134,8 @@ if __name__ == '__main__':
     source_dir = 'E:/brains/IBIS/'
     label_file = 'ibis_t1_qc.csv'
 
-    ibis_bids(source_dir, label_file)
+    # ibis_bids(source_dir, label_file)
     # make_ibis_qc()
+
+    redo_extension()
     print('Done!')
