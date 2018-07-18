@@ -80,26 +80,31 @@ def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_s
 
     for fold_num in range(n_folds):
         if fold_num == 0:
-            sens_ax.plot(epoch_number, train_sens[fold_num, :], color='darkred', linestyle=':', lw=lw, label='Train')
+            sens_ax.plot(epoch_number, train_sens[fold_num, :], color='pink', lw=lw, label='Train')
             spec_ax.plot(epoch_number, train_spec[fold_num, :], color='pink', linestyle=':', lw=lw, label='Train')
 
-            sens_ax.plot(epoch_number, val_sens[fold_num, :], color='darkblue', linestyle='--', lw=lw, label='Validation')
-            spec_ax.plot(epoch_number, val_spec[fold_num, :], color='lightblue', linestyle='--', lw=lw, label='Validation')
+            sens_ax.plot(epoch_number, val_sens[fold_num, :], color='lightblue', lw=lw, label='Validation')
+            spec_ax.plot(epoch_number, val_spec[fold_num, :], color='lightblue', lw=lw, label='Validation')
 
-            sens_ax.plot(epoch_number, test_sens[fold_num, :], color='darkgreen', lw=lw, label='Test')
+            sens_ax.plot(epoch_number, test_sens[fold_num, :], color='lightgreen', lw=lw, label='Test')
             spec_ax.plot(epoch_number, test_spec[fold_num, :], color='lightgreen', lw=lw, label='Test')
+
+            sens_ax.plot(best_epoch_idx[fold_num], val_sens[fold_num, int(best_epoch_idx[fold_num])], color='k',
+                         marker='o', markerfacecolor='None', label='selected model')
+            spec_ax.plot(best_epoch_idx[fold_num], val_spec[fold_num, int(best_epoch_idx[fold_num])], color='k',
+                         marker='o', markerfacecolor='None', label='selected model')
         else:
-            sens_ax.plot(epoch_number, train_sens[fold_num, :], color='darkred', linestyle=':', lw=lw)
-            spec_ax.plot(epoch_number, train_spec[fold_num, :], color='pink', linestyle=':', lw=lw)
+            sens_ax.plot(epoch_number, train_sens[fold_num, :], color='pink', lw=lw)
+            spec_ax.plot(epoch_number, train_spec[fold_num, :], color='pink', lw=lw)
 
-            sens_ax.plot(epoch_number, val_sens[fold_num, :], color='darkblue', linestyle='--', lw=lw)
-            spec_ax.plot(epoch_number, val_spec[fold_num, :], color='lightblue', linestyle='--', lw=lw)
+            sens_ax.plot(epoch_number, val_sens[fold_num, :], color='lightblue', lw=lw)
+            spec_ax.plot(epoch_number, val_spec[fold_num, :], color='lightblue', lw=lw)
 
-            sens_ax.plot(epoch_number, test_sens[fold_num, :], color='darkgreen', lw=lw)
+            sens_ax.plot(epoch_number, test_sens[fold_num, :], color='lightgreen', lw=lw)
             spec_ax.plot(epoch_number, test_spec[fold_num, :], color='lightgreen', lw=lw)
 
-        sens_ax.plot(best_epoch_idx[fold_num], val_sens[fold_num, int(best_epoch_idx[fold_num])], color='k', marker='o', markerfacecolor='None')
-        spec_ax.plot(best_epoch_idx[fold_num], val_spec[fold_num, int(best_epoch_idx[fold_num])], color='k', marker='o', markerfacecolor='None')
+            sens_ax.plot(best_epoch_idx[fold_num], val_sens[fold_num, int(best_epoch_idx[fold_num])], color='k', marker='o', markerfacecolor='None')
+            spec_ax.plot(best_epoch_idx[fold_num], val_spec[fold_num, int(best_epoch_idx[fold_num])], color='k', marker='o', markerfacecolor='None')
 
     sens_ax.set_xlim([0, n_epochs])
     spec_ax.set_xlim([0, n_epochs])
@@ -143,8 +148,6 @@ def sens_spec_across_folds(sens_to_plot, spec_to_plot, results_dir):
 
 
 def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir):
-    truth = np.asarray(truth, dtype='uint8')
-
     print('probs range:', np.min(probabilities), np.max(probabilities))
     print('calibrated probs range:', np.min(probabilities_calibrated), np.max(probabilities_calibrated))
     # print(probabilities.shape, probabilities_calibrated.shape)
@@ -173,15 +176,17 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
         else:
             y_conf.append(confidence)
 
-        if i%100 == 0:
+        if i%20 == 0:
             print('Truth, Pass Prob, Fail Prob, Conf:', truth[i], y_prob[i], np.mean(probabilities[i, :, 0]), y_conf[i])
 
         if truth[i] > 0.5:
+            pass_confidence.append(y_conf)
             if y_prob[i] > 0.5:
                 tp_confidence.append(y_conf)
             else:
                 fn_confidence.append(y_conf)
         else:
+            fail_confidence.append(y_conf)
             if y_prob[i] > 0.5:
                 fp_confidence.append(y_conf)
             else:
@@ -192,8 +197,8 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
 
     print('n_pass, n_fail', n_pass, n_fail)
 
-    passfail_ax.bar([0], [n_fail], width=0.85, color='darkred')
-    passfail_ax.bar([1], [n_pass], width=0.85, color='darkgreen')
+    passfail_ax.bar([0], [int(n_fail)], width=0.85, color='darkred')
+    passfail_ax.bar([1], [int(n_pass)], width=0.85, color='darkgreen')
 
     passfail_ax.set_xticks([0, 1], ['FAIL', 'PASS'])
     # passfail_ax.set_xticklabels(['FAIL', 'PASS'], fontsize=16)
@@ -228,7 +233,10 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     confidence_ax.set_xlim([-0.05, 1.05])
     confusion_ax.set_xlim([-0.05, 1.05])
 
-    bins_display = np.linspace(0, 1, num=8+1, endpoint=True)
+    bins_for_display = np.linspace(0, 1, num=8+1, endpoint=True)
+    bins_display = []
+    for i, bin in enumerate(bins_display):
+        bins_display.append("%.2f" % round(bin, 2))
 
     confidence_ax.set_xticks(bins_display)
     confusion_ax.set_xticks(bins_display)
