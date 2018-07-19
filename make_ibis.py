@@ -47,6 +47,8 @@ def make_ibis_qc():
             except:
                 print('Missing', data_point['t1_filename'])
 
+        print('Found', len(data_points), 'T1w MRI scans of', len(lines), 'QC ratings')
+
     total_subjects = len(data_points)
 
     with h5py.File(data_dir + 'IBIS_QC.hdf5', 'w') as f:
@@ -71,7 +73,9 @@ def make_ibis_qc():
                 # print('resizing from', t1_data.shape)
                 t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
+            print('Original size', t1_data.shape)
             image_to_save = np.reshape(normalise_zero_one(t1_data), (1,) + (target_size))
+            print('Reshaped', image_to_save.shape)
 
             plt.imshow(image_to_save[0, target_size[0] // 2 + 5, :, :, 0])
             plt.savefig(data_dir + '/examples/' + data_point['qc_label'] + '_' + data_point['candidate_id'] + '.png')
@@ -80,6 +84,8 @@ def make_ibis_qc():
             plt.clf()
 
             image_to_save = adjust_log(image_to_save)
+
+            print('Log normalized', image_to_save.shape)
 
             f['MRI'][i, ...] = image_to_save
             f['filename'][i] = data_point['t1_filename']
