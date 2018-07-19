@@ -197,10 +197,9 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
 
     print('n_pass, n_fail', n_pass, n_fail)
 
-    passfail_ax.bar([0], [int(n_fail)], width=0.85, color='darkred')
-    passfail_ax.bar([1], [int(n_pass)], width=0.85, color='darkgreen')
+    passfail_ax.bar([0], [int(n_fail)], width=0.85, tick_label=['FAIL'], color='darkred')
+    passfail_ax.bar([1], [int(n_pass)], width=0.85, tick_label=['PASS'], color='darkgreen')
 
-    passfail_ax.set_xticks([0, 1], ['FAIL', 'PASS'])
     # passfail_ax.set_xticklabels(['FAIL', 'PASS'], fontsize=16)
     # passfail_ax.set_xlabel('QC Label')
 
@@ -235,7 +234,7 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
 
     bins_for_display = np.linspace(0, 1, num=8+1, endpoint=True)
     bins_display = []
-    for i, bin in enumerate(bins_display):
+    for i, bin in enumerate(bins_for_display):
         bins_display.append("%.2f" % round(bin, 2))
 
     confidence_ax.set_xticks(bins_display)

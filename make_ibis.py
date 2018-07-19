@@ -5,6 +5,7 @@ import os, csv, time
 import nibabel as nib
 
 from collections import defaultdict
+from skimage.exposure import adjust_log
 
 import pickle as pkl
 
@@ -15,7 +16,7 @@ import matplotlib.cm as cm
 
 import subprocess
 
-# from make_datasets import normalise_zero_one, resize_image_with_crop_or_pad
+from make_datasets import normalise_zero_one, resize_image_with_crop_or_pad
 
 data_dir = '/data1/users/adoyle/IBIS/'
 
@@ -55,6 +56,8 @@ def make_ibis_qc():
         f.create_dataset('filename', (total_subjects,), dtype=dt)
         # f.swmr_mode = True
 
+        os.makedirs(data_dir + '/examples/', exist_ok=True)
+
         for i, data_point in enumerate(data_points):
             if 'Pass' in data_point['qc_label']:
                 pass_fail = 1
@@ -70,12 +73,22 @@ def make_ibis_qc():
 
             image_to_save = np.reshape(normalise_zero_one(t1_data), (1,) + (target_size))
 
+            plt.imshow(image_to_save[0, target_size[0] // 2 + 5, :, :, 0])
+            plt.savefig(data_dir + '/examples/' + data_point['qc_label'] + '_' + data_point['candidate_id'] + '.png')
+            plt.axis('off')
+            plt.tight_layout()
+            plt.clf()
+
+            image_to_save = adjust_log(image_to_save)
+
             f['MRI'][i, ...] = image_to_save
             f['filename'][i] = data_point['t1_filename']
 
-            # plt.imshow(image_to_save[0, target_size[0] // 2, :, :, 0])
-            # plt.savefig(data_dir + '/examples/' + data_point['candidate_id'] + '.png')
-            # plt.close()
+            plt.imshow(image_to_save[0, target_size[0] // 2 + 5, :, :, 0])
+            plt.savefig(data_dir + '/examples/' + data_point['qc_label'] + '_' + data_point['candidate_id'] + '_log_normalized.png')
+            plt.axis('off')
+            plt.tight_layout()
+            plt.clf()
 
             print(str(i+1), 'of', total_subjects, data_point['candidate_id'])
 
@@ -134,8 +147,8 @@ if __name__ == '__main__':
     source_dir = 'E:/brains/IBIS/'
     label_file = 'ibis_t1_qc.csv'
 
-    # ibis_bids(source_dir, label_file)
-    # make_ibis_qc()
+    make_ibis_qc()
 
-    redo_extension()
+    # ibis_bids(source_dir, label_file)
+    # redo_extension()
     print('Done!')
