@@ -77,7 +77,7 @@ def make_ibis_qc():
             image_to_save = np.reshape(normalise_zero_one(t1_data), (1,) + (target_size))
             print('Reshaped', image_to_save.shape)
 
-            plt.imshow(image_to_save[0, target_size[0] // 2 + 5, :, :, 0])
+            plt.imshow(image_to_save[0, target_size[0] // 2 + 5, :, :])
             plt.savefig(data_dir + '/examples/' + data_point['qc_label'] + '_' + data_point['candidate_id'] + '.png')
             plt.axis('off')
             plt.tight_layout()
@@ -90,7 +90,7 @@ def make_ibis_qc():
             f['MRI'][i, ...] = image_to_save
             f['filename'][i] = data_point['t1_filename']
 
-            plt.imshow(image_to_save[0, target_size[0] // 2 + 5, :, :, 0])
+            plt.imshow(image_to_save[0, target_size[0] // 2 + 5, :, :])
             plt.savefig(data_dir + '/examples/' + data_point['qc_label'] + '_' + data_point['candidate_id'] + '_log_normalized.png')
             plt.axis('off')
             plt.tight_layout()
