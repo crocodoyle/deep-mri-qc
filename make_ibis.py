@@ -144,8 +144,8 @@ def redo_extension():
 if __name__ == '__main__':
     print('Creating IBIS HDF5 file for quality control training')
 
-    source_dir = 'E:/brains/IBIS/'
-    label_file = 'ibis_t1_qc.csv'
+    # source_dir = 'E:/brains/IBIS/'
+    # label_file = 'ibis_t1_qc.csv'
 
     make_ibis_qc()
 
