@@ -201,7 +201,7 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     passfail_ax.bar([2], [int(n_pass)], width=0.85, tick_label=['PASS'], color='darkgreen')
 
     plt.sca(confidence_ax)
-    plt.xticks([1, 2], ['FAIL', 'PASS'], fontsize=16)
+    plt.xticks([0, 1, 2, 3], ['', 'FAIL', 'PASS', ''], fontsize=16)
 
     # passfail_ax.set_xlabel('QC Label')
 
@@ -217,13 +217,13 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
 
     width = 0.02
 
-    b1 = confidence_ax.bar(bin_edges[:-1]+0.0125, pass_hist, width, color='darkgreen')
-    b2 = confidence_ax.bar(bin_edges[:-1]+0.025, fail_hist, width, color='darkred')
+    b1 = confidence_ax.bar(bin_edges[:-1]+0.025, pass_hist, width, color='darkgreen')
+    b2 = confidence_ax.bar(bin_edges[:-1]+0.05, fail_hist, width, color='darkred')
 
-    b3 = confusion_ax.bar(bin_edges[:-1]+0.0125, tp_hist, width/2, color='green')
-    b4 = confusion_ax.bar(bin_edges[:-1]+0.025, tn_hist, width/2, color='red')
-    b5 = confusion_ax.bar(bin_edges[:-1]+0.0375, fn_hist, width/2, color='purple')
-    b6 = confusion_ax.bar(bin_edges[:-1]+0.05, fp_hist, width/2, color='darkorange')
+    # b3 = confusion_ax.bar(bin_edges[:-1]+0.025, tp_hist, width/2, color='green')
+    # b4 = confusion_ax.bar(bin_edges[:-1]+0.05, tn_hist, width/2, color='red')
+    b5 = confusion_ax.bar(bin_edges[:-1]+0.025, fn_hist, width, color='purple')
+    b6 = confusion_ax.bar(bin_edges[:-1]+0.05, fp_hist, width, color='darkorange')
 
     passfail_ax.set_ylabel('# Images', fontsize=20)
     confidence_ax.set_xlabel('Confidence', fontsize=20)
@@ -248,7 +248,7 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     # confidence_ax.set_xticklabels(['%s' % float('%.2g' % bin_edge) for bin_edge in bins[:-1]])
     # confusion_ax.set_xticklabels(['%s' % float('%.2g' % bin_edge) for bin_edge in bins[:-1]])
 
-    lgd = plt.legend([b1, b2, b3, b4, b5, b6], ['Pass', 'Fail', 'True Positive', 'True Negative', 'False Negative', 'False Positive'], shadow=True, fontsize=20, loc='center left', bbox_to_anchor=(1, 0.5))
+    lgd = plt.legend([b1, b2, b5, b6], ['Pass', 'Fail', 'False Negative', 'False Positive'], shadow=True, fontsize=20, loc='center left', bbox_to_anchor=(1, 0.5))
 
     plt.tight_layout()
     plt.savefig(results_dir + 'confidence.png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=500)
