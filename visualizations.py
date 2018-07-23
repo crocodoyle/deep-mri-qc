@@ -197,10 +197,12 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
 
     print('n_pass, n_fail', n_pass, n_fail)
 
-    passfail_ax.bar([0], [int(n_fail)], width=0.85, tick_label=['FAIL'], color='darkred')
-    passfail_ax.bar([1], [int(n_pass)], width=0.85, tick_label=['PASS'], color='darkgreen')
+    passfail_ax.bar([0+0.001], [int(n_fail)], width=0.85, tick_label=['FAIL'], color='darkred')
+    passfail_ax.bar([1+0.001], [int(n_pass)], width=0.85, tick_label=['PASS'], color='darkgreen')
 
-    # passfail_ax.set_xticklabels(['FAIL', 'PASS'], fontsize=16)
+    plt.sca(confidence_ax)
+    plt.xticks([0, 1], ['FAIL', 'PASS'], fontsize=16)
+
     # passfail_ax.set_xlabel('QC Label')
 
     bins = np.linspace(0, 1, num=n_slices+1, endpoint=True)
@@ -213,7 +215,7 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     fp_hist, bin_edges = np.histogram(fp_confidence, bins)
     tn_hist, bin_edges = np.histogram(tn_confidence, bins)
 
-    width = 0.025
+    width = 0.02
 
     b1 = confidence_ax.bar(bin_edges[:-1]-0.0125, pass_hist, width, color='darkgreen')
     b2 = confidence_ax.bar(bin_edges[:-1]+0.0125, fail_hist, width, color='darkred')
@@ -223,22 +225,25 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     b5 = confusion_ax.bar(bin_edges[:-1]+0.0125, fn_hist, width/2, color='purple')
     b6 = confusion_ax.bar(bin_edges[:-1]+0.025, fp_hist, width/2, color='darkorange')
 
+    passfail_ax.set_ylabel('# Images', fontsize=20)
     confidence_ax.set_xlabel('Confidence', fontsize=20)
-    confidence_ax.set_ylabel('# Images', fontsize=20)
-
     confusion_ax.set_xlabel('Confidence', fontsize=20)
     # confusion_ax.set_ylabel('# Images', fontsize=20)
 
     confidence_ax.set_xlim([-0.05, 1.05])
     confusion_ax.set_xlim([-0.05, 1.05])
 
-    bins_for_display = np.linspace(0, 1, num=8+1, endpoint=True)
-    # bins_display = []
-    # for i, bin in enumerate(bins_for_display):
-    #     bins_display.append("%.2f" % round(bin, 2))
+    bins_for_display = np.linspace(0, 1, num=4+1, endpoint=True)
+    bins_display = []
+    for i, bin in enumerate(bins_for_display):
+        bins_display.append("%.2f" % round(bin, 2))
 
-    confidence_ax.set_xticks(bins_for_display)
-    confusion_ax.set_xticks(bins_for_display)
+    plt.sca(confidence_ax)
+    plt.xticks(bins_for_display, bins_display)
+
+    plt.sca(confusion_ax)
+    plt.xticks(bins_for_display, bins_display)
+
     # confidence_ax.set_xticklabels(['%s' % float('%.2g' % bin_edge) for bin_edge in bins[:-1]])
     # confusion_ax.set_xticklabels(['%s' % float('%.2g' % bin_edge) for bin_edge in bins[:-1]])
 
