@@ -160,7 +160,7 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     pass_confidence, fail_confidence = [], []
     tp_confidence, tn_confidence, fp_confidence, fn_confidence = [], [], [], []
 
-    f, (passfail_ax, confidence_ax, confusion_ax) = plt.subplots(1, 3, sharey=True, figsize=(10, 4), gridspec_kw = {'width_ratios':[1, 3, 3]})
+    f, (passfail_ax, confidence_ax, confusion_ax) = plt.subplots(1, 3, figsize=(10, 4), gridspec_kw = {'width_ratios':[1, 3, 3]})
 
     y_prob = np.mean(probabilities[:, :, 1], axis=1)
     y_conf = []
@@ -197,11 +197,11 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
 
     print('n_pass, n_fail', n_pass, n_fail)
 
-    passfail_ax.bar([0+0.0001], [int(n_fail)], width=0.85, tick_label=['FAIL'], color='darkred')
-    passfail_ax.bar([1+0.0001], [int(n_pass)], width=0.85, tick_label=['PASS'], color='darkgreen')
+    passfail_ax.bar([1], [int(n_fail)], width=0.85, tick_label=['FAIL'], color='darkred')
+    passfail_ax.bar([2], [int(n_pass)], width=0.85, tick_label=['PASS'], color='darkgreen')
 
     plt.sca(confidence_ax)
-    plt.xticks([0.001, 1.001], ['FAIL', 'PASS'], fontsize=16)
+    plt.xticks([1, 2], ['FAIL', 'PASS'], fontsize=16)
 
     # passfail_ax.set_xlabel('QC Label')
 
@@ -230,7 +230,7 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     confusion_ax.set_xlabel('Confidence', fontsize=20)
     # confusion_ax.set_ylabel('# Images', fontsize=20)
 
-    passfail_ax.set_xlim([-0.05, 1.05])
+    passfail_ax.set_xlim([0.95, 2.05])
     confidence_ax.set_xlim([-0.05, 1.05])
     confusion_ax.set_xlim([-0.05, 1.05])
 
