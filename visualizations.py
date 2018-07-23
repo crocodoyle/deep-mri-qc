@@ -180,17 +180,17 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
             print('Truth, Pass Prob, Fail Prob, Conf:', truth[i], y_prob[i], np.mean(probabilities[i, :, 0]), y_conf[i])
 
         if truth[i] > 0.5:
-            pass_confidence.append(y_conf)
+            pass_confidence.append(y_conf[i])
             if y_prob[i] > 0.5:
-                tp_confidence.append(y_conf)
+                tp_confidence.append(y_conf[i])
             else:
-                fn_confidence.append(y_conf)
+                fn_confidence.append(y_conf[i])
         else:
-            fail_confidence.append(y_conf)
+            fail_confidence.append(y_conf[i])
             if y_prob[i] > 0.5:
-                fp_confidence.append(y_conf)
+                fp_confidence.append(y_conf[i])
             else:
-                tn_confidence.append(y_conf)
+                tn_confidence.append(y_conf[i])
 
     n_pass = np.sum(truth)
     n_fail = len(truth) - n_pass
