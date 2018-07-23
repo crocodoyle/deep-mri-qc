@@ -233,12 +233,12 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     confusion_ax.set_xlim([-0.05, 1.05])
 
     bins_for_display = np.linspace(0, 1, num=8+1, endpoint=True)
-    bins_display = []
-    for i, bin in enumerate(bins_for_display):
-        bins_display.append("%.2f" % round(bin, 2))
+    # bins_display = []
+    # for i, bin in enumerate(bins_for_display):
+    #     bins_display.append("%.2f" % round(bin, 2))
 
-    confidence_ax.set_xticks(bins_display)
-    confusion_ax.set_xticks(bins_display)
+    confidence_ax.set_xticks(bins_for_display)
+    confusion_ax.set_xticks(bins_for_display)
     # confidence_ax.set_xticklabels(['%s' % float('%.2g' % bin_edge) for bin_edge in bins[:-1]])
     # confusion_ax.set_xticklabels(['%s' % float('%.2g' % bin_edge) for bin_edge in bins[:-1]])
 
