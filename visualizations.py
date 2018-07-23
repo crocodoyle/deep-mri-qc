@@ -201,7 +201,7 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     passfail_ax.bar([1+0.0001], [int(n_pass)], width=0.85, tick_label=['PASS'], color='darkgreen')
 
     plt.sca(confidence_ax)
-    plt.xticks([0, 1], ['FAIL', 'PASS'], fontsize=16)
+    plt.xticks([0.001, 1.001], ['FAIL', 'PASS'], fontsize=16)
 
     # passfail_ax.set_xlabel('QC Label')
 
@@ -230,6 +230,7 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     confusion_ax.set_xlabel('Confidence', fontsize=20)
     # confusion_ax.set_ylabel('# Images', fontsize=20)
 
+    passfail_ax.set_xlim([-0.05, 1.05])
     confidence_ax.set_xlim([-0.05, 1.05])
     confusion_ax.set_xlim([-0.05, 1.05])
 
