@@ -197,8 +197,8 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
 
     print('n_pass, n_fail', n_pass, n_fail)
 
-    passfail_ax.bar([0+0.001], [int(n_fail)], width=0.85, tick_label=['FAIL'], color='darkred')
-    passfail_ax.bar([1+0.001], [int(n_pass)], width=0.85, tick_label=['PASS'], color='darkgreen')
+    passfail_ax.bar([0+0.0001], [int(n_fail)], width=0.85, tick_label=['FAIL'], color='darkred')
+    passfail_ax.bar([1+0.0001], [int(n_pass)], width=0.85, tick_label=['PASS'], color='darkgreen')
 
     plt.sca(confidence_ax)
     plt.xticks([0, 1], ['FAIL', 'PASS'], fontsize=16)
@@ -217,13 +217,13 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
 
     width = 0.02
 
-    b1 = confidence_ax.bar(bin_edges[:-1]-0.0125, pass_hist, width, color='darkgreen')
-    b2 = confidence_ax.bar(bin_edges[:-1]+0.0125, fail_hist, width, color='darkred')
+    b1 = confidence_ax.bar(bin_edges[:-1]+0.0125, pass_hist, width, color='darkgreen')
+    b2 = confidence_ax.bar(bin_edges[:-1]+0.025, fail_hist, width, color='darkred')
 
-    b3 = confusion_ax.bar(bin_edges[:-1]-0.025, tp_hist, width/2, color='green')
-    b4 = confusion_ax.bar(bin_edges[:-1]-0.0125, tn_hist, width/2, color='red')
-    b5 = confusion_ax.bar(bin_edges[:-1]+0.0125, fn_hist, width/2, color='purple')
-    b6 = confusion_ax.bar(bin_edges[:-1]+0.025, fp_hist, width/2, color='darkorange')
+    b3 = confusion_ax.bar(bin_edges[:-1]+0.0125, tp_hist, width/2, color='green')
+    b4 = confusion_ax.bar(bin_edges[:-1]+0.025, tn_hist, width/2, color='red')
+    b5 = confusion_ax.bar(bin_edges[:-1]+0.0375, fn_hist, width/2, color='purple')
+    b6 = confusion_ax.bar(bin_edges[:-1]+0.05, fp_hist, width/2, color='darkorange')
 
     passfail_ax.set_ylabel('# Images', fontsize=20)
     confidence_ax.set_xlabel('Confidence', fontsize=20)
