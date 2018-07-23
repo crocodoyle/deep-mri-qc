@@ -230,7 +230,7 @@ def plot_confidence(probabilities, probabilities_calibrated, truth, results_dir)
     confusion_ax.set_xlabel('Confidence', fontsize=20)
     # confusion_ax.set_ylabel('# Images', fontsize=20)
 
-    passfail_ax.set_xlim([0.95, 2.05])
+    # passfail_ax.set_xlim([0.95, 2.05])
     confidence_ax.set_xlim([-0.05, 1.05])
     confusion_ax.set_xlim([-0.05, 1.05])
 
