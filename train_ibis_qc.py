@@ -274,7 +274,7 @@ if __name__ == '__main__':
     best_epoch_idx = np.empty((n_folds), dtype='uint8')
 
     skf = StratifiedKFold(n_splits=n_folds)
-    for fold_idx, (train_indices, other_indices) in enumerate(skf.split(ibis_indices, labels)):
+    for fold_idx, (train_val_indices, test_indices) in enumerate(skf.split(ibis_indices, labels)):
         fold_num = fold_idx + 1
 
         current_wrong_fails = []
@@ -282,8 +282,8 @@ if __name__ == '__main__':
         if args.cuda:
             model.cuda()
 
-        validation_indices = other_indices[::2]
-        test_indices = other_indices[1::2]
+        validation_indices = train_val_indices[::10]
+        train_indices = list(set(train_val_indices) - set(validation_indices))
 
         train_labels = labels[list(train_indices)]
         validation_labels = labels[list(validation_indices)]
@@ -375,10 +375,10 @@ if __name__ == '__main__':
 
             auc_score = (val_auc / len(validation_indices)) / 2 + (train_auc / len(train_indices)) / 2
 
-            sens_score = 0.8*validation_sensitivity[fold_idx, epoch_idx] + 0.2*training_sensitivity[fold_idx, epoch_idx]
-            spec_score = 0.8*validation_specificity[fold_idx, epoch_idx] + 0.2*training_specificity[fold_idx, epoch_idx]
+            sens_score = 0.6*validation_sensitivity[fold_idx, epoch_idx] + 0.4*training_sensitivity[fold_idx, epoch_idx]
+            spec_score = 0.6*validation_specificity[fold_idx, epoch_idx] + 0.4*training_specificity[fold_idx, epoch_idx]
 
-            sens_spec_score = 0.25*sens_score + 0.75*spec_score - 0.2*np.abs(sens_score - spec_score)
+            sens_spec_score = 0.25*sens_score + 0.75*spec_score
 
             if sens_spec_score > best_sens_spec_score[fold_idx]:
                 print('This epoch is the new best model on the train/validation set!')
