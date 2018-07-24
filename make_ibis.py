@@ -5,7 +5,7 @@ import os, csv, time
 import nibabel as nib
 
 from collections import defaultdict
-from skimage.exposure import adjust_log
+from skimage.exposure import adjust_log, adjust_sigmoid
 
 import pickle as pkl
 
@@ -83,7 +83,7 @@ def make_ibis_qc():
             plt.tight_layout()
             plt.clf()
 
-            image_to_save = adjust_log(image_to_save)
+            image_to_save = adjust_sigmoid(image_to_save)
 
             print('Log normalized', image_to_save.shape)
 
