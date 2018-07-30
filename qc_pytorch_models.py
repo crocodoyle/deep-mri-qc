@@ -34,12 +34,13 @@ class ConvolutionalQCNet(nn.Module):
             # nn.MaxPool2d(2),
             nn.Conv2d(64, 128, kernel_size=3, stride=2),
             nn.InstanceNorm2d(128),
-            # nn.Dropout(0.3),
+            nn.Dropout(0.5),
             nn.ReLU(),
             # nn.MaxPool2d(2),
-            # nn.Conv2d(128, 256, kernel_size=3),
-            # nn.ReLU(),
-            # nn.Dropout(0.3),
+            nn.Conv2d(128, 256, kernel_size=3),
+            nn.InstanceNorm1d(256),
+            nn.ReLU(),
+            nn.Dropout(0.5),
             # nn.MaxPool2d(2),
         )
 
