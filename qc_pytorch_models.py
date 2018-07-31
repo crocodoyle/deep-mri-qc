@@ -51,9 +51,11 @@ class ConvolutionalQCNet(nn.Module):
 
         self.classifier = nn.Sequential(
             nn.Linear(self.flat_features, 256),
+            nn.InstanceNorm1d(256),
             nn.Dropout(0.5),
             nn.ReLU(),
             nn.Linear(256, 256),
+            nn.InstanceNorm1d(256),
             nn.Dropout(0.5),
             nn.ReLU(),
             nn.Linear(256, 2),
