@@ -9,6 +9,6 @@ if __name__ == '__main__':
         subj_id = filename.split('-')[-1]
 
         print('Starting participant:', subj_id)
-        return_code = subprocess.run(['docker', 'run', '-it', '--rm', '-v', '/data1/users/adoyle/IBIS/BIDS/:/data:ro', '-v', '/data1/users/adoyle/IBIS/mriqc_output/:/out poldracklab/mriqc:latest', '/data', '/out', 'participant', '--participant_label', subj_id, '--no-sub'])
+        return_code = subprocess.run("docker run -it --rm -v /data1/users/adoyle/IBIS/BIDS/:/data:ro -v /data1/users/adoyle/IBIS/mriqc_output/:/out poldracklab/mriqc:latest /data /out participant --participant_label " + subj_id + " --no-sub")
         if not return_code.returncode == 0:
             print(return_code.stderr)
