@@ -9,4 +9,4 @@ if __name__ == '__main__':
         subj_id = filename.split('-')[-1]
 
         print('Starting participant:', subj_id)
-        subprocess.run(['docker', 'run', '-it', '-v', '/data1/users/adoyle/IBIS/BIDS/:/data:ro', '-v', '/data1/users/adoyle/IBIS/mriqc_output/:/out poldracklab/mriqc:latest', '/data', '/out', 'participant', '--participant-label', subj_id, '--no-sub'], capture_output=True)
+        subprocess.run(['docker', 'run', '-it', '--rm', '-v', '/data1/users/adoyle/IBIS/BIDS/:/data:ro', '-v', '/data1/users/adoyle/IBIS/mriqc_output/:/out poldracklab/mriqc:latest', '/data', '/out', 'participant', '--participant_label', subj_id, '--no-sub'], check=True)
