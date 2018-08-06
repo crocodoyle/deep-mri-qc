@@ -455,6 +455,11 @@ if __name__ == '__main__':
 
     plot_confidence(np.asarray(all_test_probs, dtype='float32'), np.asarray(all_test_probs_cal, dtype='float32'), np.asarray(all_test_truth, dtype='uint8'), results_dir)
 
+
+    plot_roc(None, None, all_val_truth, all_val_probs, all_test_truth, all_test_probs, results_dir, -1, fold_num=-1)
+    plot_roc(None, None, all_val_truth, all_val_probs_cal, all_test_truth, all_test_probs_cal, results_dir, -2, fold_num=-1)
+
+
     sens_plot = [best_sensitivity[:, 0], best_sensitivity[:, 1], best_sensitivity[:, 2]]
     spec_plot = [best_specificity[:, 0], best_specificity[:, 1], best_specificity[:, 2]]
 

@@ -26,7 +26,7 @@ def make_roc_gif(results_dir, epochs, fold_num=1):
     imageio.mimsave(results_dir + 'ROC_fold_' + str(fold_num) + '.gif', images)
 
 
-def plot_roc(train_truth, train_probs, val_truth, val_probs, test_truth, test_probs, results_dir, epoch_num, fold_num=-1):
+def plot_roc(train_truth, train_probs, val_truth, val_probs, test_truth, test_probs, results_dir, epoch_num=-1, fold_num=-1):
     plt.figure(figsize=(8, 8))
 
     lw = 2
@@ -60,10 +60,19 @@ def plot_roc(train_truth, train_probs, val_truth, val_probs, test_truth, test_pr
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate', fontsize=20)
     plt.ylabel('True Positive Rate', fontsize=20)
-    plt.title('ROC Epoch:' + str(epoch_num).zfill(3), fontsize=24)
+    if epoch_num >= 0:
+        plt.title('ROC Epoch:' + str(epoch_num).zfill(3), fontsize=24)
+        filename ='ROC_fold_' + str(fold_num) + '_epoch_' + str(epoch_num).zfill(2) + '.png'
+    elif epoch_num == -1:
+        plt.title('ROC')
+        filename = 'unscaled_ROC.png'
+    elif epoch_num == -2:
+        plt.title('ROC (temperature scaled)')
+        filename = 'scaled_ROC.png'
+
     plt.legend(loc="lower right", shadow=True, fontsize=20)
 
-    plt.savefig(results_dir + 'ROC_fold_' + str(fold_num) + '_epoch_' + str(epoch_num).zfill(2) + '.png', bbox_inches='tight')
+    plt.savefig(results_dir + filename, bbox_inches='tight')
     plt.close()
 
     return train_roc_auc, val_roc_auc, test_roc_auc
