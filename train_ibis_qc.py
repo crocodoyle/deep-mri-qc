@@ -373,14 +373,14 @@ if __name__ == '__main__':
             print('Test sensitivity/specificity:', test_sensitivity[fold_idx, epoch_idx],
                   test_specificity[fold_idx, epoch_idx])
 
-            auc_score = (val_auc / len(validation_indices)) / 2 + (train_auc / len(train_indices)) / 2
+            auc_score = val_auc
 
             sens_score = 0.6*validation_sensitivity[fold_idx, epoch_idx] + 0.4*training_sensitivity[fold_idx, epoch_idx]
             spec_score = 0.6*validation_specificity[fold_idx, epoch_idx] + 0.4*training_specificity[fold_idx, epoch_idx]
 
             sens_spec_score = 0.25*sens_score + 0.75*spec_score
 
-            if sens_spec_score > best_sens_spec_score[fold_idx]:
+            if auc_score > best_auc_score[fold_idx]:
                 print('This epoch is the new best model on the train/validation set!')
                 best_auc_score[fold_idx] = auc_score
                 best_sens_spec_score[fold_idx] = sens_spec_score
