@@ -44,7 +44,6 @@ class ConvolutionalQCNet(nn.Module):
             nn.InstanceNorm2d(256),
             nn.ReLU(),
             nn.Dropout(0.5),
-            nn.MaxPool2d(2),
         )
 
         self.flat_features = self.get_flat_features(input_shape, self.features)
