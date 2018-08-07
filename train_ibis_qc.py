@@ -26,7 +26,7 @@ from visualizations import plot_roc, plot_sens_spec, make_roc_gif, GradCam, sens
 
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import StratifiedKFold, LeaveOneGroupOut
-
+from sklearn.utils import compute_class_weight
 
 import matplotlib as mpl
 mpl.use('Agg')
@@ -67,21 +67,30 @@ class QCDataset(Dataset):
         return self.n_subjects
 
 
-def train(epoch):
+def train(epoch, class_weight=None):
     model.train()
 
     truth, probabilities = np.zeros((len(train_loader.dataset))), np.zeros((len(train_loader.dataset), 2))
     m = torch.nn.Softmax(dim=-1)
+    if not class_weight is None:
+        w = torch.DoubleTensor(class_weight)
+    else:
+        w = None
+
 
     for batch_idx, (data, target) in enumerate(train_loader):
         n_in_batch = data.shape[0]
         if args.cuda:
-            data, target = data.cuda(), target.cuda()
+            data, target, w = data.cuda(), target.cuda(), w.cuda()
         data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
         optimizer.zero_grad()
         output = model(data)
 
-        loss = nn.CrossEntropyLoss()
+        if not w is None:
+            loss = nn.CrossEntropyLoss(w)
+        else:
+            loss = nn.CrossEntropyLoss()
+
         loss_val = loss(output, target)
         loss_val.backward()
         optimizer.step()
@@ -314,6 +323,9 @@ if __name__ == '__main__':
         #       str(len(validation_loader.dataset)), 'validation images and', str(len(test_loader.dataset)),
         #       'test images.')
 
+        class_weights = compute_class_weight('balanced', np.unique(train_labels), train_labels)
+        print('Class weights are:', class_weights)
+
         optimizer = optim.Adam(model.parameters(), lr=0.0001, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-05)
         # optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9, nesterov=True)
 
@@ -328,7 +340,7 @@ if __name__ == '__main__':
             train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=False,
                                                        **kwargs)
 
-            train_truth, train_probabilities = train(epoch)
+            train_truth, train_probabilities = train(epoch, class_weight=class_weights)
             train_predictions = np.argmax(train_probabilities, axis=-1)
 
             val_truth, val_probabilities = test(f, validation_indices, n_slices)
