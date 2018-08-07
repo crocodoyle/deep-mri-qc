@@ -73,7 +73,7 @@ def train(epoch, class_weight=None):
     truth, probabilities = np.zeros((len(train_loader.dataset))), np.zeros((len(train_loader.dataset), 2))
     m = torch.nn.Softmax(dim=-1)
     if not class_weight is None:
-        w = torch.DoubleTensor(class_weight)
+        w = torch.FloatTensor(class_weight)
     else:
         w = None
 
