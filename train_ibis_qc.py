@@ -274,8 +274,8 @@ if __name__ == '__main__':
     print('Whole dataset has ' + str(len(ibis_indices)) + ' images (' + str(n_pass) + ' PASS, ' + str(n_fail) + ' FAIL)')
     fail_weight = (n_pass / n_total)
     pass_weight = n_fail / n_total
-    print('Setting class weighting to ' + str(fail_weight) + ' for FAIL class and ' + str(
-        pass_weight) + ' for PASS class')
+    # print('Setting class weighting to ' + str(fail_weight) + ' for FAIL class and ' + str(
+    #     pass_weight) + ' for PASS class')
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
@@ -310,21 +310,22 @@ if __name__ == '__main__':
         print('Fold', fold_num, 'has', n_val_pass, 'pass images and', n_val_fail, 'fail images in the validation set.')
         print('Fold', fold_num, 'has', n_test_pass, 'pass images and', n_test_fail, 'fail images in the test set.')
 
+        class_weights = compute_class_weight('balanced', np.unique(train_labels), train_labels)
+        print('Class weights are:', class_weights)
+        class_weights[0] /= 2
+
         train_sample_weights = np.zeros((len(train_labels)))
         for i, label in enumerate(train_labels):
             if label == 1:
-                train_sample_weights[i] = pass_weight
+                train_sample_weights[i] = class_weights[1]
             else:
-                train_sample_weights[i] = fail_weight
+                train_sample_weights[i] = class_weights[0] / 2
 
         train_sample_weights = torch.DoubleTensor(train_sample_weights)
 
         # print('This fold has', str(len(train_loader.dataset)), 'training images and',
         #       str(len(validation_loader.dataset)), 'validation images and', str(len(test_loader.dataset)),
         #       'test images.')
-
-        class_weights = compute_class_weight('balanced', np.unique(train_labels), train_labels)
-        print('Class weights are:', class_weights)
 
         optimizer = optim.Adam(model.parameters(), lr=0.0001, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-05)
         # optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9, nesterov=True)
