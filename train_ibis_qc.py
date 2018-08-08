@@ -319,7 +319,7 @@ if __name__ == '__main__':
             if label == 1:
                 train_sample_weights[i] = class_weights[1]
             else:
-                train_sample_weights[i] = class_weights[0] / 2
+                train_sample_weights[i] = class_weights[0]
 
         train_sample_weights = torch.DoubleTensor(train_sample_weights)
 
@@ -341,7 +341,7 @@ if __name__ == '__main__':
             train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=False,
                                                        **kwargs)
 
-            train_truth, train_probabilities = train(epoch, class_weight=class_weights)
+            train_truth, train_probabilities = train(epoch, class_weight=None)
             train_predictions = np.argmax(train_probabilities, axis=-1)
 
             val_truth, val_probabilities = test(f, validation_indices, n_slices)
