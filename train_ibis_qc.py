@@ -81,7 +81,9 @@ def train(epoch, class_weight=None):
     for batch_idx, (data, target) in enumerate(train_loader):
         n_in_batch = data.shape[0]
         if args.cuda:
-            data, target, w = data.cuda(), target.cuda(), w.cuda()
+            data, target, w = data.cuda(), target.cuda()
+            if not class_weight is None:
+                w.cuda()
         data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
         optimizer.zero_grad()
         output = model(data)
