@@ -314,7 +314,6 @@ if __name__ == '__main__':
 
         class_weights = compute_class_weight('balanced', np.unique(train_labels), train_labels)
         print('Class weights are:', class_weights)
-        class_weights[0] /= 2
 
         train_sample_weights = np.zeros((len(train_labels)))
         for i, label in enumerate(train_labels):
@@ -390,12 +389,12 @@ if __name__ == '__main__':
 
             auc_score = val_auc
 
-            sens_score = 0.6*validation_sensitivity[fold_idx, epoch_idx] + 0.4*training_sensitivity[fold_idx, epoch_idx]
-            spec_score = 0.6*validation_specificity[fold_idx, epoch_idx] + 0.4*training_specificity[fold_idx, epoch_idx]
+            sens_score = validation_sensitivity[fold_idx, epoch_idx]
+            spec_score = validation_specificity[fold_idx, epoch_idx]
 
-            sens_spec_score = 0.25*sens_score + 0.75*spec_score
+            sens_spec_score = (sens_score + spec_score) / 2
 
-            if auc_score > best_auc_score[fold_idx]:
+            if sens_spec_score > best_sens_spec_score[fold_idx]:
                 print('This epoch is the new best model on the train/validation set!')
                 best_auc_score[fold_idx] = auc_score
                 best_sens_spec_score[fold_idx] = sens_spec_score
