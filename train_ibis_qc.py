@@ -204,23 +204,21 @@ def load_mriqc_metrics(train_indices, val_indices, test_indices, f):
 
         lines = list(csvreader)[1:]
 
-    for train_idx in train_indices:
+    for i, train_idx in enumerate(train_indices):
         tokens = str(filenames[train_idx]).split('_')
         subj_id = tokens[1]
         session = tokens[2].upper()
         run = tokens[4].upper()[:-5]
-        print(subj_id, session, run)
 
         for line in lines:
             if subj_id in line[0]:
                 if session in line[1]:
                     if run in line[2]:
                         iqms = [float(iqm) for iqm in line[3:]]
-
-                        train_features[train_idx, :] = iqms
+                        train_features[i, :] = iqms
                         break
 
-    for test_idx in list(val_indices) + list(test_indices):
+    for i, test_idx in enumerate(list(val_indices) + list(test_indices)):
         tokens = str(filenames[test_idx]).split('_')
         subj_id = tokens[1]
         session = tokens[2].upper()
@@ -231,7 +229,7 @@ def load_mriqc_metrics(train_indices, val_indices, test_indices, f):
                 if session in line[1]:
                     if run in line[2]:
                         iqms = [float(iqm) for iqm in line[3:]]
-                        test_features[test_idx, :] = iqms
+                        test_features[i, :] = iqms
                         break
 
     train_features = normalize(train_features)
