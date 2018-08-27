@@ -385,12 +385,13 @@ if __name__ == '__main__':
         rf.fit(train_features, train_labels)
         rf_predictions = rf.predict(test_features)
 
-        test_tn, test_fp, test_fn, test_tp = confusion_matrix(test_labels, rf_predictions).ravel()
+        rf_test_labels = list(validation_labels) + list(test_labels)
+        test_tn, test_fp, test_fn, test_tp = confusion_matrix(rf_test_labels, rf_predictions).ravel()
 
         mriqc_results[fold_idx, 0] = test_tp / (test_tp + test_fn + epsilon)
         mriqc_results[fold_idx, 1] = test_tn / (test_tn + test_fp + epsilon)
-        mriqc_results[fold_idx, 2] = accuracy_score(train_labels, rf_predictions)
-        mriqc_results[fold_idx, 3] = roc_auc_score(train_labels, rf_predictions)
+        mriqc_results[fold_idx, 2] = accuracy_score(rf_test_labels, rf_predictions)
+        mriqc_results[fold_idx, 3] = roc_auc_score(rf_test_labels, rf_predictions)
 
         # print('This fold has', str(len(train_loader.dataset)), 'training images and',
         #       str(len(validation_loader.dataset)), 'validation images and', str(len(test_loader.dataset)),
