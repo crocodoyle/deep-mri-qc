@@ -377,12 +377,12 @@ if __name__ == '__main__':
 
         #MRIQC COMPARISON
         train_features, test_features = load_mriqc_metrics(train_indices, validation_indices, test_indices, f)
-        print(train_features.shape, test_features.shape)
-        print(np.max(train_features), np.max(test_features), np.min(train_features), np.min(test_features))
-        print(np.argmax(train_labels, axis=0))
+        # print(train_features.shape, test_features.shape)
+        # print(np.max(train_features), np.max(test_features), np.min(train_features), np.min(test_features))
+        # print(np.argmax(train_labels, axis=0))
 
         rf = RandomForestClassifier(n_estimators=1000)
-        rf.fit(train_features, train_labels)
+        rf.fit(train_features, train_labels, class_weight='balanced')
         rf_predictions = rf.predict(test_features)
 
         rf_test_labels = list(validation_labels) + list(test_labels)
@@ -392,6 +392,8 @@ if __name__ == '__main__':
         mriqc_results[fold_idx, 1] = test_tn / (test_tn + test_fp + epsilon)
         mriqc_results[fold_idx, 2] = accuracy_score(rf_test_labels, rf_predictions)
         mriqc_results[fold_idx, 3] = roc_auc_score(rf_test_labels, rf_predictions)
+
+        print('Random Forest accuracy:', accuracy_score(rf_test_labels, rf_predictions))
 
         # print('This fold has', str(len(train_loader.dataset)), 'training images and',
         #       str(len(validation_loader.dataset)), 'validation images and', str(len(test_loader.dataset)),
@@ -527,7 +529,7 @@ if __name__ == '__main__':
         # all_test_probs_calibrated[test_idx:test_idx + len(test_indices), :, :] = test_probabilities_calibrated
 
         model_filename = os.path.join(results_dir, 'calibrated_qc_fold_' + str(fold_num) + '.tch')
-        torch.save(model.state_dict(), model_filename)
+        torch.save(model, model_filename)
 
         test_idx += len(test_indices)
         val_idx += len(validation_indices)
@@ -538,9 +540,8 @@ if __name__ == '__main__':
 
     plot_confidence(np.asarray(all_test_probs, dtype='float32'), np.asarray(all_test_probs_cal, dtype='float32'), np.asarray(all_test_truth, dtype='uint8'), results_dir)
 
-    plot_roc(None, None, all_val_truth, all_val_probs, all_test_truth, all_test_probs, results_dir, -1, fold_num=-1)
-    plot_roc(None, None, all_val_truth, all_val_probs_cal, all_test_truth, all_test_probs_cal, results_dir, -2, fold_num=-1)
-
+    plot_roc(None, None, np.asarray(all_val_truth, dtype='float32'), np.asarray(all_val_probs, dtype='float32'), np.asarray(all_test_truth, dtype='float32'), np.asarray(all_test_probs, dtype='float32'), results_dir, -1, fold_num=-1)
+    plot_roc(None, None, np.asarray(all_val_truth, dtype='float32'), np.asarray(all_val_probs_cal, dtype='float32'), np.asarray(all_test_truth, dtype='float32'), np.asarray(all_test_probs_cal, dtype='float32'), results_dir, -2, fold_num=-1)
 
     sens_plot = [best_sensitivity[:, 0], best_sensitivity[:, 1], best_sensitivity[:, 2], mriqc_results[:, 0]]
     spec_plot = [best_specificity[:, 0], best_specificity[:, 1], best_specificity[:, 2], mriqc_results[:, 1]]

@@ -131,7 +131,7 @@ def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_s
 
 
 def sens_spec_across_folds(sens_to_plot, spec_to_plot, results_dir):
-    fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True, figsize=(10, 4))
+    fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True, figsize=(12, 4))
 
     bplot1 = ax1.boxplot(sens_to_plot, patch_artist=True)
     bplot2 = ax2.boxplot(spec_to_plot, patch_artist=True)
@@ -144,8 +144,8 @@ def sens_spec_across_folds(sens_to_plot, spec_to_plot, results_dir):
     ax1.set_ylim([0, 1])
     ax2.set_ylim([0, 1])
 
-    ax1.set_xticklabels(['Train', 'Validation', 'Test', 'mriqc'], fontsize=20)
-    ax2.set_xticklabels(['Train', 'Validation', 'Test', 'mriqc'], fontsize=20)
+    ax1.set_xticklabels(['Train', 'Validation', 'Test', 'mriqc'], fontsize=16)
+    ax2.set_xticklabels(['Train', 'Validation', 'Test', 'mriqc'], fontsize=16)
 
     ax1.set_title('Sensitivity', fontsize=24)
     ax2.set_title('Specificity', fontsize=24)
