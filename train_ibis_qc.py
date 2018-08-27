@@ -381,8 +381,8 @@ if __name__ == '__main__':
         # print(np.max(train_features), np.max(test_features), np.min(train_features), np.min(test_features))
         # print(np.argmax(train_labels, axis=0))
 
-        rf = RandomForestClassifier(n_estimators=1000)
-        rf.fit(train_features, train_labels, class_weight='balanced')
+        rf = RandomForestClassifier(n_estimators=1000, class_weight='balanced')
+        rf.fit(train_features, train_labels)
         rf_predictions = rf.predict(test_features)
 
         rf_test_labels = list(validation_labels) + list(test_labels)
