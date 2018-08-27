@@ -208,26 +208,29 @@ def load_mriqc_metrics(train_indices, val_indices, test_indices, f):
         tokens = str(filenames[train_idx]).split('_')
         subj_id = tokens[1]
         session = tokens[2]
-        run = tokens[4]
+        run = tokens[4].upper()
         print(subj_id, session, run)
 
         for line in lines:
-            print(line)
-            if subj_id in line[0] and session in line[1] and run in line[2]:
-                print(float(line[3:]))
-                train_features[train_idx, :] = float(line[3:])
-                break
+            if subj_id in line[0]:
+                if session in line[1]:
+                    if run in line[2]:
+                        print(float(line[3:]))
+                        train_features[train_idx, :] = float(line[3:])
+                        break
 
     for test_idx in list(val_indices) + list(test_indices):
         tokens = str(filenames[test_idx]).split('_')
         subj_id = tokens[1]
         session = tokens[2]
-        run = tokens[4]
+        run = tokens[4].upper()
 
         for line in lines:
-            if subj_id in line[0] and session in line[1] and run in line[2]:
-                test_features[test_idx, :] = float(line[3:])
-                break
+            if subj_id in line[0]:
+                if session in line[1]:
+                    if run in line[2]:
+                        test_features[test_idx, :] = float(line[3:])
+                        break
 
     train_features = normalize(train_features)
     test_features = normalize(test_features)
