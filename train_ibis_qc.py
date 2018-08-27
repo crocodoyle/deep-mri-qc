@@ -196,7 +196,7 @@ def set_temperature(model, f, validation_indices, n_slices):
 def load_mriqc_metrics(train_indices, val_indices, test_indices, f):
     filenames = f['filename']
 
-    train_features, test_features = np.zeros((len(train_indices), 65), dtype='float32'), np.zeros((len(val_indices) + len(test_indices), 65))
+    train_features, test_features = np.zeros((len(train_indices), 68), dtype='float32'), np.zeros((len(val_indices) + len(test_indices), 68))
     lines = None
 
     with open(workdir + mriqc_output_file, 'r') as csvfile:
