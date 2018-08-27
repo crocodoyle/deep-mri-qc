@@ -22,7 +22,7 @@ class ConvolutionalQCNet(nn.Module):
             # nn.Dropout(0.1),
             nn.ReLU(),
             nn.MaxPool2d(2),
-            nn.Conv2d(32, 32, kernel_size=5),
+            nn.Conv2d(16, 32, kernel_size=5),
             nn.InstanceNorm2d(32),
             # nn.BatchNorm2d(32),
             # nn.Dropout(0.2),
