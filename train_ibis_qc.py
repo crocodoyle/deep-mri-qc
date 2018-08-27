@@ -209,8 +209,10 @@ def load_mriqc_metrics(train_indices, val_indices, test_indices, f):
         subj_id = tokens[1]
         session = tokens[2]
         run = tokens[4]
+        print(subj_id, session, run)
 
         for line in lines:
+            print(line)
             if subj_id in line[0] and session in line[1] and run in line[2]:
                 print(float(line[3:]))
                 train_features[train_idx, :] = float(line[3:])
