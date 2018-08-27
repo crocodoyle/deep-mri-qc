@@ -136,7 +136,7 @@ def sens_spec_across_folds(sens_to_plot, spec_to_plot, results_dir):
     bplot1 = ax1.boxplot(sens_to_plot, patch_artist=True)
     bplot2 = ax2.boxplot(spec_to_plot, patch_artist=True)
 
-    colors = ['pink', 'lightblue', 'lightgreen']
+    colors = ['pink', 'lightblue', 'lightgreen', 'peachpuff']
     for bplot in (bplot1, bplot2):
         for patch, color in zip(bplot['boxes'], colors):
             patch.set_facecolor(color)

@@ -18,15 +18,16 @@ from temperature_scaling import ModelWithTemperature, ModelWithSoftmax, ECELoss
 
 from qc_pytorch_models import ConvolutionalQCNet
 
-import h5py, pickle, os, time, sys
+import h5py, pickle, os, time, sys, csv
 import numpy as np
 
 from ml_experiment import setup_experiment
 from visualizations import plot_roc, plot_sens_spec, make_roc_gif, GradCam, sens_spec_across_folds, plot_confidence
 
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, accuracy_score, roc_auc_score
 from sklearn.model_selection import StratifiedKFold, LeaveOneGroupOut
 from sklearn.utils import compute_class_weight
+from sklearn.ensemble import RandomForestClassifier
 
 import matplotlib as mpl
 mpl.use('Agg')
@@ -37,6 +38,9 @@ import matplotlib.cm as cm
 workdir = '/data1/users/adoyle/IBIS/'
 # workdir = '/home/users/adoyle/deepqc/'
 input_filename = 'IBIS_QC.hdf5'
+mriqc_output_file = '/mriqc_output/T1w.csv'
+
+epsilon = 1e-6
 
 image_shape = (160, 256, 224)
 
@@ -188,6 +192,41 @@ def set_temperature(model, f, validation_indices, n_slices):
 
     return model
 
+def load_mriqc_metrics(train_indices, val_indices, test_indices, f):
+    filenames = f['filename']
+
+    train_features, test_features = np.zeros((len(train_indices), 65), dtype='float32'), np.zeros((len(val_indices) + len(test_indices), 65))
+    lines = None
+
+    with open(workdir + mriqc_output_file, 'r') as csvfile:
+        csvreader = csv.reader(csvfile)
+
+        lines = list(csvreader)[1:]
+
+    for train_idx in train_indices:
+        tokens = filenames[train_idx].split('_')
+        subj_id = tokens[1]
+        session = tokens[2]
+        run = tokens[4]
+
+        for line in lines:
+            if subj_id in line[0] and session in line[1] and run in line[2]:
+                train_features[train_idx, :] = float(line[3:])
+                break
+
+    for test_idx in val_indices + test_indices:
+        tokens = filenames[train_idx].split('_')
+        subj_id = tokens[1]
+        session = tokens[2]
+        run = tokens[4]
+
+        for line in lines:
+            if subj_id in line[0] and session in line[1] and run in line[2]:
+                test_features[test_idx, :] = float(line[3:])
+                break
+
+    return train_features, test_features
+
 if __name__ == '__main__':
     print('PyTorch implementation of DeepMRIQC.')
     start_time = time.time()
@@ -248,11 +287,13 @@ if __name__ == '__main__':
     n_folds = args.folds
     n_slices = args.n_slices
 
-    results_shape = (args.folds, args.epochs)
+    results_shape = (n_folds, args.epochs)
 
     training_sensitivity, training_specificity, validation_sensitivity, validation_specificity, test_sensitivity, test_specificity, val_aucs = np.zeros(
         results_shape), np.zeros(results_shape), np.zeros(results_shape), np.zeros(results_shape), np.zeros(
         results_shape), np.zeros(results_shape), np.zeros(results_shape)
+
+    mriqc_results = np.zeros((n_folds, 4))
 
     best_auc_score, best_sensitivity, best_specificity = np.zeros(n_folds), np.zeros((n_folds, 3)), np.zeros((n_folds, 3))
     best_sens_spec_score = np.zeros((n_folds))
@@ -324,6 +365,20 @@ if __name__ == '__main__':
 
         train_sample_weights = torch.DoubleTensor(train_sample_weights)
 
+        #MRIQC COMPARISON
+        train_features, test_features = load_mriqc_metrics(train_indices, validation_indices, test_indices, f)
+
+        rf = RandomForestClassifier(n_estimators=1000)
+        rf.fit(train_features, np.argmax(train_labels, axis=-1))
+        rf_predictions = rf.predict(test_features)
+
+        train_tn, train_fp, train_fn, train_tp = confusion_matrix(np.argmax(train_labels, axis=-1), rf_predictions).ravel()
+
+        mriqc_results[fold_idx, 0] = train_tp / (train_tp + train_fn + epsilon)
+        mriqc_results[fold_idx, 1] = train_tn / (train_tn + train_fp + epsilon)
+        mriqc_results[fold_idx, 2] = accuracy_score(np.argmax(train_labels, axis=-1), rf_predictions)
+        mriqc_results[fold_idx, 3] = roc_auc_score(np.argmax(train_labels, axis=-1), rf_predictions)
+
         # print('This fold has', str(len(train_loader.dataset)), 'training images and',
         #       str(len(validation_loader.dataset)), 'validation images and', str(len(test_loader.dataset)),
         #       'test images.')
@@ -368,7 +423,7 @@ if __name__ == '__main__':
             print('Testing TP:', test_tp, 'TN:', test_tn, 'FP:', test_fp, 'FN:', test_fn)
 
             # print('Calculating sensitivity/specificity...')
-            epsilon = 1e-6
+
             training_sensitivity[fold_idx, epoch_idx] = train_tp / (train_tp + train_fn + epsilon)
             training_specificity[fold_idx, epoch_idx] = train_tn / (train_tn + train_fp + epsilon)
 
@@ -469,13 +524,12 @@ if __name__ == '__main__':
 
     plot_confidence(np.asarray(all_test_probs, dtype='float32'), np.asarray(all_test_probs_cal, dtype='float32'), np.asarray(all_test_truth, dtype='uint8'), results_dir)
 
-
     plot_roc(None, None, all_val_truth, all_val_probs, all_test_truth, all_test_probs, results_dir, -1, fold_num=-1)
     plot_roc(None, None, all_val_truth, all_val_probs_cal, all_test_truth, all_test_probs_cal, results_dir, -2, fold_num=-1)
 
 
-    sens_plot = [best_sensitivity[:, 0], best_sensitivity[:, 1], best_sensitivity[:, 2]]
-    spec_plot = [best_specificity[:, 0], best_specificity[:, 1], best_specificity[:, 2]]
+    sens_plot = [best_sensitivity[:, 0], best_sensitivity[:, 1], best_sensitivity[:, 2], mriqc_results[:, 0]]
+    spec_plot = [best_specificity[:, 0], best_specificity[:, 1], best_specificity[:, 2], mriqc_results[:, 1]]
 
     print('Sensitivity')
     print('Average:', np.mean(best_sensitivity[:, 0]), np.mean(best_sensitivity[:, 1]), np.mean(best_sensitivity[:, 2]))
@@ -486,8 +540,8 @@ if __name__ == '__main__':
     print('Best:', np.max(best_specificity[:, 0]), np.max(best_specificity[:, 1]), np.max(best_specificity[:, 2]))
     print('(train, val, test)')
 
-    pickle.dump(sens_plot, open(results_dir + 'best_sens.pkl', 'wb'))
-    pickle.dump(spec_plot, open(results_dir + 'best_spec.pkl', 'wb'))
+    # pickle.dump(sens_plot, open(results_dir + 'best_sens.pkl', 'wb'))
+    # pickle.dump(spec_plot, open(results_dir + 'best_spec.pkl', 'wb'))
 
     sens_spec_across_folds(sens_plot, spec_plot, results_dir)
 
