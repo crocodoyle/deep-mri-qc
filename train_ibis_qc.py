@@ -28,6 +28,7 @@ from sklearn.metrics import confusion_matrix, accuracy_score, roc_auc_score
 from sklearn.model_selection import StratifiedKFold, LeaveOneGroupOut
 from sklearn.utils import compute_class_weight
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import normalize
 
 import matplotlib as mpl
 mpl.use('Agg')
@@ -225,6 +226,9 @@ def load_mriqc_metrics(train_indices, val_indices, test_indices, f):
                 test_features[test_idx, :] = float(line[3:])
                 break
 
+    train_features = normalize(train_features)
+    test_features = normalize(test_features)
+
     return train_features, test_features
 
 if __name__ == '__main__':
@@ -367,6 +371,9 @@ if __name__ == '__main__':
 
         #MRIQC COMPARISON
         train_features, test_features = load_mriqc_metrics(train_indices, validation_indices, test_indices, f)
+        print(train_features.shape, test_features.shape)
+        print(np.max(train_features), np.max_test_features, np.min(train_features), np.min(test_features))
+        print(np.argmax(train_labels, axis=-1))
 
         rf = RandomForestClassifier(n_estimators=1000)
         rf.fit(train_features, np.argmax(train_labels, axis=-1))
