@@ -215,7 +215,7 @@ def load_mriqc_metrics(train_indices, val_indices, test_indices, f):
                 break
 
     for test_idx in list(val_indices) + list(test_indices):
-        tokens = filenames[test_idx].split('_')
+        tokens = str(filenames[test_idx]).split('_')
         subj_id = tokens[1]
         session = tokens[2]
         run = tokens[4]
