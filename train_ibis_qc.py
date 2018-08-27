@@ -385,10 +385,10 @@ if __name__ == '__main__':
         rf.fit(train_features, train_labels)
         rf_predictions = rf.predict(test_features)
 
-        train_tn, train_fp, train_fn, train_tp = confusion_matrix(train_labels, rf_predictions).ravel()
+        test_tn, test_fp, test_fn, test_tp = confusion_matrix(test_labels, rf_predictions).ravel()
 
-        mriqc_results[fold_idx, 0] = train_tp / (train_tp + train_fn + epsilon)
-        mriqc_results[fold_idx, 1] = train_tn / (train_tn + train_fp + epsilon)
+        mriqc_results[fold_idx, 0] = test_tp / (test_tp + test_fn + epsilon)
+        mriqc_results[fold_idx, 1] = test_tn / (test_tn + test_fp + epsilon)
         mriqc_results[fold_idx, 2] = accuracy_score(train_labels, rf_predictions)
         mriqc_results[fold_idx, 3] = roc_auc_score(train_labels, rf_predictions)
 
