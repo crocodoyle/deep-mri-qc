@@ -208,7 +208,7 @@ def load_mriqc_metrics(train_indices, val_indices, test_indices, f):
         tokens = str(filenames[train_idx]).split('_')
         subj_id = tokens[1]
         session = tokens[2].upper()
-        run = tokens[4].upper()[:-4]
+        run = tokens[4].upper()[:-5]
         print(subj_id, session, run)
 
         for line in lines:
@@ -223,7 +223,7 @@ def load_mriqc_metrics(train_indices, val_indices, test_indices, f):
         tokens = str(filenames[test_idx]).split('_')
         subj_id = tokens[1]
         session = tokens[2].upper()
-        run = tokens[4].upper()[:-4]
+        run = tokens[4].upper()[:-5]
 
         for line in lines:
             if subj_id in line[0]:
