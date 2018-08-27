@@ -372,7 +372,7 @@ if __name__ == '__main__':
         #MRIQC COMPARISON
         train_features, test_features = load_mriqc_metrics(train_indices, validation_indices, test_indices, f)
         print(train_features.shape, test_features.shape)
-        print(np.max(train_features), np.max_test_features, np.min(train_features), np.min(test_features))
+        print(np.max(train_features), np.max(test_features), np.min(train_features), np.min(test_features))
         print(np.argmax(train_labels, axis=-1))
 
         rf = RandomForestClassifier(n_estimators=1000)
