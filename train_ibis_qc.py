@@ -204,8 +204,6 @@ def load_mriqc_metrics(train_indices, val_indices, test_indices, f):
         lines = list(csvreader)[1:]
 
     for train_idx in train_indices:
-        print(str(filenames[train_idx]))
-
         tokens = str(filenames[train_idx]).split('_')
         subj_id = tokens[1]
         session = tokens[2]
@@ -216,7 +214,7 @@ def load_mriqc_metrics(train_indices, val_indices, test_indices, f):
                 train_features[train_idx, :] = float(line[3:])
                 break
 
-    for test_idx in val_indices + test_indices:
+    for test_idx in list(val_indices) + list(test_indices):
         tokens = filenames[test_idx].split('_')
         subj_id = tokens[1]
         session = tokens[2]
