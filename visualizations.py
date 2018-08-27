@@ -144,8 +144,8 @@ def sens_spec_across_folds(sens_to_plot, spec_to_plot, results_dir):
     ax1.set_ylim([0, 1])
     ax2.set_ylim([0, 1])
 
-    ax1.set_xticklabels(['Train', 'Validation', 'Test'], fontsize=20)
-    ax2.set_xticklabels(['Train', 'Validation', 'Test'], fontsize=20)
+    ax1.set_xticklabels(['Train', 'Validation', 'Test', 'mriqc'], fontsize=20)
+    ax2.set_xticklabels(['Train', 'Validation', 'Test', 'mriqc'], fontsize=20)
 
     ax1.set_title('Sensitivity', fontsize=24)
     ax2.set_title('Specificity', fontsize=24)

@@ -382,7 +382,7 @@ if __name__ == '__main__':
         print(np.argmax(train_labels, axis=0))
 
         rf = RandomForestClassifier(n_estimators=1000)
-        rf.fit(train_features, np.argmax(train_labels, axis=-1))
+        rf.fit(train_features, np.argmax(train_labels, axis=0))
         rf_predictions = rf.predict(test_features)
 
         train_tn, train_fp, train_fn, train_tp = confusion_matrix(np.argmax(train_labels, axis=0), rf_predictions).ravel()
