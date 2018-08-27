@@ -382,15 +382,15 @@ if __name__ == '__main__':
         print(np.argmax(train_labels, axis=0))
 
         rf = RandomForestClassifier(n_estimators=1000)
-        rf.fit(train_features, np.argmax(train_labels, axis=0))
+        rf.fit(train_features, train_labels)
         rf_predictions = rf.predict(test_features)
 
-        train_tn, train_fp, train_fn, train_tp = confusion_matrix(np.argmax(train_labels, axis=0), rf_predictions).ravel()
+        train_tn, train_fp, train_fn, train_tp = confusion_matrix(train_labels, rf_predictions).ravel()
 
         mriqc_results[fold_idx, 0] = train_tp / (train_tp + train_fn + epsilon)
         mriqc_results[fold_idx, 1] = train_tn / (train_tn + train_fp + epsilon)
-        mriqc_results[fold_idx, 2] = accuracy_score(np.argmax(train_labels, axis=0), rf_predictions)
-        mriqc_results[fold_idx, 3] = roc_auc_score(np.argmax(train_labels, axis=0), rf_predictions)
+        mriqc_results[fold_idx, 2] = accuracy_score(train_labels, rf_predictions)
+        mriqc_results[fold_idx, 3] = roc_auc_score(train_labels, rf_predictions)
 
         # print('This fold has', str(len(train_loader.dataset)), 'training images and',
         #       str(len(validation_loader.dataset)), 'validation images and', str(len(test_loader.dataset)),
