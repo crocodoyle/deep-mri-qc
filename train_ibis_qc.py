@@ -212,6 +212,7 @@ def load_mriqc_metrics(train_indices, val_indices, test_indices, f):
 
         for line in lines:
             if subj_id in line[0] and session in line[1] and run in line[2]:
+                print(float(line[3:]))
                 train_features[train_idx, :] = float(line[3:])
                 break
 
@@ -373,18 +374,18 @@ if __name__ == '__main__':
         train_features, test_features = load_mriqc_metrics(train_indices, validation_indices, test_indices, f)
         print(train_features.shape, test_features.shape)
         print(np.max(train_features), np.max(test_features), np.min(train_features), np.min(test_features))
-        print(np.argmax(train_labels, axis=-1))
+        print(np.argmax(train_labels, axis=0))
 
         rf = RandomForestClassifier(n_estimators=1000)
         rf.fit(train_features, np.argmax(train_labels, axis=-1))
         rf_predictions = rf.predict(test_features)
 
-        train_tn, train_fp, train_fn, train_tp = confusion_matrix(np.argmax(train_labels, axis=-1), rf_predictions).ravel()
+        train_tn, train_fp, train_fn, train_tp = confusion_matrix(np.argmax(train_labels, axis=0), rf_predictions).ravel()
 
         mriqc_results[fold_idx, 0] = train_tp / (train_tp + train_fn + epsilon)
         mriqc_results[fold_idx, 1] = train_tn / (train_tn + train_fp + epsilon)
-        mriqc_results[fold_idx, 2] = accuracy_score(np.argmax(train_labels, axis=-1), rf_predictions)
-        mriqc_results[fold_idx, 3] = roc_auc_score(np.argmax(train_labels, axis=-1), rf_predictions)
+        mriqc_results[fold_idx, 2] = accuracy_score(np.argmax(train_labels, axis=0), rf_predictions)
+        mriqc_results[fold_idx, 3] = roc_auc_score(np.argmax(train_labels, axis=0), rf_predictions)
 
         # print('This fold has', str(len(train_loader.dataset)), 'training images and',
         #       str(len(validation_loader.dataset)), 'validation images and', str(len(test_loader.dataset)),
