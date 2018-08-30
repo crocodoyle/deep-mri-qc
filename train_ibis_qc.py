@@ -399,14 +399,14 @@ if __name__ == '__main__':
         #       str(len(validation_loader.dataset)), 'validation images and', str(len(test_loader.dataset)),
         #       'test images.')
 
-
         optimizer = optim.Adam(model.parameters(), lr=0.0001, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-04)
-        # optimizer = optim.SGD(model.parameters(), lr=0.0001, momentum=0.9, nesterov=True)
-
-        lr_scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.1, threshold=1e-5, patience=10, verbose=True)
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             epoch_start = time.time()
+
+            if args.epochs - epoch_idx == 20:
+                optimizer = optim.SGD(model.parameters(), lr=0.0001)
+
             f = h5py.File(workdir + input_filename, 'r')
             train_dataset = QCDataset(f, train_indices, n_slices=n_slices)
 
