@@ -405,7 +405,7 @@ if __name__ == '__main__':
             epoch_start = time.time()
 
             if args.epochs - epoch_idx == 20:
-                optimizer = optim.SGD(model.parameters(), lr=0.00001)
+                optimizer = optim.SGD(model.parameters(), lr=0.0001)
 
             f = h5py.File(workdir + input_filename, 'r')
             train_dataset = QCDataset(f, train_indices, n_slices=n_slices)
@@ -461,12 +461,12 @@ if __name__ == '__main__':
 
             auc_score = val_auc
 
-            sens_score = validation_sensitivity[fold_idx, epoch_idx]
-            spec_score = validation_specificity[fold_idx, epoch_idx]
+            sens_score = 0.6*validation_sensitivity[fold_idx, epoch_idx] + 0.4*training_sensitivity[fold_idx, epoch_idx]
+            spec_score = 0.6*validation_specificity[fold_idx, epoch_idx] + 0.4*training_specificity[fold_idx, epoch_idx]
 
             sens_spec_score = (sens_score + spec_score) / 2
 
-            if sens_spec_score > best_sens_spec_score[fold_idx]:
+            if auc_score > best_auc_score[fold_idx]:
                 print('This epoch is the new best model on the train/validation set!')
                 best_auc_score[fold_idx] = auc_score
                 best_sens_spec_score[fold_idx] = sens_spec_score
