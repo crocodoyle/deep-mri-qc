@@ -10,13 +10,13 @@ class ConvolutionalQCNet(nn.Module):
         super(ConvolutionalQCNet, self).__init__()
 
         self.features = nn.Sequential(
-            nn.Conv2d(1, 16, kernel_size=5),
+            nn.Conv2d(1, 32, kernel_size=5),
             # nn.BatchNorm2d(16),
-            nn.InstanceNorm2d(16),
+            nn.InstanceNorm2d(32),
             # nn.Dropout(0.5),
             nn.ReLU(),
             nn.MaxPool2d(2),
-            nn.Conv2d(16, 32, kernel_size=5),
+            nn.Conv2d(32, 32, kernel_size=5),
             # nn.BatchNorm2d(32),
             nn.InstanceNorm2d(32),
             # nn.Dropout(0.5),
@@ -31,7 +31,7 @@ class ConvolutionalQCNet(nn.Module):
             nn.Conv2d(32, 64, kernel_size=5),
             nn.InstanceNorm2d(64),
             # nn.BatchNorm2d(64),
-            # nn.Dropout(0.5),
+            nn.Dropout(0.5),
             nn.ReLU(),
             nn.MaxPool2d(2),
             nn.Conv2d(64, 128, kernel_size=5),
