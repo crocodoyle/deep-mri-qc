@@ -42,6 +42,7 @@ def plot_roc(train_truth, train_probs, val_truth, val_probs, test_truth, test_pr
         print('Couldnt plot training')
 
     try:
+        print('validation results shapes:', val_truth.shape, val_probs.shape)
         val_roc_auc = roc_auc_score(val_truth, val_probs[:, 1], 'weighted')
         val_fpr, val_tpr, _ = roc_curve(val_truth, val_probs[:, 1])
         plt.plot(val_fpr, val_tpr, color='red', lw=lw, label='Val ROC (area = %0.2f)' % val_roc_auc)
