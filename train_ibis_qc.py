@@ -89,6 +89,7 @@ def train(epoch, class_weight=None):
             data, target = data.cuda(), target.cuda()
             if not class_weight is None:
                 w.cuda()
+                w = Variable.type(torch.cuda.FloatTensor)
         data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
         optimizer.zero_grad()
         output = model(data)
