@@ -308,14 +308,6 @@ if __name__ == '__main__':
     best_auc_score, best_sensitivity, best_specificity = np.zeros(n_folds), np.zeros((n_folds, 3)), np.zeros((n_folds, 3))
     best_sens_spec_score = np.zeros((n_folds))
 
-    # all_test_probs = np.empty((n_total, n_slices*2, 2), dtype='float32')
-    # all_val_probs = np.empty((n_total, n_slices*2, 2), dtype='float32')
-    #
-    # all_test_truth = np.empty((n_total), dtype='uint8')
-    # all_val_truth = np.empty((n_total), dtype='uint8')
-    # all_test_probs_calibrated = np.empty((n_total, n_slices*2, 2), dtype='float32')
-    # all_val_probs_calibrated = np.empty((n_total, n_slices*2, 2), dtype='float32')
-
     all_test_truth, all_val_truth, all_test_probs, all_val_probs, all_test_probs_cal, all_val_probs_cal = [], [], [], [], [], []
 
     if args.cuda:
@@ -414,7 +406,9 @@ if __name__ == '__main__':
             train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=False,
                                                        **kwargs)
 
-            train_truth, train_probabilities = train(epoch, class_weight=None)
+            class_weights = [0.6, 0.4]
+
+            train_truth, train_probabilities = train(epoch, class_weight=class_weights)
             train_predictions = np.argmax(train_probabilities, axis=-1)
 
             val_truth, val_probabilities = test(f, validation_indices, n_slices)
