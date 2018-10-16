@@ -4,6 +4,7 @@ from scipy.spatial.distance import euclidean
 import os, sys, time, csv, subprocess, pickle, h5py
 
 from sklearn.neighbors import KDTree
+from skimage.exposure import adjust_sigmoid
 
 import nibabel as nib
 from nibabel.processing import resample_from_to
@@ -12,7 +13,6 @@ from skimage.exposure import equalize_hist
 from multiprocessing import Pool, Process
 
 from nipype.interfaces.ants import Registration
-
 
 data_dir = '/data1/users/adoyle/'
 output_dir = '/data1/users/adoyle/deepqc/'
@@ -268,9 +268,9 @@ def make_ibis_subject(line, subject_index, input_path, f, mask):
             # print('resizing from', t1_data.shape)
             t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
-        t1_data = equalize_hist(t1_data, mask=mask)
+        # t1_data = equalize_hist(t1_data, mask=mask)
 
-        f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
+        f['MRI'][subject_index, ...] = adjust_sigmoid(normalise_zero_one(t1_data))
         f['dataset'][subject_index] = 'IBIS'
         f['filename'][subject_index] = t1_filename
 
@@ -334,7 +334,7 @@ def make_abide_subject(line, subject_index, input_path, f, mask):
         #         print('Excluding ' + line[0] + ' because QC inconsistent')
         #         return -1
 
-        f['qc_label'][subject_index, :] = one_hot
+        f['qc_label'][subject_index, :] = np.argmax(one_hot)
         # print(t1_filename, one_hot)
         t1_data = nib.load(input_path + '/resampled/' + t1_filename).get_data()
 
@@ -343,7 +343,7 @@ def make_abide_subject(line, subject_index, input_path, f, mask):
 
         # t1_data = equalize_hist(t1_data, mask=mask)
 
-        f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
+        f['MRI'][subject_index, ...] = adjust_sigmoid(normalise_zero_one(t1_data))
         f['dataset'][subject_index] = line[1]
         f['filename'][subject_index] = t1_filename
 
@@ -395,7 +395,7 @@ def make_ds030_subject(line, subject_index, input_path, f, mask):
 
             # t1_data = equalize_hist(t1_data, mask=mask)
 
-            f['MRI'][subject_index, ...] = normalise_zero_one(t1_data)
+            f['MRI'][subject_index, ...] = adjust_sigmoid(normalise_zero_one(t1_data))
 
             one_hot = [0, 0]
 
@@ -408,7 +408,7 @@ def make_ds030_subject(line, subject_index, input_path, f, mask):
             else:
                 raise Exception
 
-            f['qc_label'][subject_index, :] = one_hot
+            f['qc_label'][subject_index, :] = np.argmax(one_hot)
             f['dataset'][subject_index] = 'ds030'
             f['filename'][subject_index] = t1_filename
 
@@ -698,8 +698,8 @@ if __name__ == "__main__":
     dt = h5py.special_dtype(vlen=bytes)
 
     with h5py.File(abide_output, 'w') as f:
-        f.create_dataset('MRI', (n_abide, target_size[0], target_size[1], target_size[2]), dtype='float32')
-        f.create_dataset('qc_label', (n_abide, 2), dtype='uint8')
+        f.create_dataset('MRI', (n_abide, 1, target_size[0], target_size[1], target_size[2]), dtype='float32')
+        f.create_dataset('qc_label', (n_abide,), dtype='float32')
 
         f.create_dataset('filename', (n_abide,), dtype=dt)
         f.create_dataset('dataset', (n_abide,), dtype=dt)
@@ -710,8 +710,8 @@ if __name__ == "__main__":
         pickle.dump(abide_indices, open(output_dir + 'abide_indices.pkl', 'wb'))
 
     with h5py.File(ds030_output, 'w') as f:
-        f.create_dataset('MRI', (n_ds030, target_size[0], target_size[1], target_size[2]), dtype='float32')
-        f.create_dataset('qc_label', (n_ds030, 2), dtype='uint8')
+        f.create_dataset('MRI', (n_ds030, 1, target_size[0], target_size[1], target_size[2]), dtype='float32')
+        f.create_dataset('qc_label', (n_ds030,), dtype='flaot32')
 
         f.create_dataset('filename', (n_ds030,), dtype=dt)
         f.create_dataset('dataset', (n_ds030,), dtype=dt)

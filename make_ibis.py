@@ -1,7 +1,6 @@
 import numpy as np
-import h5py
 
-import os, csv, time
+import os, csv, time, h5py, subprocess
 import nibabel as nib
 
 from collections import defaultdict
@@ -13,8 +12,6 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-
-import subprocess
 
 from make_datasets import normalise_zero_one, resize_image_with_crop_or_pad
 
