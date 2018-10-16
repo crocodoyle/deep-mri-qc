@@ -343,7 +343,7 @@ def make_abide_subject(line, subject_index, input_path, f, mask):
 
         # t1_data = equalize_hist(t1_data, mask=mask)
 
-        f['MRI'][subject_index, ...] = adjust_sigmoid(normalise_zero_one(t1_data))
+        f['MRI'][subject_index, 0, ...] = adjust_sigmoid(normalise_zero_one(t1_data))
         f['dataset'][subject_index] = line[1]
         f['filename'][subject_index] = t1_filename
 
@@ -395,7 +395,7 @@ def make_ds030_subject(line, subject_index, input_path, f, mask):
 
             # t1_data = equalize_hist(t1_data, mask=mask)
 
-            f['MRI'][subject_index, ...] = adjust_sigmoid(normalise_zero_one(t1_data))
+            f['MRI'][subject_index, 0, ...] = adjust_sigmoid(normalise_zero_one(t1_data))
 
             one_hot = [0, 0]
 
