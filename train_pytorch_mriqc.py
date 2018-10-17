@@ -279,7 +279,6 @@ if __name__ == '__main__':
     for fold_idx, (train_val_indices, test_indices) in enumerate(skf.split(abide_indices, labels)):
         fold_num = fold_idx + 1
 
-        current_wrong_fails = []
         model = ConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
         if args.cuda:
             model.cuda()
@@ -402,11 +401,6 @@ if __name__ == '__main__':
                 best_specificity[fold_idx, 2] = test_specificity[fold_idx, epoch_idx]
 
                 torch.save(model.state_dict(), results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch')
-
-                current_wrong_fails = []
-                for prediction, truth, idx in zip(test_predictions, test_truth, test_indices):
-                    if truth == 0 and prediction == 1:
-                        current_wrong_fails.append((f['filename'][idx, ...], fold_num))
 
             epoch_elapsed = time.time() - epoch_start
             print('Epoch ' + str(epoch) + ' of fold ' + str(fold_num) + ' took ' + str(epoch_elapsed / 60) + ' minutes')
