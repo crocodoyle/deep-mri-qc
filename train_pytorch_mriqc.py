@@ -336,11 +336,11 @@ if __name__ == '__main__':
             train_truth, train_probabilities = train(epoch, class_weight=class_weights)
             train_predictions = np.argmax(train_probabilities, axis=-1)
 
-            val_truth, val_probabilities = test(f, validation_indices, n_slices)
+            val_truth, val_probabilities = test(abide_f, validation_indices, n_slices)
             val_average_probs = np.mean(val_probabilities, axis=1)
             val_predictions = np.argmax(val_average_probs, axis=-1)
 
-            test_truth, test_probabilities = test(f, test_indices, n_slices)
+            test_truth, test_probabilities = test(abide_f, test_indices, n_slices)
             test_average_probs = np.mean(test_probabilities, axis=1)
             test_predictions = np.argmax(test_average_probs, axis=-1)
 
