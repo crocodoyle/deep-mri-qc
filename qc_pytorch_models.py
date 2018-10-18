@@ -113,11 +113,11 @@ class BigConvolutionalQCNet(nn.Module):
             nn.Conv2d(64, 128, kernel_size=5),
             nn.InstanceNorm2d(128),
             nn.Dropout(0.5),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(128, 256, kernel_size=5),
-            nn.ReLU(),
-            nn.Dropout(0.5),
+            # nn.ReLU(),
+            # nn.MaxPool2d(2),
+            # nn.Conv2d(128, 256, kernel_size=5),
+            # nn.ReLU(),
+            # nn.Dropout(0.5),
         )
 
         self.flat_features = self.get_flat_features(input_shape, self.features)
