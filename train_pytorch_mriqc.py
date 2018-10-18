@@ -16,7 +16,7 @@ from torch.autograd import Variable
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from temperature_scaling import ModelWithTemperature, ModelWithSoftmax, ECELoss
 
-from qc_pytorch_models import ConvolutionalQCNet
+from qc_pytorch_models import ConvolutionalQCNet, BigConvolutionalQCNet
 
 import h5py, pickle, os, time, sys, csv
 import numpy as np
@@ -217,8 +217,8 @@ if __name__ == '__main__':
                         help='random seed (default: 1)')
     parser.add_argument('--log-interval', type=int, default=5, metavar='N',
                         help='how many batches to wait before logging training status (default: 5)')
-    parser.add_argument('--n-slices', type=int, default=40, metavar='N',
-                        help='specifies how many slices to include about the centre for testing (default: 40)')
+    parser.add_argument('--n-slices', type=int, default=50, metavar='N',
+                        help='specifies how many slices to include about the centre for testing (default: 50)')
 
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -251,7 +251,7 @@ if __name__ == '__main__':
         results_shape), np.zeros(results_shape), np.zeros(results_shape), np.zeros(results_shape), np.zeros(
         results_shape), np.zeros(results_shape), np.zeros(results_shape)
 
-    mriqc_results = np.zeros((n_folds, 4))
+    ds030_results = np.zeros((n_folds, 4))
 
     best_auc_score, best_sensitivity, best_specificity = np.zeros(n_folds), np.zeros((n_folds, 3)), np.zeros((n_folds, 3))
     best_sens_spec_score = np.zeros((n_folds))
@@ -279,7 +279,7 @@ if __name__ == '__main__':
     for fold_idx, (train_val_indices, test_indices) in enumerate(skf.split(abide_indices, labels)):
         fold_num = fold_idx + 1
 
-        model = ConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
+        model = BigConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
         if args.cuda:
             model.cuda()
 
@@ -330,7 +330,7 @@ if __name__ == '__main__':
             train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=False,
                                                        **kwargs)
 
-            class_weights = [0.6, 0.4]
+            class_weights = [0.5, 0.5]
 
             train_truth, train_probabilities = train(epoch, class_weight=class_weights)
             train_predictions = np.argmax(train_probabilities, axis=-1)
@@ -412,6 +412,17 @@ if __name__ == '__main__':
 
         val_truth, val_probabilities = test(abide_f, validation_indices, n_slices)
         test_truth, test_probabilities = test(abide_f, test_indices, n_slices)
+        ds030_truth, ds030_probabilities = test(ds030_f, test_indices, n_slices)
+
+        ds030_predictions = np.argmax(np.mean(ds030_probabilities, axis=1), axis=-1)
+        print('ds030 predictions shape:', ds030_predictions.shape)
+
+        ds030_tn, ds030_fp, ds030_fn, ds030_tp = confusion_matrix(ds030_truth, ds030_predictions).ravel()
+
+        ds030_results[fold_idx, 0] = ds030_tp / (ds030_tp + ds030_fn + epsilon)
+        ds030_results[fold_idx, 1] = ds030_tn / (ds030_tn + ds030_fp + epsilon)
+        ds030_results[fold_idx, 2] = accuracy_score(ds030_truth, ds030_predictions)
+        ds030_results[fold_idx, 3] = roc_auc_score(ds030_truth, ds030_predictions)
 
         #calibrate model probability on validation set
         model_with_temperature = ModelWithTemperature(model)
@@ -456,8 +467,8 @@ if __name__ == '__main__':
     plot_roc(None, None, np.asarray(all_val_truth, dtype='float32'), np.mean(np.asarray(all_val_probs, dtype='float32'), axis=1), np.asarray(all_test_truth, dtype='float32'), np.mean(np.asarray(all_test_probs, dtype='float32'), axis=1), results_dir, -1, fold_num=-1)
     plot_roc(None, None, np.asarray(all_val_truth, dtype='float32'), np.mean(np.asarray(all_val_probs_cal, dtype='float32'), axis=1), np.asarray(all_test_truth, dtype='float32'), np.mean(np.asarray(all_test_probs_cal, dtype='float32'), axis=1), results_dir, -2, fold_num=-1)
 
-    sens_plot = [best_sensitivity[:, 0], best_sensitivity[:, 1], best_sensitivity[:, 2], mriqc_results[:, 0]]
-    spec_plot = [best_specificity[:, 0], best_specificity[:, 1], best_specificity[:, 2], mriqc_results[:, 1]]
+    sens_plot = [best_sensitivity[:, 0], best_sensitivity[:, 1], best_sensitivity[:, 2], ds030_results[:, 0]]
+    spec_plot = [best_specificity[:, 0], best_specificity[:, 1], best_specificity[:, 2], ds030_results[:, 1]]
 
     print('Sensitivity')
     print('Average:', np.mean(best_sensitivity[:, 0]), np.mean(best_sensitivity[:, 1]), np.mean(best_sensitivity[:, 2]))
@@ -484,7 +495,7 @@ if __name__ == '__main__':
     model.load_state_dict(torch.load(results_dir + 'qc_torch_fold_1.tch'))
     model.eval()
 
-    torch.onnx.export(model, dummy_input, results_dir + "deepqc.onnx", verbose=True)
+    torch.onnx.export(model, dummy_input, results_dir + "deepqc.onnx", verbose=False)
 
     for fold in range(skf.get_n_splits()):
         make_roc_gif(results_dir, args.epochs, fold + 1)
