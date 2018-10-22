@@ -347,9 +347,9 @@ def make_abide_subject(line, subject_index, input_path, f, mask):
         f['dataset'][subject_index] = line[1]
         f['filename'][subject_index] = t1_filename
 
-        # plt.imshow(t1_data[96, ...])
-        # plt.axis('off')
-        # plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
+        plt.imshow(t1_data[96, ...], origin='lower')
+        plt.axis('off')
+        plt.savefig(output_dir + '/examples/' + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
 
         return subject_index
     except Exception as e:
@@ -412,9 +412,9 @@ def make_ds030_subject(line, subject_index, input_path, f, mask):
             f['dataset'][subject_index] = 'ds030'
             f['filename'][subject_index] = t1_filename
 
-            # plt.imshow(t1_data[96, ...])
-            # plt.axis('off')
-            # plt.savefig(output_dir + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
+            plt.imshow(t1_data[96, ...], origin='lower')
+            plt.axis('off')
+            plt.savefig(output_dir + '/examples/' + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
 
     except Exception as e:
         print('Error:', e)

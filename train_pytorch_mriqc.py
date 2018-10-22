@@ -484,7 +484,7 @@ if __name__ == '__main__':
     # pickle.dump(sens_plot, open(results_dir + 'best_sens.pkl', 'wb'))
     # pickle.dump(spec_plot, open(results_dir + 'best_spec.pkl', 'wb'))
 
-    sens_spec_across_folds(sens_plot, spec_plot, results_dir)
+    sens_spec_across_folds(sens_plot, spec_plot, ['Training', 'Validation', 'Testing', 'ds030'], results_dir)
 
     # grad_cam = GradCam(model=model, target_layer_names=['output'], use_cuda=args.cuda)
 

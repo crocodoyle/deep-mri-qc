@@ -554,7 +554,7 @@ if __name__ == '__main__':
     # pickle.dump(sens_plot, open(results_dir + 'best_sens.pkl', 'wb'))
     # pickle.dump(spec_plot, open(results_dir + 'best_spec.pkl', 'wb'))
 
-    sens_spec_across_folds(sens_plot, spec_plot, results_dir)
+    sens_spec_across_folds(sens_plot, spec_plot, ['Training', 'Validation', 'Testing', 'mriqc'], results_dir)
 
     # grad_cam = GradCam(model=model, target_layer_names=['output'], use_cuda=args.cuda)
 
@@ -567,7 +567,7 @@ if __name__ == '__main__':
     model.load_state_dict(torch.load(results_dir + 'qc_torch_fold_1.tch'))
     model.eval()
 
-    torch.onnx.export(model, dummy_input, results_dir + "ibis_qc_net_v1.onnx", verbose=True)
+    torch.onnx.export(model, dummy_input, results_dir + "ibis_qc_net_v1.onnx", verbose=False)
 
     for fold in range(skf.get_n_splits()):
         make_roc_gif(results_dir, args.epochs, fold + 1)
