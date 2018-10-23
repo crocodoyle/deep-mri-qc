@@ -2,6 +2,7 @@ import numpy as np
 from scipy.spatial.distance import euclidean
 
 import os, sys, time, csv, subprocess, pickle, h5py
+import SimpleITK as sitk
 
 from sklearn.neighbors import KDTree
 from skimage.exposure import adjust_sigmoid
@@ -612,7 +613,7 @@ def register_ants(moving_image, atlas, output_image):
 
     reg.run()
 
-def check_datasets():
+def check_datasets(f, f2):
 
     histograms = {}
 
@@ -621,6 +622,7 @@ def check_datasets():
 
     bins = np.linspace(0.0, 1.0, 257)
 
+    # ABIDE
     images = f['MRI']
     datasets = f['dataset']
     filenames = f['filename']
@@ -637,12 +639,31 @@ def check_datasets():
         except:
             print('Error for', filename, 'in dataset', dataset)
 
+    # ds030
+    images = f2['MRI']
+    datasets = f2['dataset']
+    filenames = f2['filename']
+
+    for i, (img, dataset, filename) in enumerate(zip(images, datasets, filenames)):
+        dataset = dataset.decode('UTF-8')
+        filename = filename.decode('UTF-8')
+        img = np.asarray(img, dtype='float32')
+
+        try:
+            histo = np.histogram(img, bins=bins)
+            histograms[dataset] += histo[0]
+            print(filename, dataset, np.mean(histo[0]), np.var(histo[0]))
+        except:
+            print('Error for', filename, 'in dataset', dataset)
+
     fig, axes = plt.subplots(len(mri_sites), 1, sharex=True, figsize=(4, 24))
+    fig2, axes2 = plt.subplots(1, 1, figsize=(12, 6))
 
     for i, site in enumerate(mri_sites):
         try:
             histograms[site] = np.divide(histograms[site], np.sum(histograms[site]))
             axes[i].plot(bins[:-1], histograms[site], lw=2, label=site)
+            axes2.plot(bins[:-2], histograms[site], lw=2, label=site)
 
             # axes[i].set_xlim([0, 1])
 
@@ -653,31 +674,18 @@ def check_datasets():
             print('Problem normalizing histogram for', site)
 
     plt.tight_layout()
-    plt.savefig(output_dir + 'dataset_histograms.png', bbox_inches='tight')
+
+    axes2.legend(loc='center left', bbox_to_anchor=(1, 0.5), fancybox=True, shadow=True, ncols=2, textsize=10)
+    axes2.set_ylabel('Voxel Intensity Distribution', fontsize=16)
+    axes2.set_xlabel('Voxel Intensity Value', fontsize=16)
+    axes2.set_xscale('log')
+    axes2.set_yscale('log')
+
+    fig.savefig(output_dir + 'dataset_histograms.png', dpi=500)
+    fig2.savefig(output_dir + 'dataset_histograms_combined.png', dpi=500)
 
 if __name__ == "__main__":
     os.environ["LD_LIBRARY_PATH"] = "/home/users/adoyle/quarantines/Linux-x86_64/lib"
-
-    # path = '/data1/data/ABIDE/'
-
-    # for filename in os.listdir(path + '/surfaces/'):
-    #     if "right" in filename:
-    #         # patient_id = filename.split('+')[1]
-    #
-    #         filename1 = filename
-    #         filename2 = filename.replace("right", "left")
-    #         filename3 = filename.replace("right", "combined")
-    #
-    #         combine_objs(os.path.join(path, 'surfaces/' + filename1), os.path.join(path, 'surfaces/' + filename2), os.path.join(path, 'surfaces/' + filename3))
-
-    # for filename in os.listdir(path + '/T1s/'):
-    #     try:
-    #         patient_id = filename.split('+')[1]
-    #
-    #         p = subprocess.Popen(['mincresample', '-nearest_neighbour', '-like', path + 'icbm_template_1.00mm.mnc', path + 'T1s/' + filename, path + 'T1_downsampled/' + patient_id + '.mnc', '-clobber'])
-    #         p.communicate()
-    #     except:
-    #         print filename
 
     n_abide = count_abide(data_dir + '/deep_abide/', 't1_qc.csv')
     # n_ibis = count_ibis(data_dir + '/IBIS/', 'ibis_t1_qc.csv')
@@ -689,8 +697,6 @@ if __name__ == "__main__":
     # print('IBIS:', n_ibis)
     # print('PING:', n_ping)
     print('ds030:', n_ds030)
-
-    # total_subjects = n_abide + n_ibis + n_ping + n_ds030
 
     abide_output = output_dir + 'abide.hdf5'
     ds030_output = output_dir + 'ds030.hdf5'
@@ -709,35 +715,16 @@ if __name__ == "__main__":
         abide_indices = list(range(0, next_index))
         pickle.dump(abide_indices, open(output_dir + 'abide_indices.pkl', 'wb'))
 
-    with h5py.File(ds030_output, 'w') as f:
-        f.create_dataset('MRI', (n_ds030, 1, target_size[0], target_size[1], target_size[2]), dtype='float32')
-        f.create_dataset('qc_label', (n_ds030,), dtype='float32')
+    with h5py.File(ds030_output, 'w') as f2:
+        f2.create_dataset('MRI', (n_ds030, 1, target_size[0], target_size[1], target_size[2]), dtype='float32')
+        f2.create_dataset('qc_label', (n_ds030,), dtype='float32')
 
-        f.create_dataset('filename', (n_ds030,), dtype=dt)
-        f.create_dataset('dataset', (n_ds030,), dtype=dt)
+        f2.create_dataset('filename', (n_ds030,), dtype=dt)
+        f2.create_dataset('dataset', (n_ds030,), dtype=dt)
 
-        next_index = make_ds030(data_dir + '/ds030/', f, 'ds030_DB.csv', 0)
+        next_index = make_ds030(data_dir + '/ds030/', f2, 'ds030_DB.csv', 0)
 
         ds030_indices = list(range(0, next_index))
         pickle.dump(ds030_indices, open(output_dir + 'ds030_indices.pkl', 'wb'))
 
-        # print('Starting PING...')
-        # next_index = make_ping(data_dir + '/PING/', f, 't1_qc.csv', 0)
-        # ping_indices = range(0, next_index)
-        # print('Last PING index:', next_index - 1)
-        # print('Starting ABIDE...')
-        # abide_indices = range(ping_indices[-1] + 1, next_index)
-        # print('Last ABIDE index:', next_index - 1)
-        # print('Starting IBIS...')
-        # next_index = make_ibis(data_dir + '/IBIS/', f, 'ibis_t1_qc.csv', next_index)
-        # ibis_indices = range(abide_indices[-1] + 1, next_index)
-        # print('Last IBIS index:', next_index - 1)
-        # print('Starting ds030...')
-        # ds030_indices = range(ibis_indices[-1] + 1, next_index)
-        # print('Last ds030 index:', next_index - 1)
-        #
-        # pickle.dump(ping_indices, open(output_dir + 'ping_indices.pkl', 'wb'))
-        # pickle.dump(ibis_indices, open(output_dir + 'ibis_indices.pkl', 'wb'))
-        #
-        #
-        # check_datasets()
+        check_datasets(f, f2)
