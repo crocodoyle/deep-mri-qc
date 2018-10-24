@@ -723,16 +723,16 @@ if __name__ == "__main__":
         abide_indices = list(range(0, next_index))
         pickle.dump(abide_indices, open(output_dir + 'abide_indices.pkl', 'wb'))
 
-    with h5py.File(ds030_output, 'w') as f2:
-        f2.create_dataset('MRI', (n_ds030, 1, target_size[0], target_size[1], target_size[2]), dtype='float32')
-        f2.create_dataset('qc_label', (n_ds030,), dtype='float32')
+        with h5py.File(ds030_output, 'w') as f2:
+            f2.create_dataset('MRI', (n_ds030, 1, target_size[0], target_size[1], target_size[2]), dtype='float32')
+            f2.create_dataset('qc_label', (n_ds030,), dtype='float32')
 
-        f2.create_dataset('filename', (n_ds030,), dtype=dt)
-        f2.create_dataset('dataset', (n_ds030,), dtype=dt)
+            f2.create_dataset('filename', (n_ds030,), dtype=dt)
+            f2.create_dataset('dataset', (n_ds030,), dtype=dt)
 
-        next_index = make_ds030(data_dir + '/ds030/', f2, 'ds030_DB.csv', 0)
+            next_index = make_ds030(data_dir + '/ds030/', f2, 'ds030_DB.csv', 0)
 
-        ds030_indices = list(range(0, next_index))
-        pickle.dump(ds030_indices, open(output_dir + 'ds030_indices.pkl', 'wb'))
+            ds030_indices = list(range(0, next_index))
+            pickle.dump(ds030_indices, open(output_dir + 'ds030_indices.pkl', 'wb'))
 
-        check_datasets(f, f2)
+            check_datasets(f, f2)
