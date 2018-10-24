@@ -380,11 +380,15 @@ def make_ds030(input_path, f, label_file, subject_index):
 
 def make_ds030_subject(line, subject_index, input_path, f, mask):
     try:
-        t1_filename = line[0] + '.nii.gz'
+        t1_filename_nii = line[0] + '.nii.gz'
+        t1_filename_mnc = line[0] + '.mnc'
         label = line[8]
 
         if len(label) > 0:
-            t1 = nib.load(input_path + t1_filename)
+            convert_to_MINC(input_path + t1_filename_nii)
+            register_MINC(input_path + t1_filename_mnc, atlas, input_path + '/resampled/' + t1_filename_mnc)
+
+            t1 = nib.load(input_path + '/resampled/' + t1_filename_mnc)
             atlas_image = nib.load(atlas)
 
             t1_resampled = resample_from_to(t1, atlas_image)
@@ -411,11 +415,11 @@ def make_ds030_subject(line, subject_index, input_path, f, mask):
 
             f['qc_label'][subject_index] = np.argmax(one_hot)
             f['dataset'][subject_index] = 'ds030'
-            f['filename'][subject_index] = t1_filename
+            f['filename'][subject_index] = t1_filename_mnc
 
             plt.imshow(t1_data[96, ...], origin='lower')
             plt.axis('off')
-            plt.savefig(output_dir + '/examples/' + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
+            plt.savefig(output_dir + '/examples/' + t1_filename_mnc[:-4] + '.png', bbox_inches='tight', cmap='gray')
 
     except Exception as e:
         print('Error:', e)
@@ -580,7 +584,11 @@ def register_MINC(moving_image, atlas, output_image):
 
     # subprocess.run(register_command_line, stdout=open(os.devnull, 'wb'))
     subprocess.run(register_command_line)
+    return
 
+def convert_to_MINC(mnc):
+    convert_command_line = ['nii2mnc', mnc]
+    subprocess.run(convert_command_line)
     return
 
 def register_ants(moving_image, atlas, output_image):
