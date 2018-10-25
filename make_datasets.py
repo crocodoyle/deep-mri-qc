@@ -386,7 +386,7 @@ def make_ds030_subject(line, subject_index, input_path, f, mask):
         label = line[8]
 
         if len(label) > 0:
-            convert_to_MINC(input_path + t1_filename_nii)
+            convert_to_MINC(input_path, t1_filename_nii, t1_filename_mnc)
             register_MINC(input_path + t1_filename_mnc, atlas, input_path + '/resampled/' + t1_filename_mnc)
 
             t1 = nib.load(input_path + '/resampled/' + t1_filename_mnc)
@@ -587,8 +587,8 @@ def register_MINC(moving_image, atlas, output_image):
     subprocess.run(register_command_line)
     return
 
-def convert_to_MINC(in_path, mnc):
-    convert_command_line = ['nii2mnc', mnc, in_path + mnc[:-7] + '.mnc']
+def convert_to_MINC(in_path, nii_filename, mnc_filename):
+    convert_command_line = ['nii2mnc', in_path + nii_filename, in_path + mnc_filename]
     subprocess.run(convert_command_line)
     return
 
