@@ -710,6 +710,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     os.environ["LD_LIBRARY_PATH"] = "/home/users/adoyle/quarantines/Linux-x86_64/lib"
+    os.environ["PATH"] += ":/data1/users/adoyle/quarantines/Linux-x86_64/SRC/mni_autoreg-0.99.7/minctracc/Extra_progs/"
 
     n_abide = count_abide(data_dir + '/deep_abide/', 't1_qc.csv')
     # n_ibis = count_ibis(data_dir + '/IBIS/', 'ibis_t1_qc.csv')
