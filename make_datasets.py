@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.spatial.distance import euclidean
+import argparse
 
 import os, sys, time, csv, subprocess, pickle, h5py
 import SimpleITK as sitk
@@ -586,8 +587,8 @@ def register_MINC(moving_image, atlas, output_image):
     subprocess.run(register_command_line)
     return
 
-def convert_to_MINC(mnc):
-    convert_command_line = ['nii2mnc', mnc]
+def convert_to_MINC(in_path, mnc):
+    convert_command_line = ['nii2mnc', mnc, in_path + mnc[:-7] + '.mnc']
     subprocess.run(convert_command_line)
     return
 
@@ -693,6 +694,21 @@ def check_datasets(f, f2):
     fig2.savefig(output_dir + 'dataset_histograms_combined.png', dpi=500)
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Make QC datasets in HDF5 for deep learning.')
+
+    parser.add_argument('--no-cuda', action='store_true', default=False,
+                        help='disables CUDA training')
+    parser.add_argument('--register', action='store_true', default=False,
+                        help='registers to MNI space')
+    parser.add_argument('--convert', action='store_true', default=False,
+                        help='convert to .mnc')
+    parser.add_argument('--do-abide', action='store_true', default=False,
+                        help='run on ABIDE')
+    parser.add_argument('--do-ds030', action='store_true', default=False,
+                        help='run on ds030')
+
+    args = parser.parse_args()
+
     os.environ["LD_LIBRARY_PATH"] = "/home/users/adoyle/quarantines/Linux-x86_64/lib"
 
     n_abide = count_abide(data_dir + '/deep_abide/', 't1_qc.csv')
@@ -711,18 +727,20 @@ if __name__ == "__main__":
 
     dt = h5py.special_dtype(vlen=bytes)
 
-    with h5py.File(abide_output, 'w') as f:
-        f.create_dataset('MRI', (n_abide, 1, target_size[0], target_size[1], target_size[2]), dtype='float32')
-        f.create_dataset('qc_label', (n_abide,), dtype='float32')
+    if args.do_abide:
+        with h5py.File(abide_output, 'w') as f:
+            f.create_dataset('MRI', (n_abide, 1, target_size[0], target_size[1], target_size[2]), dtype='float32')
+            f.create_dataset('qc_label', (n_abide,), dtype='float32')
 
-        f.create_dataset('filename', (n_abide,), dtype=dt)
-        f.create_dataset('dataset', (n_abide,), dtype=dt)
+            f.create_dataset('filename', (n_abide,), dtype=dt)
+            f.create_dataset('dataset', (n_abide,), dtype=dt)
 
-        next_index = make_abide(data_dir + '/deep_abide/', f, 't1_qc.csv', 0)
+            next_index = make_abide(data_dir + '/deep_abide/', f, 't1_qc.csv', 0)
 
-        abide_indices = list(range(0, next_index))
-        pickle.dump(abide_indices, open(output_dir + 'abide_indices.pkl', 'wb'))
+            abide_indices = list(range(0, next_index))
+            pickle.dump(abide_indices, open(output_dir + 'abide_indices.pkl', 'wb'))
 
+    if args.do_ds030:
         with h5py.File(ds030_output, 'w') as f2:
             f2.create_dataset('MRI', (n_ds030, 1, target_size[0], target_size[1], target_size[2]), dtype='float32')
             f2.create_dataset('qc_label', (n_ds030,), dtype='float32')
@@ -735,4 +753,7 @@ if __name__ == "__main__":
             ds030_indices = list(range(0, next_index))
             pickle.dump(ds030_indices, open(output_dir + 'ds030_indices.pkl', 'wb'))
 
-            check_datasets(f, f2)
+
+    f = h5py.File(abide_output, 'r')
+    f2 = h5py.File(ds030_output, 'r')
+    check_datasets(f, f2)
