@@ -626,7 +626,7 @@ def check_datasets(f, f2, abide_indices, ds030_indices):
 
     histograms = {}
 
-    for site in mri_sites:
+    for site in mri_sites[2:]:
         histograms[site] = np.zeros(256, dtype='float32')
 
     bins = np.linspace(0.0, 1.0, 257)
@@ -669,14 +669,14 @@ def check_datasets(f, f2, abide_indices, ds030_indices):
         except Exception as e:
             print('Error for', filename, 'in dataset', dataset)
 
-    fig, axes = plt.subplots(len(mri_sites), 1, sharex=True, figsize=(4, 24))
+    fig, axes = plt.subplots(len(mri_sites[2:]), 1, sharex=True, figsize=(4, 24))
     fig2, axes2 = plt.subplots(1, 1, figsize=(12, 6))
 
-    for i, site in enumerate(mri_sites):
+    for i, site in enumerate(mri_sites[2:]):
         try:
             histograms[site] = np.divide(histograms[site], np.sum(histograms[site]))
             axes[i].plot(bins[:-1], histograms[site], lw=2, label=site)
-            axes2.plot(bins[:-2], histograms[site], lw=2, label=site)
+            axes2.plot(bins[:-1], histograms[site], lw=2, label=site)
 
             # axes[i].set_xlim([0, 1])
 
@@ -715,7 +715,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     os.environ["LD_LIBRARY_PATH"] = "/home/users/adoyle/quarantines/Linux-x86_64/lib"
-    os.environ["PATH"] += ":/data1/users/adoyle/quarantines/Linux-x86_64/bin/"
+    if not '/data1/users/adoyle/quarantines/Linux-x86_64/bin/' in os.environ["PATH"]:
+        os.environ["PATH"] += ":/data1/users/adoyle/quarantines/Linux-x86_64/bin/"
 
     n_abide = count_abide(data_dir + '/deep_abide/', 't1_qc.csv')
     # n_ibis = count_ibis(data_dir + '/IBIS/', 'ibis_t1_qc.csv')
