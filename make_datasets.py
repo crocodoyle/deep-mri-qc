@@ -386,8 +386,8 @@ def make_ds030_subject(line, subject_index, input_path, f, mask):
         label = line[8]
 
         if len(label) > 0:
-            convert_to_MINC(input_path, t1_filename_nii, t1_filename_mnc)
-            register_MINC(input_path + t1_filename_mnc, atlas, input_path + '/resampled/' + t1_filename_mnc)
+            # convert_to_MINC(input_path, t1_filename_nii, t1_filename_mnc)
+            # register_MINC(input_path + t1_filename_mnc, atlas, input_path + '/resampled/' + t1_filename_mnc)
 
             t1 = nib.load(input_path + '/resampled/' + t1_filename_mnc)
             atlas_image = nib.load(atlas)
@@ -622,7 +622,7 @@ def register_ants(moving_image, atlas, output_image):
 
     reg.run()
 
-def check_datasets(f, f2):
+def check_datasets(f, f2, abide_indices, ds030_indices):
 
     histograms = {}
 
@@ -636,7 +636,11 @@ def check_datasets(f, f2):
     datasets = f['dataset']
     filenames = f['filename']
 
-    for i, (img, dataset, filename) in enumerate(zip(images, datasets, filenames)):
+    for idx in abide_indices:
+        img = images[idx]
+        dataset = datasets[idx]
+        filename = filenames[idx]
+
         dataset = dataset.decode('UTF-8')
         filename = filename.decode('UTF-8')
         img = np.asarray(img, dtype='float32')
@@ -653,16 +657,16 @@ def check_datasets(f, f2):
     datasets = f2['dataset']
     filenames = f2['filename']
 
-    for i, (img, dataset, filename) in enumerate(zip(images, datasets, filenames)):
-        dataset = dataset.decode('UTF-8')
-        filename = filename.decode('UTF-8')
-        img = np.asarray(img, dtype='float32')
+    for idx in ds030_indices:
+        img = np.asarray(images[idx], dtype='float32')
+        dataset = datasets[idx].decode('UTF-8')
+        filename = filenames[idx].decode('UTF-8')
 
         try:
             histo = np.histogram(img, bins=bins)
             histograms[dataset] += histo[0]
             print(filename, dataset, np.mean(histo[0]), np.var(histo[0]))
-        except:
+        except Exception as e:
             print('Error for', filename, 'in dataset', dataset)
 
     fig, axes = plt.subplots(len(mri_sites), 1, sharex=True, figsize=(4, 24))
@@ -679,7 +683,8 @@ def check_datasets(f, f2):
             axes[i].set_ylabel(site, fontsize=16)
             axes[i].set_xscale('log')
             axes[i].set_yscale('log')
-        except:
+        except Exception as e:
+            print(e)
             print('Problem normalizing histogram for', site)
 
     plt.tight_layout()
@@ -757,4 +762,4 @@ if __name__ == "__main__":
 
     f = h5py.File(abide_output, 'r')
     f2 = h5py.File(ds030_output, 'r')
-    check_datasets(f, f2)
+    check_datasets(f, f2, abide_indices, ds030_indices)
