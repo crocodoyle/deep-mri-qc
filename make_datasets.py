@@ -760,6 +760,8 @@ if __name__ == "__main__":
             ds030_indices = list(range(0, next_index))
             pickle.dump(ds030_indices, open(output_dir + 'ds030_indices.pkl', 'wb'))
 
+    abide_indices = pickle.load(open(output_dir) + 'abide_indices.pkl', 'rb')
+    ds030_indices = pickle.load(open(output_dir) + 'ds030_indices.pkl', 'rb')
 
     f = h5py.File(abide_output, 'r')
     f2 = h5py.File(ds030_output, 'r')
