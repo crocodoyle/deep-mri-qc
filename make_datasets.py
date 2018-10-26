@@ -689,7 +689,7 @@ def check_datasets(f, f2, abide_indices, ds030_indices):
 
     plt.tight_layout()
 
-    axes2.legend(loc='center left', bbox_to_anchor=(1, 0.5), fancybox=True, shadow=True, ncols=2, textsize=10)
+    axes2.legend(loc='center left', bbox_to_anchor=(1, 0.5), fancybox=True, shadow=True, ncols=2, prop={'size': 10})
     axes2.set_ylabel('Voxel Intensity Distribution', fontsize=16)
     axes2.set_xlabel('Voxel Intensity Value', fontsize=16)
     axes2.set_xscale('log')
