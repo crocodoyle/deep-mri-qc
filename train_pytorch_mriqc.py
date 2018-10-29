@@ -232,7 +232,7 @@ if __name__ == '__main__':
     results_dir, experiment_number = setup_experiment(workdir)
 
     abide_f = h5py.File(workdir + abide_filename, 'r')
-    ds030_f = h5py.File(workdir + abide_filename, 'r')
+    ds030_f = h5py.File(workdir + ds030_filename, 'r')
 
     abide_indices = pickle.load(open(workdir + 'abide_indices.pkl', 'rb'))
     ds030_indices = pickle.load(open(workdir + 'ds030_indices.pkl', 'rb'))
@@ -412,7 +412,7 @@ if __name__ == '__main__':
 
         val_truth, val_probabilities = test(abide_f, validation_indices, n_slices)
         test_truth, test_probabilities = test(abide_f, test_indices, n_slices)
-        ds030_truth, ds030_probabilities = test(ds030_f, test_indices, n_slices)
+        ds030_truth, ds030_probabilities = test(ds030_f, ds030_indices, n_slices)
 
         ds030_predictions = np.argmax(np.mean(ds030_probabilities, axis=1), axis=-1)
         print('ds030 predictions shape:', ds030_predictions.shape)
@@ -488,16 +488,16 @@ if __name__ == '__main__':
 
     # grad_cam = GradCam(model=model, target_layer_names=['output'], use_cuda=args.cuda)
 
-    dummy_input = Variable(torch.randn(n_slices*2, 1, image_shape[1], image_shape[2]))
+    # dummy_input = Variable(torch.randn(n_slices*2, 1, image_shape[1], image_shape[2]))
+    #
+    # input_names = ["coronal_slice"]
+    # output_names = ["pass_fail"]
+    #
+    # model = ConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
+    # model.load_state_dict(torch.load(results_dir + 'qc_torch_fold_1.tch'))
+    # model.eval()
 
-    input_names = ["coronal_slice"]
-    output_names = ["pass_fail"]
-
-    model = ConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
-    model.load_state_dict(torch.load(results_dir + 'qc_torch_fold_1.tch'))
-    model.eval()
-
-    torch.onnx.export(model, dummy_input, results_dir + "deepqc.onnx", verbose=False)
+    # torch.onnx.export(model, dummy_input, results_dir + "deepqc.onnx", verbose=False)
 
     for fold in range(skf.get_n_splits()):
         make_roc_gif(results_dir, args.epochs, fold + 1)

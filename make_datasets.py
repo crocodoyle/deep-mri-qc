@@ -687,16 +687,14 @@ def check_datasets(f, f2, abide_indices, ds030_indices):
             print(e)
             print('Problem normalizing histogram for', site)
 
-    plt.tight_layout()
-
-    axes2.legend(loc='center left', bbox_to_anchor=(1, 0.5), fancybox=True, shadow=True, ncol=2, prop={'size': 10})
+    axes2.legend(loc='center left', bbox_to_anchor=(1, 0.5), fancybox=True, shadow=True, ncol=1, prop={'size': 10})
     axes2.set_ylabel('Voxel Intensity Distribution', fontsize=16)
     axes2.set_xlabel('Voxel Intensity Value', fontsize=16)
     axes2.set_xscale('log')
     axes2.set_yscale('log')
 
-    fig.savefig(output_dir + 'dataset_histograms.png', dpi=500)
-    fig2.savefig(output_dir + 'dataset_histograms_combined.png', dpi=500)
+    fig.savefig(output_dir + 'dataset_histograms.png', dpi=500, bbox_inches='tight')
+    fig2.savefig(output_dir + 'dataset_histograms_combined.png', dpi=500, bbox_inches='tight')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Make QC datasets in HDF5 for deep learning.')
