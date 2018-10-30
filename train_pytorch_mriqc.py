@@ -237,6 +237,7 @@ if __name__ == '__main__':
     abide_indices = pickle.load(open(workdir + 'abide_indices.pkl', 'rb'))
     ds030_indices = pickle.load(open(workdir + 'ds030_indices.pkl', 'rb'))
 
+    np.random.shuffle(abide_indices)
 
     labels = np.copy(abide_f['qc_label'])
 
@@ -480,7 +481,7 @@ if __name__ == '__main__':
     print('(train, val, test)')
 
     print('Test sens/spec:', np.mean(best_sensitivity[:, 2]), np.mean(best_specificity[:, 2]))
-
+    print('ds030:', np.mean(ds030_results[:, 0]), np.mean(ds030_results[:, 1]))
     # pickle.dump(sens_plot, open(results_dir + 'best_sens.pkl', 'wb'))
     # pickle.dump(spec_plot, open(results_dir + 'best_spec.pkl', 'wb'))
 
