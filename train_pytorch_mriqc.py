@@ -321,8 +321,8 @@ if __name__ == '__main__':
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             epoch_start = time.time()
 
-            if args.epochs - epoch_idx == 20:
-                optimizer = optim.SGD(model.parameters(), lr=0.0001)
+            # if args.epochs - epoch_idx == 20:
+            #     optimizer = optim.SGD(model.parameters(), lr=0.0001)
 
             abide_f = h5py.File(workdir + 'abide.hdf5', 'r')
             train_dataset = QCDataset(abide_f, train_indices, n_slices=n_slices)
