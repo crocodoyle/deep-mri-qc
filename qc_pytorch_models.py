@@ -86,12 +86,12 @@ class BigConvolutionalQCNet(nn.Module):
         super(BigConvolutionalQCNet, self).__init__()
 
         self.features = nn.Sequential(
-            nn.Conv2d(1, 64, kernel_size=3),
+            nn.Conv2d(1, 32, kernel_size=3),
             # nn.InstanceNorm2d(64),
             nn.Dropout(0.5),
             nn.LeakyReLU(0.1),
             # nn.MaxPool2d(2),
-            nn.Conv2d(64, 64, kernel_size=3),
+            nn.Conv2d(32, 64, kernel_size=3),
             nn.InstanceNorm2d(64),
             nn.Dropout(0.5),
             nn.LeakyReLU(0.1),
