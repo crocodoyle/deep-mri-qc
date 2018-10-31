@@ -121,7 +121,7 @@ class BigConvolutionalQCNet(nn.Module):
             nn.Dropout(0.5),
             nn.LeakyReLU(0.1),
             # nn.MaxPool2d(2),
-            nn.Conv2d(128, 256, kernel_size=5),
+            nn.Conv2d(64, 64, kernel_size=5),
             nn.LeakyReLU(0.1),
             nn.Dropout(0.5),
         )
