@@ -316,7 +316,7 @@ if __name__ == '__main__':
         train_sample_weights = torch.DoubleTensor(train_sample_weights)
 
 
-        optimizer = optim.Adam(model.parameters(), lr=0.0001, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-05)
+        optimizer = optim.Adam(model.parameters(), lr=0.00002, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             epoch_start = time.time()
