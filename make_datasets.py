@@ -326,7 +326,7 @@ def make_abide(input_path, f, label_file, subject_index):
 
     return index
 
-def make_abide_subject(line, subject_index, input_path, f, mask, atlas_data):
+def make_abide_subject(line, subject_index, input_path, f, mask):
     try:
         t1_filename = line[0] + '.mnc'
 
