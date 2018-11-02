@@ -89,11 +89,11 @@ def histogram_matching(input_image, target_image):
     # reader.SetImageIO("MINCImageIO")
     # reader.SetFileName(input_filename)
     # image = reader.Execute()
-
-    image = sitk.Image(input_image.shape[0], input_image.shape[1], input_image.shape[2], sitk.sitkFloat32)
-    target = sitk.Image(target_image.shape[0], target_image.shape[1], target_image.shape[2], sitk.sitkFloat32)
-    image[:, :, :] = input_image
-    target[:, :, :] = target_image
+    #
+    # image = sitk.Image(input_image.shape[0], input_image.shape[1], input_image.shape[2], sitk.sitkFloat32)
+    # target = sitk.Image(target_image.shape[0], target_image.shape[1], target_image.shape[2], sitk.sitkFloat32)
+    image = sitk.GetImageFromArray(input_image)
+    target = sitk.GetImageFromArray(target_image)
 
     matcher = sitk.HistogramMatchingImageFilter()
     matcher.SetNumberOfMatchPoints(10)
