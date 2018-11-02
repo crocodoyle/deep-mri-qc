@@ -86,9 +86,9 @@ class BigConvolutionalQCNet(nn.Module):
         super(BigConvolutionalQCNet, self).__init__()
 
         self.features = nn.Sequential(
-            nn.Conv2d(1, 32, kernel_size=3),
+            nn.Conv2d(1, 32, kernel_size=5),
             # nn.InstanceNorm2d(64),
-            nn.Dropout(0.5),
+            # nn.Dropout(0.5),
             nn.LeakyReLU(0.1),
             # nn.MaxPool2d(2),
             nn.Conv2d(32, 32, kernel_size=3),
@@ -98,7 +98,7 @@ class BigConvolutionalQCNet(nn.Module):
             nn.MaxPool2d(2),
             nn.Conv2d(32, 32, kernel_size=3),
             # nn.InstanceNorm2d(64),
-            nn.Dropout(0.5),
+            # nn.Dropout(0.5),
             nn.LeakyReLU(0.1),
             # nn.MaxPool2d(2),
             nn.Conv2d(32, 32, kernel_size=3),
@@ -108,7 +108,7 @@ class BigConvolutionalQCNet(nn.Module):
             nn.MaxPool2d(2),
             nn.Conv2d(32, 32, kernel_size=3),
             # nn.InstanceNorm2d(64),
-            nn.Dropout(0.5),
+            # nn.Dropout(0.5),
             nn.LeakyReLU(0.1),
             nn.MaxPool2d(2),
             nn.Conv2d(32, 32, kernel_size=3),
@@ -118,7 +118,7 @@ class BigConvolutionalQCNet(nn.Module):
             nn.MaxPool2d(2),
             nn.Conv2d(32, 32, kernel_size=3),
             # nn.InstanceNorm2d(64),
-            nn.Dropout(0.5),
+            # nn.Dropout(0.5),
             nn.LeakyReLU(0.1),
             # nn.MaxPool2d(2),
             nn.Conv2d(32, 32, kernel_size=3),
@@ -129,10 +129,10 @@ class BigConvolutionalQCNet(nn.Module):
         self.flat_features = self.get_flat_features(input_shape, self.features)
 
         self.classifier = nn.Sequential(
-            nn.Linear(self.flat_features, 512),
+            nn.Linear(self.flat_features, 256),
             nn.Dropout(0.5),
             nn.LeakyReLU(0.1),
-            nn.Linear(512, 256),
+            nn.Linear(256, 256),
             nn.Dropout(0.5),
             nn.LeakyReLU(0.1),
             nn.Linear(256, 2),
