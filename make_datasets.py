@@ -327,7 +327,7 @@ def make_abide(input_path, f, label_file, subject_index):
     return index
 
 def make_abide_subject(line, subject_index, input_path, f, mask):
-    try:
+    # try:
         t1_filename = line[0] + '.mnc'
 
         # register_MINC(input_path + t1_filename, atlas, input_path + '/resampled/' + t1_filename)
@@ -377,9 +377,9 @@ def make_abide_subject(line, subject_index, input_path, f, mask):
         plt.savefig(output_dir + '/examples/' + t1_filename[:-4] + '.png', bbox_inches='tight', cmap='gray')
 
         return subject_index
-    except Exception as e:
-        print('Error:', e)
-        return -1
+    # except Exception as e:
+    #     print('Error:', e)
+    #     return -1
 
 
 def make_ds030(input_path, f, label_file, subject_index):
