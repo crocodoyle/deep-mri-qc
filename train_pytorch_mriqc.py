@@ -328,7 +328,7 @@ if __name__ == '__main__':
             train_dataset = QCDataset(abide_f, train_indices, n_slices=n_slices)
 
             sampler = WeightedRandomSampler(weights=train_sample_weights, num_samples=len(train_sample_weights))
-            train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=True,
+            train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=False,
                                                        **kwargs)
 
             class_weights = [0.55, 0.45]
