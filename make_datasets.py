@@ -84,6 +84,27 @@ def resize_image_with_crop_or_pad(image, img_size=(64, 64, 64), **kwargs):
     # Pad the cropped image to extend the missing dimension
     return np.pad(image[slicer], to_padding, **kwargs)
 
+def histogram_matching(input_image, target_image):
+    # reader = sitk.ImageFileReader()
+    # reader.SetImageIO("MINCImageIO")
+    # reader.SetFileName(input_filename)
+    # image = reader.Execute()
+
+    image = sitk.Image(input_image.shape[0], input_image.shape[1], input_image.shape[2], sitk.sitkFloat32)
+    target = sitk.Image(target_image.shape[0], target_image.shape[1], target_image.shape[2], sitk.sitkFloat32)
+    image[:, :, :] = input_image
+    target[:, :, :] = target_image
+
+    matcher = sitk.HistogramMatchingImageFilter()
+    matcher.SetNumberOfMatchPoints(10)
+    matcher.SetThresholdAtMeanIntensity(True)
+
+    output = matcher.Execute(input_image, target_image)
+    output = sitk.GetArrayFromImage(output)
+
+    print(input_image.shape, output.shape)
+    return output
+
 
 def count_ping(input_path, label_file):
     with open(os.path.join(input_path, label_file)) as label_file:
@@ -305,7 +326,7 @@ def make_abide(input_path, f, label_file, subject_index):
 
     return index
 
-def make_abide_subject(line, subject_index, input_path, f, mask):
+def make_abide_subject(line, subject_index, input_path, f, mask, atlas_data):
     try:
         t1_filename = line[0] + '.mnc'
 
@@ -344,8 +365,10 @@ def make_abide_subject(line, subject_index, input_path, f, mask):
             t1_data = resize_image_with_crop_or_pad(t1_data, img_size=target_size, mode='constant')
 
         # t1_data = equalize_hist(t1_data, mask=mask)
+        atlas_image = nib.load(atlas)
+        t1_data = histogram_matching(t1_data, atlas_image.get_data())
 
-        f['MRI'][subject_index, 0, ...] = adjust_sigmoid(normalise_zero_one(t1_data))
+        f['MRI'][subject_index, 0, ...] = normalise_zero_one(t1_data)
         f['dataset'][subject_index] = line[1]
         f['filename'][subject_index] = t1_filename
 
@@ -401,7 +424,9 @@ def make_ds030_subject(line, subject_index, input_path, f, mask):
 
             # t1_data = equalize_hist(t1_data, mask=mask)
 
-            f['MRI'][subject_index, 0, ...] = adjust_sigmoid(normalise_zero_one(t1_data))
+            t1_data = histogram_matching(t1_data, atlas_image.get_data())
+
+            f['MRI'][subject_index, 0, ...] = normalise_zero_one(t1_data)
 
             one_hot = [0, 0]
 
