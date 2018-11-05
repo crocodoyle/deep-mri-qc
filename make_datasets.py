@@ -95,17 +95,14 @@ def histogram_matching(input_image, target_image):
     image = sitk.GetImageFromArray(np.float32(input_image))
     target = sitk.GetImageFromArray(np.float32(target_image))
 
-    print(image.GetSize(), target.GetSize())
-
     matcher = sitk.HistogramMatchingImageFilter()
     matcher.SetNumberOfMatchPoints(10)
-    matcher.SetNumberOfHistogramLevels(128)
+    # matcher.SetNumberOfHistogramLevels(128)
     matcher.SetThresholdAtMeanIntensity(True)
 
     output = matcher.Execute(image, target)
     output = sitk.GetArrayFromImage(output)
 
-    print(input_image.shape, output.shape)
     return output
 
 
@@ -709,7 +706,7 @@ def check_datasets(f, f2, abide_indices, ds030_indices):
             # axes[i].set_xlim([0, 1])
 
             axes[i].set_ylabel(site, fontsize=16)
-            axes[i].set_xscale('log')
+            # axes[i].set_xscale('log')
             axes[i].set_yscale('log')
         except Exception as e:
             print(e)
@@ -718,7 +715,7 @@ def check_datasets(f, f2, abide_indices, ds030_indices):
     axes2.legend(loc='center left', bbox_to_anchor=(1, 0.5), fancybox=True, shadow=True, ncol=1, prop={'size': 10})
     axes2.set_ylabel('Voxel Intensity Distribution', fontsize=16)
     axes2.set_xlabel('Voxel Intensity Value', fontsize=16)
-    axes2.set_xscale('log')
+    # axes2.set_xscale('log')
     axes2.set_yscale('log')
 
     fig.savefig(output_dir + 'dataset_histograms.png', dpi=500, bbox_inches='tight')
