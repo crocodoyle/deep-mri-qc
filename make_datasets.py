@@ -99,7 +99,7 @@ def histogram_matching(input_image, target_image):
 
     matcher = sitk.HistogramMatchingImageFilter()
     matcher.SetNumberOfMatchPoints(10)
-    matcher.SetNumberofHistogramLevels(128)
+    matcher.SetNumberOfHistogramLevels(128)
     matcher.SetThresholdAtMeanIntensity(True)
 
     output = matcher.Execute(image, target)
