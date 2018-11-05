@@ -92,8 +92,8 @@ def histogram_matching(input_image, target_image):
     #
     # image = sitk.Image(input_image.shape[0], input_image.shape[1], input_image.shape[2], sitk.sitkFloat32)
     # target = sitk.Image(target_image.shape[0], target_image.shape[1], target_image.shape[2], sitk.sitkFloat32)
-    image = sitk.GetImageFromArray(input_image)
-    target = sitk.GetImageFromArray(target_image)
+    image = sitk.GetImageFromArray(np.float32(input_image))
+    target = sitk.GetImageFromArray(np.float32(target_image))
 
     print(image.GetSize(), target.GetSize())
 
