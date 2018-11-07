@@ -13,7 +13,7 @@ from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.sampler import WeightedRandomSampler
 from torch.autograd import Variable
 
-from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
 from temperature_scaling import ModelWithTemperature, ModelWithSoftmax, ECELoss
 
 from qc_pytorch_models import ConvolutionalQCNet, BigConvolutionalQCNet
@@ -280,7 +280,7 @@ if __name__ == '__main__':
     for fold_idx, (train_val_indices, test_indices) in enumerate(skf.split(abide_indices, labels)):
         fold_num = fold_idx + 1
 
-        model = BigConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
+        model = ConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
         if args.cuda:
             model.cuda()
 
@@ -316,13 +316,13 @@ if __name__ == '__main__':
         train_sample_weights = torch.DoubleTensor(train_sample_weights)
 
 
-        optimizer = optim.Adam(model.parameters(), lr=0.00002, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+        optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+        scheduler = StepLR(optimizer, args.epochs // 3)
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             epoch_start = time.time()
 
-            # if args.epochs - epoch_idx == 20:
-            #     optimizer = optim.SGD(model.parameters(), lr=0.0001)
+            scheduler.step()
 
             abide_f = h5py.File(workdir + 'abide.hdf5', 'r')
             train_dataset = QCDataset(abide_f, train_indices, n_slices=n_slices)
@@ -415,10 +415,12 @@ if __name__ == '__main__':
         test_truth, test_probabilities = test(abide_f, test_indices, n_slices)
         ds030_truth, ds030_probabilities = test(ds030_f, ds030_indices, n_slices)
 
+        print('ds030 truth shape:', ds030_truth.shape)
+        print('ds030 probabilities shape:', ds030_probabilities.shape)
         ds030_predictions = np.argmax(np.mean(ds030_probabilities, axis=1), axis=-1)
         print('ds030 predictions shape:', ds030_predictions.shape)
 
-        ds030_tn, ds030_fp, ds030_fn, ds030_tp = confusion_matrix(ds030_truth, ds030_predictions).ravel()
+        (ds030_tn, ds030_fp, ds030_fn, ds030_tp) = confusion_matrix(ds030_truth, ds030_predictions).ravel()
 
         ds030_results[fold_idx, 0] = ds030_tp / (ds030_tp + ds030_fn + epsilon)
         ds030_results[fold_idx, 1] = ds030_tn / (ds030_tn + ds030_fp + epsilon)
