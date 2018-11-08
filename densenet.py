@@ -99,7 +99,7 @@ class DenseNet(nn.Module):
 
     def _get_flat_features(self, image_shape, features):
         f = features(Variable(torch.ones(1,*image_shape)))
-        return int(np.prod(f.size()[1:]))
+        return int(np.prod(f.size()))
 
     def features(self, x):
         out = self.conv1(x)
