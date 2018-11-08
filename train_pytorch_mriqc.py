@@ -165,6 +165,7 @@ def set_temperature(model, f, validation_indices, n_slices):
         for j in range(n_slices*2):
             data[0, 0, j, :, :] = torch.from_numpy(images[val_idx, 0, image_shape[0] // 2 - n_slices + j, :, :])
             input_var = Variable(data).cuda()
+            print('input var:', input_var.shape)
             logits_var = model(input_var)
             logits_list.append(logits_var.data)
             labels_list.append(target)
