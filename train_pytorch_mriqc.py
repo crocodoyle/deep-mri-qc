@@ -163,7 +163,7 @@ def set_temperature(model, f, validation_indices, n_slices):
         data = torch.FloatTensor((1, 1, n_slices*2, image_shape[1], image_shape[2])).pin_memory()
 
         for j in range(n_slices*2):
-            data[0, 0, image_shape[0] // 2 - n_slices + j, :, :] = images[val_idx, 0, ...]
+            data[0, 0, image_shape[0] // 2 - n_slices + j, :, :] = torch.from_numpy(images[val_idx, 0, ...])
             input_var = Variable(data).cuda()
             logits_var = model(input_var)
             logits_list.append(logits_var.data)
@@ -223,6 +223,8 @@ if __name__ == '__main__':
                         help='specifies how many slices to include about the centre for testing (default: 50)')
     parser.add_argument('--gpu', type=int, default=0, metavar='N',
                         help='specifies which GPU to use')
+    parser.add_argument('--scheduler', type=bool, default=False, metavar='N',
+                        help='whether to enable learning rate scheduling')
 
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -329,12 +331,14 @@ if __name__ == '__main__':
 
         # optimizer = optim.Adam(model.parameters(), lr=0.002, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
         optimizer = optim.SGD(model.parameters(), lr=0.02, momentum=0.9, dampening=0, weight_decay=0, nesterov=True)
-        scheduler = StepLR(optimizer, args.epochs // 4)
+        if args.scheduler:
+            scheduler = StepLR(optimizer, args.epochs // 4)
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             epoch_start = time.time()
 
-            scheduler.step()
+            if args.scheduler:
+                scheduler.step()
 
             abide_f = h5py.File(workdir + 'abide.hdf5', 'r')
             train_dataset = QCDataset(abide_f, train_indices, n_slices=n_slices)
