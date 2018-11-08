@@ -104,7 +104,7 @@ def train(epoch, class_weight=None):
         loss_val.backward()
         optimizer.step()
         if batch_idx % args.log_interval == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch, batch_idx * args.batch_size, len(train_loader.dataset), 100. * batch_idx * args.batch_size / len(train_loader.dataset), loss_val.data.cpu().numpy()[0]))
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch, batch_idx * args.batch_size, len(train_loader.dataset), 100. * batch_idx * args.batch_size / len(train_loader.dataset), loss_val.data.cpu().numpy()))
 
         output = m(output)
 
@@ -176,8 +176,8 @@ def set_temperature(model, f, validation_indices, n_slices):
     # print('logits, labels', logits_var, labels_var)
 
     # Calculate NLL and ECE before temperature scaling
-    before_temperature_nll = nll_criterion(logits_var, labels_var).data[0]
-    before_temperature_ece = ece_criterion(logits_var, labels_var).data[0]
+    before_temperature_nll = nll_criterion(logits_var, labels_var).data.cpu().numpy()
+    before_temperature_ece = ece_criterion(logits_var, labels_var).data.cpu().numpy()
     print('Before temperature - NLL: %.3f, ECE: %.3f' % (before_temperature_nll, before_temperature_ece))
 
     # Next: optimize the temperature w.r.t. NLL
@@ -189,9 +189,9 @@ def set_temperature(model, f, validation_indices, n_slices):
     optimizer.step(eval)
 
     # Calculate NLL and ECE after temperature scaling
-    after_temperature_nll = nll_criterion(model.temperature_scale(logits_var), labels_var).data[0]
-    after_temperature_ece = ece_criterion(model.temperature_scale(logits_var), labels_var).data[0]
-    print('Optimal temperature: %.3f' % model.temperature.data[0])
+    after_temperature_nll = nll_criterion(model.temperature_scale(logits_var), labels_var).data.cpu().numpy()
+    after_temperature_ece = ece_criterion(model.temperature_scale(logits_var), labels_var).data.cpu().numpy()
+    print('Optimal temperature: %.3f' % model.temperature.data.cpu().numpy())
     print('After temperature - NLL: %.3f, ECE: %.3f' % (after_temperature_nll, after_temperature_ece))
 
     return model
