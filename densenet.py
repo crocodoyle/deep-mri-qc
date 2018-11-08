@@ -103,4 +103,5 @@ class DenseNet(nn.Module):
         out = torch.squeeze(F.avg_pool2d(F.relu(self.bn1(out)), 8))
         print('avgpool', out.shape)
         out = self.fc(out)
+        print('fc', out.shape)
         return out
