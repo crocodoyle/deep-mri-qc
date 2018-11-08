@@ -84,8 +84,8 @@ def train(epoch, class_weight=None):
     else:
         w = None
 
-
     for batch_idx, (data, target) in enumerate(train_loader):
+        print(data.shape)
         n_in_batch = data.shape[0]
         if args.cuda:
             data, target = data.cuda(), target.cuda()

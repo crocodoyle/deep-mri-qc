@@ -9,11 +9,9 @@ class Bottleneck(nn.Module):
         super(Bottleneck, self).__init__()
         interChannels = 4*growthRate
         self.bn1 = nn.BatchNorm2d(nChannels)
-        self.conv1 = nn.Conv2d(nChannels, interChannels, kernel_size=1,
-                               bias=False)
+        self.conv1 = nn.Conv2d(nChannels, interChannels, kernel_size=1, bias=False)
         self.bn2 = nn.BatchNorm2d(interChannels)
-        self.conv2 = nn.Conv2d(interChannels, growthRate, kernel_size=3,
-                               padding=1, bias=False)
+        self.conv2 = nn.Conv2d(interChannels, growthRate, kernel_size=3, padding=1, bias=False)
 
     def forward(self, x):
         out = self.conv1(F.relu(self.bn1(x)))
@@ -25,8 +23,7 @@ class SingleLayer(nn.Module):
     def __init__(self, nChannels, growthRate):
         super(SingleLayer, self).__init__()
         self.bn1 = nn.BatchNorm2d(nChannels)
-        self.conv1 = nn.Conv2d(nChannels, growthRate, kernel_size=3,
-                               padding=1, bias=False)
+        self.conv1 = nn.Conv2d(nChannels, growthRate, kernel_size=3, padding=1, bias=False)
 
     def forward(self, x):
         out = self.conv1(F.relu(self.bn1(x)))
@@ -37,8 +34,7 @@ class Transition(nn.Module):
     def __init__(self, nChannels, nOutChannels):
         super(Transition, self).__init__()
         self.bn1 = nn.BatchNorm2d(nChannels)
-        self.conv1 = nn.Conv2d(nChannels, nOutChannels, kernel_size=1,
-                               bias=False)
+        self.conv1 = nn.Conv2d(nChannels, nOutChannels, kernel_size=1, bias=False)
 
     def forward(self, x):
         out = self.conv1(F.relu(self.bn1(x)))
