@@ -99,7 +99,6 @@ class DenseNet(nn.Module):
 
     def _get_flat_features(self, image_shape, features):
         f = features(Variable(torch.ones(1,*image_shape)))
-        print('features size:', f.size())
         return int(np.prod(f.size()))
 
     def features(self, x):
@@ -111,11 +110,7 @@ class DenseNet(nn.Module):
         return out
 
     def forward(self, x):
-        print('input:', x.shape)
         out = self.features(x)
-        print('features:', out.shape)
         out = out.view(out.size(0), -1)
-        print('flat:', out.shape)
         out = self.fc(out)
-        print('out:', out.shape)
         return out
