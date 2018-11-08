@@ -54,8 +54,7 @@ class DenseNet(nn.Module):
             nDenseBlocks //= 2
 
         nChannels = 2*growthRate
-        self.conv1 = nn.Conv2d(1, nChannels, kernel_size=3, padding=1,
-                               bias=False)
+        self.conv1 = nn.Conv2d(1, nChannels, kernel_size=3, padding=1, bias=False)
         self.dense1 = self._make_dense(nChannels, growthRate, nDenseBlocks, bottleneck)
         nChannels += nDenseBlocks*growthRate
         nOutChannels = int(math.floor(nChannels*reduction))
@@ -111,6 +110,9 @@ class DenseNet(nn.Module):
         return out
 
     def forward(self, x):
+        print('input:', x.shape)
         out = self.features(x)
+        print('features:', out.shape)
         out = self.fc(out)
+        print('out:', out.shape)
         return out
