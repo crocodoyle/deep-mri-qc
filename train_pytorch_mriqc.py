@@ -219,9 +219,13 @@ if __name__ == '__main__':
                         help='how many batches to wait before logging training status (default: 5)')
     parser.add_argument('--n-slices', type=int, default=50, metavar='N',
                         help='specifies how many slices to include about the centre for testing (default: 50)')
+    parser.add_argument('--gpu', type=int, default=0, metavar='N',
+                        help='specifies which GPU to use')
 
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
+
+    os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
 
     torch.manual_seed(args.seed)
     if args.cuda:
@@ -315,9 +319,9 @@ if __name__ == '__main__':
 
         train_sample_weights = torch.DoubleTensor(train_sample_weights)
 
-
-        optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
-        scheduler = StepLR(optimizer, args.epochs // 3)
+        # optimizer = optim.Adam(model.parameters(), lr=0.002, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+        optimizer = optim.SGD(model.parameters, lr=0.02, momentum=0.9, dampening=0, weight_decay=0, nesterov=True)
+        scheduler = StepLR(optimizer, args.epochs // 4)
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             epoch_start = time.time()
@@ -331,7 +335,7 @@ if __name__ == '__main__':
             train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=False,
                                                        **kwargs)
 
-            class_weights = [0.55, 0.45]
+            class_weights = [0.5, 0.5]
 
             train_truth, train_probabilities = train(epoch, class_weight=class_weights)
             train_predictions = np.argmax(train_probabilities, axis=-1)
