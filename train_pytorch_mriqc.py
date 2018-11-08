@@ -123,8 +123,8 @@ def test(f, test_indices, n_slices):
     images = f['MRI']
     labels = f['qc_label']
 
-    data = torch.zeros((n_slices*2, 1, image_shape[1], image_shape[2]), dtype=torch.float32)
-    target = torch.zeros((data.shape[0], 1), dtype=torch.int64)
+    data = torch.zeros((n_slices*2, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
+    target = torch.zeros((data.shape[0], 1), dtype=torch.int64).pin_memory()
 
     for i, test_idx in enumerate(test_indices):
         data[:, 0, ...] = torch.FloatTensor(images[test_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
@@ -160,9 +160,10 @@ def set_temperature(model, f, validation_indices, n_slices):
     logits_list, labels_list = [], []
     for i, val_idx in enumerate(validation_indices):
         target = torch.LongTensor([int(labels[val_idx])])
+        data = torch.FloatTensor((1, 1, n_slices*2, image_shape[1], image_shape[2])).pin_memory()
 
         for j in range(n_slices*2):
-            data = torch.FloatTensor(images[val_idx, 0, image_shape[0] // 2 - n_slices + j, ...][np.newaxis, np.newaxis, ...])
+            data[0, 0, image_shape[0] // 2 - n_slices + j, :, :] = images[val_idx, 0, ...]
             input_var = Variable(data).cuda()
             logits_var = model(input_var)
             logits_list.append(logits_var.data)

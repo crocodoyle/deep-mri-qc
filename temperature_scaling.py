@@ -21,6 +21,7 @@ class ModelWithTemperature(nn.Module):
         self.output = nn.Softmax(dim=-1)
 
     def forward(self, input):
+        print('input:', input.shape)
         logits = self.model(input)
         logits_scaled = self.temperature_scale(logits)
         return self.output(logits_scaled)
