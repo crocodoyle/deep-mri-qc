@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.autograd import Variable
+
 
 import math
 import numpy as np
@@ -96,7 +98,7 @@ class DenseNet(nn.Module):
         return nn.Sequential(*layers)
 
     def _get_flat_features(self, image_shape, features):
-        f = features(torch.Variable(torch.ones(1,*image_shape)))
+        f = features(Variable(torch.ones(1,*image_shape)))
         return int(np.prod(f.size()[1:]))
 
     def features(self, x):
