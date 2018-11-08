@@ -175,8 +175,8 @@ def set_temperature(model, f, validation_indices, n_slices):
     labels = torch.cat(labels_list).cuda()
     logits_var = Variable(logits)
     labels_var = Variable(labels)
-    print('logits, labels', logits_var, labels_var)
-    print(logits_var.shape, labels_var.shape)
+    # print('logits, labels', logits_var, labels_var)
+    # print(logits_var.shape, labels_var.shape)
 
     # Calculate NLL and ECE before temperature scaling
     before_temperature_nll = nll_criterion(logits_var, labels_var).data.cpu().numpy()
@@ -184,7 +184,7 @@ def set_temperature(model, f, validation_indices, n_slices):
     print('Before temperature - NLL: %.3f, ECE: %.3f' % (before_temperature_nll, before_temperature_ece))
 
     # Next: optimize the temperature w.r.t. NLL
-    optimizer = optim.LBFGS([model.temperature], lr=0.01, max_iter=50)
+    optimizer = optim.LBFGS([model.temperature], lr=0.02, max_iter=100)
     def eval():
         loss = nll_criterion(model.temperature_scale(logits_var), labels_var)
         loss.backward()
@@ -239,7 +239,7 @@ if __name__ == '__main__':
     if args.cuda:
         torch.cuda.manual_seed(args.seed)
 
-    model = densenet.DenseNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],), growthRate=4, depth=32, reduction=0.5, bottleneck=True, nClasses=2)
+    model = densenet.DenseNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],), growthRate=4, depth=64, reduction=0.5, bottleneck=True, nClasses=2)
     # model = BigConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
 
     print('Parameters:', sum([p.data.nelement() for p in model.parameters()]))
@@ -296,7 +296,7 @@ if __name__ == '__main__':
         fold_num = fold_idx + 1
 
         # model = ConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
-        model = densenet.DenseNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],), growthRate=4, depth=32, reduction=0.5, bottleneck=True, nClasses=2)
+        model = densenet.DenseNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],), growthRate=4, depth=64, reduction=0.5, bottleneck=True, nClasses=2)
 
         if args.cuda:
             model.cuda()
