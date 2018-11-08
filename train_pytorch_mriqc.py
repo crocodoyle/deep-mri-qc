@@ -9,6 +9,8 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.onnx
 
+import densenet
+
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.sampler import WeightedRandomSampler
 from torch.autograd import Variable
@@ -225,13 +227,17 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
+    print('Using GPU:', str(args.gpu))
     os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
 
     torch.manual_seed(args.seed)
     if args.cuda:
         torch.cuda.manual_seed(args.seed)
 
-    model = BigConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
+    model = densenet.DenseNet(growthRate=12, depth=100, reduction=0.5, bottleneck=True, nClasses=2)
+    # model = BigConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
+
+    print('Parameters:', sum([p.data.nelement() for p in model.parameters()]))
 
     results_dir, experiment_number = setup_experiment(workdir)
 
@@ -284,7 +290,9 @@ if __name__ == '__main__':
     for fold_idx, (train_val_indices, test_indices) in enumerate(skf.split(abide_indices, labels)):
         fold_num = fold_idx + 1
 
-        model = ConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
+        # model = ConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
+        model = densenet.DenseNet(growthRate=12, depth=100, reduction=0.5, bottleneck=True, nClasses=2)
+
         if args.cuda:
             model.cuda()
 
