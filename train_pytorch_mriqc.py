@@ -104,7 +104,7 @@ def train(epoch, class_weight=None):
         loss_val.backward()
         optimizer.step()
         if batch_idx % args.log_interval == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch, batch_idx * args.batch_size, len(train_loader.dataset), 100. * batch_idx * args.batch_size / len(train_loader.dataset), loss_val.data[0]))
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch, batch_idx * args.batch_size, len(train_loader.dataset), 100. * batch_idx * args.batch_size / len(train_loader.dataset), loss_val.data.cpu().numpy()[0]))
 
         output = m(output)
 
@@ -163,7 +163,7 @@ def set_temperature(model, f, validation_indices, n_slices):
         data = torch.FloatTensor(1, 1, n_slices*2, image_shape[1], image_shape[2]).pin_memory()
 
         for j in range(n_slices*2):
-            data[0, 0, image_shape[0] // 2 - n_slices + j, :, :] = torch.from_numpy(images[val_idx, 0, ...])
+            data[0, 0, j, :, :] = torch.from_numpy(images[val_idx, 0, image_shape[0] // 2 - n_slices + j, :, :])
             input_var = Variable(data).cuda()
             logits_var = model(input_var)
             logits_list.append(logits_var.data)
