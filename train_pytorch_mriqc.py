@@ -160,7 +160,7 @@ def set_temperature(model, f, validation_indices, n_slices):
     logits_list, labels_list = [], []
     for i, val_idx in enumerate(validation_indices):
         target = torch.LongTensor([int(labels[val_idx])])
-        data = torch.FloatTensor((1, 1, n_slices*2, image_shape[1], image_shape[2])).pin_memory()
+        data = torch.FloatTensor(1, 1, n_slices*2, image_shape[1], image_shape[2]).pin_memory()
 
         for j in range(n_slices*2):
             data[0, 0, image_shape[0] // 2 - n_slices + j, :, :] = torch.from_numpy(images[val_idx, 0, ...])
