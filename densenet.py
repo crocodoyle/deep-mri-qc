@@ -73,7 +73,6 @@ class DenseNet(nn.Module):
         self.bn1 = nn.BatchNorm2d(nChannels)
 
         self.flat_features = self._get_flat_features(input_shape, self.features)
-        print('flat features:', self.flat_features)
 
         self.fc = nn.Linear(self.flat_features, nClasses)
 
