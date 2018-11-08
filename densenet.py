@@ -101,7 +101,7 @@ class DenseNet(nn.Module):
         return int(np.prod(f.size()))
 
     def features(self, x):
-        print('input features:', x.shape)
+        # print('input features:', x.shape)
         out = self.conv1(x)
         out = self.trans1(self.dense1(out))
         out = self.trans2(self.dense2(out))
@@ -110,7 +110,7 @@ class DenseNet(nn.Module):
         return out
 
     def forward(self, x):
-        print('input forward:', x.shape)
+        # print('input forward:', x.shape)
         out = self.features(x)
         out = out.view(out.size(0), -1)
         out = self.fc(out)
