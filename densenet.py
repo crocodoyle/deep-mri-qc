@@ -99,17 +99,15 @@ class DenseNet(nn.Module):
         f = features(torch.Variable(torch.ones(1,*image_shape)))
         return int(np.prod(f.size()[1:]))
 
-    def forward(self, x):
+    def features(self, x):
         out = self.conv1(x)
-        print('conv1', out.shape)
         out = self.trans1(self.dense1(out))
-        print('trans1', out.shape)
         out = self.trans2(self.dense2(out))
-        print('trans2', out.shape)
         out = self.dense3(out)
-        print('dense', out.shape)
         out = torch.squeeze(F.avg_pool2d(F.relu(self.bn1(out)), 8))
-        print('avgpool', out.shape)
+        return out
+
+    def forward(self, x):
+        out = self.features(x)
         out = self.fc(out)
-        print('fc', out.shape)
         return out
