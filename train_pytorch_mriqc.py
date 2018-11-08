@@ -320,7 +320,7 @@ if __name__ == '__main__':
         train_sample_weights = torch.DoubleTensor(train_sample_weights)
 
         # optimizer = optim.Adam(model.parameters(), lr=0.002, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
-        optimizer = optim.SGD(model.parameters, lr=0.02, momentum=0.9, dampening=0, weight_decay=0, nesterov=True)
+        optimizer = optim.SGD(model.parameters(), lr=0.02, momentum=0.9, dampening=0, weight_decay=0, nesterov=True)
         scheduler = StepLR(optimizer, args.epochs // 4)
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
