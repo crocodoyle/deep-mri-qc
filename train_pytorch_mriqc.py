@@ -345,7 +345,7 @@ if __name__ == '__main__':
 
             class_weights = [0.5, 0.5]
 
-            train_truth, train_probabilities = train(epoch, class_weight=class_weights)
+            train_truth, train_probabilities = train(epoch, class_weight=None)
             train_predictions = np.argmax(train_probabilities, axis=-1)
 
             val_truth, val_probabilities = test(abide_f, validation_indices, n_slices)
