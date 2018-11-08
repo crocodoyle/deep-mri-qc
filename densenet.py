@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 import math
+import numpy as np
 
 class Bottleneck(nn.Module):
     def __init__(self, nChannels, growthRate):
@@ -43,7 +44,7 @@ class Transition(nn.Module):
 
 
 class DenseNet(nn.Module):
-    def __init__(self, growthRate, depth, reduction, nClasses, bottleneck):
+    def __init__(self, input_shape, growthRate, depth, reduction, nClasses, bottleneck):
         super(DenseNet, self).__init__()
 
         nDenseBlocks = (depth-4) // 3
@@ -69,7 +70,10 @@ class DenseNet(nn.Module):
         nChannels += nDenseBlocks*growthRate
 
         self.bn1 = nn.BatchNorm2d(nChannels)
-        self.fc = nn.Linear(nChannels, nClasses)
+
+        self.flat_features = self.get_flat_features(input_shape, self.features)
+
+        self.fc = nn.Linear(self.flat_features, nClasses)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -90,6 +94,10 @@ class DenseNet(nn.Module):
                 layers.append(SingleLayer(nChannels, growthRate))
             nChannels += growthRate
         return nn.Sequential(*layers)
+
+    def _get_flat_features(self, image_shape, features):
+        f = features(torch.Variable(torch.ones(1,*image_shape)))
+        return int(np.prod(f.size()[1:]))
 
     def forward(self, x):
         out = self.conv1(x)

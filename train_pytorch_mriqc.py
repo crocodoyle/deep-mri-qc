@@ -234,7 +234,7 @@ if __name__ == '__main__':
     if args.cuda:
         torch.cuda.manual_seed(args.seed)
 
-    model = densenet.DenseNet(growthRate=12, depth=100, reduction=0.5, bottleneck=True, nClasses=2)
+    model = densenet.DenseNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],), growthRate=4, depth=32, reduction=0.5, bottleneck=True, nClasses=2)
     # model = BigConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
 
     print('Parameters:', sum([p.data.nelement() for p in model.parameters()]))
@@ -291,7 +291,7 @@ if __name__ == '__main__':
         fold_num = fold_idx + 1
 
         # model = ConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
-        model = densenet.DenseNet(growthRate=4, depth=32, reduction=0.5, bottleneck=True, nClasses=2)
+        model = densenet.DenseNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],), growthRate=4, depth=32, reduction=0.5, bottleneck=True, nClasses=2)
 
         if args.cuda:
             model.cuda()
