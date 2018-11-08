@@ -107,13 +107,14 @@ class DenseNet(nn.Module):
         out = self.trans2(self.dense2(out))
         out = self.dense3(out)
         out = torch.squeeze(F.avg_pool2d(F.relu(self.bn1(out)), 8))
-        out = out.view(out.size(0), -1)
         return out
 
     def forward(self, x):
         print('input:', x.shape)
         out = self.features(x)
         print('features:', out.shape)
+        out = out.view(out.size(0), -1)
+        print('flat:', out.shape)
         out = self.fc(out)
         print('out:', out.shape)
         return out
