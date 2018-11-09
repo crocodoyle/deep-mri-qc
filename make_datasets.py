@@ -771,7 +771,7 @@ if __name__ == "__main__":
         with h5py.File(abide_output, 'w') as f:
             f.create_dataset('MRI', (n_abide, 1, target_size[0], target_size[1], target_size[2]), dtype='float32')
             f.create_dataset('qc_label', (n_abide,), dtype='float32')
-            f.create_dataset('label_confidence', (n_abide), dtype='float32')
+            f.create_dataset('label_confidence', (n_abide,), dtype='float32')
 
             f.create_dataset('filename', (n_abide,), dtype=dt)
             f.create_dataset('dataset', (n_abide,), dtype=dt)
@@ -785,7 +785,7 @@ if __name__ == "__main__":
         with h5py.File(ds030_output, 'w') as f2:
             f2.create_dataset('MRI', (n_ds030, 1, target_size[0], target_size[1], target_size[2]), dtype='float32')
             f2.create_dataset('qc_label', (n_ds030,), dtype='float32')
-            f.create_dataset('label_confidence', (n_ds030), dtype='float32')
+            f.create_dataset('label_confidence', (n_ds030,), dtype='float32')
 
             f2.create_dataset('filename', (n_ds030,), dtype=dt)
             f2.create_dataset('dataset', (n_ds030,), dtype=dt)
