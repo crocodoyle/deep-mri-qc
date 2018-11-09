@@ -332,9 +332,9 @@ def make_abide_subject(line, subject_index, input_path, f, mask):
 
         # register_MINC(input_path + t1_filename, atlas, input_path + '/resampled/' + t1_filename)
 
-        one_hot = [0, 0, 0]
-
+        one_hot = [0.0, 0.0, 0.0]
         total_labels = 0
+
         if len(line[2]) > 0:
             label1 = int(line[2]) + 1  # -1, 0, or 1
             one_hot[label1] += 1
@@ -348,16 +348,21 @@ def make_abide_subject(line, subject_index, input_path, f, mask):
         #     one_hot[label3] += 1
         #     total_labels += 1
 
+        confidence = (0.66*one_hot[1] + one_hot[2]) / total_labels
+
+        one_hot = np.divide(one_hot, total_labels)
         one_hot = [one_hot[0], one_hot[1] + one_hot[2]] # map doubtful and accept to one label
 
-        one_hot = np.multiply(one_hot, 1 / total_labels)
+        if one_hot[0] == one_hot[1]:
+            print('Excluding ' + line[0] + ' because QC ratings inconsistent')
+            return -1
 
-        # for one in one_hot:
-        #     if one > 0.1 and one < 0.9:
-        #         print('Excluding ' + line[0] + ' because QC inconsistent')
-        #         return -1
+        label = np.argmax(one_hot)
+        if label == 0:
+            confidence = 1 - confidence
 
-        f['qc_label'][subject_index] = np.argmax(one_hot)
+        f['qc_label'][subject_index] = label
+        f['label_confidence'][subject_index] = confidence
         # print(t1_filename, one_hot)
         t1_data = nib.load(input_path + '/resampled/' + t1_filename).get_data()
 
@@ -429,17 +434,22 @@ def make_ds030_subject(line, subject_index, input_path, f, mask):
             f['MRI'][subject_index, 0, ...] = normalise_zero_one(t1_data)
 
             one_hot = [0, 0]
+            label_confidence = 1
 
             if 'ok' in label:
                 one_hot = [0, 1]
             elif 'maybe' in label:
                 one_hot = [0, 1]
+                label_confidence = 0.66
             elif 'exclude' in label:
                 one_hot = [1, 0]
             else:
                 raise Exception
 
-            f['qc_label'][subject_index] = np.argmax(one_hot)
+            label = np.argmax(one_hot)
+
+            f['label_confidence'][subject_index] = label_confidence
+            f['qc_label'][subject_index] = label
             f['dataset'][subject_index] = 'ds030'
             f['filename'][subject_index] = t1_filename_mnc
 
@@ -761,6 +771,7 @@ if __name__ == "__main__":
         with h5py.File(abide_output, 'w') as f:
             f.create_dataset('MRI', (n_abide, 1, target_size[0], target_size[1], target_size[2]), dtype='float32')
             f.create_dataset('qc_label', (n_abide,), dtype='float32')
+            f.create_dataset('label_confidence', (n_abide), dtype='float32')
 
             f.create_dataset('filename', (n_abide,), dtype=dt)
             f.create_dataset('dataset', (n_abide,), dtype=dt)
@@ -774,6 +785,7 @@ if __name__ == "__main__":
         with h5py.File(ds030_output, 'w') as f2:
             f2.create_dataset('MRI', (n_ds030, 1, target_size[0], target_size[1], target_size[2]), dtype='float32')
             f2.create_dataset('qc_label', (n_ds030,), dtype='float32')
+            f.create_dataset('label_confidence', (n_ds030), dtype='float32')
 
             f2.create_dataset('filename', (n_ds030,), dtype=dt)
             f2.create_dataset('dataset', (n_ds030,), dtype=dt)
