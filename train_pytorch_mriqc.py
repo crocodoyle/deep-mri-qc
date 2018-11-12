@@ -363,7 +363,7 @@ if __name__ == '__main__':
 
     np.random.shuffle(abide_indices)
 
-    labels = np.copy(abide_f['qc_label'][list(abide_indices)])
+    labels = np.copy(abide_f['qc_label'][np.array(abide_indices)])
 
     n_total = len(abide_indices)
 
