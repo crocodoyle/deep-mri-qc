@@ -156,7 +156,7 @@ def learn_bag_distribution(model, f, f2, train_indices, validation_indices, test
     bag_model.bag_classifier.train()
     bag_model.output.train()
 
-    bag_model_params = [list(bag_model.bag_classifier.parameters()) + list(bag_model.output.parameters())]
+    bag_model_params = list(bag_model.bag_classifier.parameters()) + list(bag_model.output.parameters())
     print('Bag model has', len(bag_model_params), 'parameters')
 
     bag_optimizer = torch.optim.Adam(bag_model_params, lr=0.0002)
