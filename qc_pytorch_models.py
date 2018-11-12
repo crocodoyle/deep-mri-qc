@@ -184,7 +184,7 @@ class ModelWithBagDistribution(nn.Module):
         self.output = nn.Softmax(dim=-1)
 
     def forward(self, input):
-        # print('input:', input.shape)
+        print('input:', input.shape)
         model_output = self.model(input)
 
         model_output = model_output.view(1, -1)
