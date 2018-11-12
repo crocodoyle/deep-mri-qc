@@ -127,23 +127,24 @@ def test(f, test_indices, n_slices):
     images = f['MRI']
     labels = f['qc_label']
 
-    data = torch.zeros((n_slices*2, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
-    target = torch.zeros((data.shape[0], 1), dtype=torch.int64).pin_memory()
+    data = torch.zeros((1, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
+    target = torch.zeros((1, 1), dtype=torch.int64).pin_memory()
 
     for i, test_idx in enumerate(test_indices):
-        data[:, 0, ...] = torch.FloatTensor(images[test_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
-        target[:, 0] = torch.LongTensor([int(labels[test_idx])])
+        for j, slice_idx in enumerate(range(image_shape[0] // 2 - n_slices, image_shape[0] // 2 + n_slices)):
+            data[0, 0, ...] = torch.FloatTensor(images[test_idx, 0, j, ...])
+            target[0, 0] = torch.LongTensor([int(labels[test_idx])])
 
-        truth[i] = int(labels[test_idx])
+            truth[i] = int(labels[test_idx])
 
-        if args.cuda:
-            data, target = data.cuda(), target.cuda()
-        data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
+            if args.cuda:
+                data, target = data.cuda(), target.cuda()
+            data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
 
-        output = model(data)
-        output = m(output)
+            output = model(data)
+            output = m(output)
 
-        probabilities[i, :, :] = output.data.cpu().numpy()
+            probabilities[i, j, :] = output.data.cpu().numpy()
 
     return truth, probabilities
 
