@@ -156,7 +156,7 @@ def learn_bag_distribution(model, f, f2, train_indices, validation_indices, test
     bag_model.bag_classifier.train()
     bag_model.output.train()
 
-    bag_optimizer = torch.optim.Adam([bag_model.bag_classifier.parameters(), bag_model.output.parameters()], lr=0.0002)
+    bag_optimizer = torch.optim.Adam([bag_model.bag_classifier.parameters() + bag_model.output.parameters()], lr=0.0002)
 
     images = f['MRI']
     labels = f['qc_label']
