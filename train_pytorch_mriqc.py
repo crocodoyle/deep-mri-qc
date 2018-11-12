@@ -156,7 +156,10 @@ def learn_bag_distribution(model, f, f2, train_indices, validation_indices, test
     bag_model.bag_classifier.train()
     bag_model.output.train()
 
-    bag_optimizer = torch.optim.Adam([bag_model.bag_classifier.parameters() + bag_model.output.parameters()], lr=0.0002)
+    bag_model_params = [list(bag_model.bag_classifier.parameters()) + list(bag_model.output.parameters())]
+    print('Bag model has', len(bag_model_params), 'parameters')
+    
+    bag_optimizer = torch.optim.Adam(bag_model_params, lr=0.0002)
 
     images = f['MRI']
     labels = f['qc_label']
@@ -336,8 +339,8 @@ if __name__ == '__main__':
                         help='specifies how many slices to include about the centre for testing (default: 50)')
     parser.add_argument('--gpu', type=int, default=0, metavar='N',
                         help='specifies which GPU to use')
-    parser.add_argument('--scheduler', type=bool, default=False, metavar='N',
-                        help='whether to enable learning rate scheduling')
+    parser.add_argument('--no-scheduler', action='store_false', default=True, metavar='N',
+                        help='disable learning rate scheduling')
 
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
