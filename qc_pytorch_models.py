@@ -160,3 +160,42 @@ class BigConvolutionalQCNet(nn.Module):
         # print('classifier shape:', x.shape)
         # x = self.output(x)
         return x
+
+
+class ModelWithBagDistribution(nn.Module):
+    """
+    Wraps a model that predicts slice-wise to learn distribution across slices
+    """
+    def __init__(self, model, n_slices):
+        super(ModelWithBagDistribution, self).__init__()
+        self.model = model
+
+        self.n_slices = n_slices
+
+        self.bag_classifier = nn.Sequential(
+            nn.Linear(n_slices*2, n_slices*2, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.Dropout(0.5),
+            nn.Linear(n_slices*2, n_slices, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.Dropout(0.5)
+        )
+
+        self.output = nn.Softmax(dim=-1)
+
+    def forward(self, input):
+        # print('input:', input.shape)
+        model_output = self.model(input)
+
+        model_output = model_output.view(1, -1)
+
+        logits_scaled = self.bag_classifier(model_output)
+        return self.output(logits_scaled)
+
+    def temperature_scale(self, logits):
+        """
+        Perform temperature scaling on logits
+        """
+        # Expand temperature to match the size of logits
+        temperature = self.temperature.unsqueeze(1).expand(logits.size(0), logits.size(1))
+        return logits / temperature

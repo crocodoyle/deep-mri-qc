@@ -18,7 +18,7 @@ from torch.autograd import Variable
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
 from temperature_scaling import ModelWithTemperature, ModelWithSoftmax, ECELoss
 
-from qc_pytorch_models import ConvolutionalQCNet, BigConvolutionalQCNet
+from qc_pytorch_models import ConvolutionalQCNet, BigConvolutionalQCNet, ModelWithBagDistribution
 
 import h5py, pickle, os, time, sys, csv
 import numpy as np
@@ -51,6 +51,7 @@ class QCDataset(Dataset):
     def __init__(self, f, all_indices, n_slices=40):
         self.images = f['MRI']
         self.labels = f['qc_label']
+        self.confidence = f['label_confidence']
 
         self.n_subjects = len(all_indices)
         self.indices = np.zeros((self.n_subjects))
@@ -66,9 +67,10 @@ class QCDataset(Dataset):
         slice_modifier = np.random.randint(-self.n_slices, self.n_slices)
 
         label = self.labels[good_index]
+        label_confidence = self.confidence[good_index]
         image_slice = self.images[good_index, :, image_shape[0] // 2 + slice_modifier, :, :]
 
-        return image_slice, label
+        return image_slice, label, label_confidence
 
     def __len__(self):
         return self.n_subjects
@@ -84,13 +86,16 @@ def train(epoch, class_weight=None):
     else:
         w = None
 
-    for batch_idx, (data, target) in enumerate(train_loader):
+    for batch_idx, (data, target, target_confidence) in enumerate(train_loader):
         n_in_batch = data.shape[0]
+        truth[batch_idx * args.batch_size:batch_idx * args.batch_size + n_in_batch] = target
+
         if args.cuda:
             data, target = data.cuda(), target.cuda()
             if not class_weight is None:
                 w.cuda()
                 w = Variable(w).type(torch.cuda.FloatTensor)
+
         data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
         optimizer.zero_grad()
         output = model(data)
@@ -108,7 +113,6 @@ def train(epoch, class_weight=None):
 
         output = m(output)
 
-        truth[batch_idx * args.batch_size:batch_idx * args.batch_size + n_in_batch] = target.data.cpu().numpy()
         probabilities[batch_idx * args.batch_size:batch_idx * args.batch_size + n_in_batch] = output.data.cpu().numpy()
 
     return truth, probabilities
@@ -130,6 +134,8 @@ def test(f, test_indices, n_slices):
         data[:, 0, ...] = torch.FloatTensor(images[test_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
         target[:, 0] = torch.LongTensor([int(labels[test_idx])])
 
+        truth[i] = int(labels[test_idx])
+
         if args.cuda:
             data, target = data.cuda(), target.cuda()
         data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
@@ -137,10 +143,113 @@ def test(f, test_indices, n_slices):
         output = model(data)
         output = m(output)
 
-        truth[i] = target.data.cpu()[0, 0]
         probabilities[i, :, :] = output.data.cpu().numpy()
 
     return truth, probabilities
+
+
+def learn_bag_distribution(model, f, f2, train_indices, validation_indices, test_indices, n_slices, batch_size, n_epochs):
+    bag_model = ModelWithBagDistribution(model, n_slices)
+
+    bag_model.model.eval()
+    bag_model.bag_classifier.train()
+    bag_model.output.train()
+
+    bag_optimizer = torch.optim.Adam([bag_model.bag_classifier.parameters(), bag_model.output.parameters()], lr=0.0002)
+
+    images = f['MRI']
+    labels = f['qc_label']
+    label_confidence = f['label_confidence']
+
+    data = torch.empty((n_slices*2, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
+    target = torch.empty((data.shape[0], 1), dtype=torch.int64).pin_memory()
+    sample_weight = torch.empty((1), dtype=torch.float32).pin_memory()
+
+    for epoch_idx in range(n_epochs):
+        np.random.shuffle(train_indices)
+
+        for sample_idx, train_idx in enumerate(train_indices):
+            data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
+            target[:, 0] = torch.LongTensor([int(labels[train_idx])])
+            sample_weight[0] = torch.LongTensor([float(label_confidence[train_idx])])
+
+            if args.cuda:
+                data, target = data.cuda(), target.cuda()
+            data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
+
+            output = bag_model(data)
+
+            loss = nn.NLLLoss()
+            loss_val = loss(output, target) * sample_weight
+            loss_val.backward()
+
+            if (sample_idx + 1) % batch_size == 0:
+                bag_optimizer.step()
+                bag_optimizer.zero_grad()
+                print('Bag classifier training epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch_idx, sample_idx, len(train_indices), loss_val.data.cpu().numpy()))
+
+        bag_optimizer.step()
+        bag_optimizer.zero_grad()
+
+    bag_model.eval()
+
+    train_truth, train_probabilities = np.zeros(len(train_indices), dtype='uint8'), np.zeros((len(train_indices)), dtype='float32')
+    validation_truth, validation_probabilities = np.zeros(len(validation_indices), dtype='uint8'), np.zeros((len(validation_indices)), dtype='float32')
+    test_truth, test_probabilities = np.zeros(len(test_indices), dtype='uint8'), np.zeros((len(test_indices)), dtype='float32')
+    ds030_truth, ds030_probabilities = np.zeros(len(ds030_indices), dtype='uint8'), np.zeros((len(ds030_indices)), dtype='float32')
+
+    for i, train_idx in enumerate(train_indices):
+        data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
+        train_truth[i] = int(labels[train_idx])
+
+        if args.cuda:
+            data, target = data.cuda(), target.cuda()
+        data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
+
+        output = bag_model(data)
+
+        train_probabilities[i, :] = output.data.cpu().numpy()
+
+    for i, validation_idx in enumerate(validation_indices):
+        data[:, 0, ...] = torch.FloatTensor(images[validation_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
+        validation_truth[i] = int(labels[validation_idx])
+
+        if args.cuda:
+            data, target = data.cuda(), target.cuda()
+        data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
+
+        output = bag_model(data)
+
+        validation_probabilities[i, :] = output.data.cpu().numpy()
+
+    for i, test_idx in enumerate(test_indices):
+        data[:, 0, ...] = torch.FloatTensor(images[test_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
+        test_truth[i] = int(labels[test_idx])
+
+        if args.cuda:
+            data, target = data.cuda(), target.cuda()
+        data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
+
+        output = bag_model(data)
+
+        test_probabilities[i, :] = output.data.cpu().numpy()
+
+    images = f2['MRI']
+    for i, ds030_idx in enumerate(ds030_indices):
+        data[:, 0, ...] = torch.FloatTensor(images[ds030_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
+        ds030_truth[i] = int(labels[ds030_idx])
+
+        if args.cuda:
+            data, target = data.cuda(), target.cuda()
+        data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
+
+        output = bag_model(data)
+
+        ds030_probabilities[i, :] = output.data.cpu().numpy()
+
+    return bag_model, (train_truth, train_probabilities), (validation_truth, validation_probabilities), (test_truth, test_probabilities), (ds030_truth, ds030_probabilities)
+
+
 
 
 def set_temperature(model, f, validation_indices, n_slices):
@@ -273,6 +382,7 @@ if __name__ == '__main__':
     best_sens_spec_score = np.zeros((n_folds))
 
     all_test_truth, all_val_truth, all_test_probs, all_val_probs, all_test_probs_cal, all_val_probs_cal = [], [], [], [], [], []
+    all_bagged_test_truth, all_bagged_val_truth, all_bagged_test_probs, all_bagged_val_probs, all_bagged_ds030_truth, all_bagged_ds030_probs = [], [], [], [], [], []
 
     if args.cuda:
         model.cuda()
@@ -333,9 +443,9 @@ if __name__ == '__main__':
         train_sample_weights = torch.DoubleTensor(train_sample_weights)
 
         # optimizer = optim.Adam(model.parameters(), lr=0.002, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
-        optimizer = optim.SGD(model.parameters(), lr=0.02, momentum=0.9, dampening=0, weight_decay=0, nesterov=True)
+        optimizer = optim.SGD(model.parameters(), lr=0.002, momentum=0.9, dampening=0, weight_decay=0, nesterov=True)
         if args.scheduler:
-            scheduler = StepLR(optimizer, args.epochs // 4)
+            scheduler = StepLR(optimizer, args.epochs // 4, gamma=0.5)
 
         for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
             epoch_start = time.time()
@@ -446,9 +556,11 @@ if __name__ == '__main__':
         ds030_results[fold_idx, 2] = accuracy_score(ds030_truth, ds030_predictions)
         ds030_results[fold_idx, 3] = roc_auc_score(ds030_truth, ds030_predictions)
 
+        bag_model, train_res, val_res, test_res, ds030_res = learn_bag_distribution(model, abide_f, ds030_f, train_indices, validation_indices, test_indices, n_slices, batch_size=32, n_epochs=20)
+
         #calibrate model probability on validation set
-        model_with_temperature = ModelWithTemperature(model)
-        model = set_temperature(model_with_temperature, abide_f, validation_indices, n_slices)
+        model_with_temperature = ModelWithTemperature(bag_model)
+        model_with_temperature = set_temperature(model_with_temperature, abide_f, validation_indices, n_slices)
 
         val_truth, val_probabilities_calibrated = test(abide_f, validation_indices, n_slices)
         test_truth, test_probabilities_calibrated = test(abide_f, test_indices, n_slices)
@@ -457,28 +569,23 @@ if __name__ == '__main__':
             all_val_probs.append(val_probabilities[i, ...])
             all_val_truth.append(val_truth[i, ...])
             all_val_probs_cal.append(val_probabilities_calibrated[i, ...])
+            all_bagged_val_probs.append(val_res[1][i, ...])
+            all_bagged_val_truth.append(val_res[0][i, ...])
 
         for i, test_idx in enumerate(test_indices):
             all_test_probs.append(test_probabilities[i, ...])
             all_test_truth.append(test_truth[i, ...])
             all_test_probs_cal.append(test_probabilities_calibrated[i, ...])
+            all_bagged_test_probs.append(test_res[1][i, ...])
+            all_bagged_test_truth.append(test_res[0][i, ...])
 
-        # all_val_probs[val_idx:val_idx+len(validation_indices), :, :] = val_probabilities
-        # all_val_truth[val_idx:val_idx+len(validation_indices)] = val_truth
-        # all_test_probs[test_idx:test_idx+len(test_indices), :, :] = test_probabilities
-        # all_test_truth[test_idx:test_idx+len(test_indices)] = test_truth
+        for i, ds030_idx in enumerate(ds030_indices):
+            all_bagged_ds030_probs(ds030_res[1][i, ...])
+            all_bagged_ds030_truth(ds030_res[0][i, ...])
 
-        # print('val_ indices:', val_idx, val_idx + len(validation_indices))
-        # print('test indices:', test_idx, test_idx + len(test_indices))
-
-        # all_val_probs_calibrated[val_idx:val_idx + len(validation_indices), :, :] = val_probabilities_calibrated
-        # all_test_probs_calibrated[test_idx:test_idx + len(test_indices), :, :] = test_probabilities_calibrated
 
         model_filename = os.path.join(results_dir, 'calibrated_qc_fold_' + str(fold_num) + '.tch')
-        torch.save(model, model_filename)
-
-        test_idx += len(test_indices)
-        val_idx += len(validation_indices)
+        torch.save(model_with_temperature, model_filename)
 
     plot_sens_spec(training_sensitivity, training_specificity,
                            validation_sensitivity, validation_specificity,
@@ -486,8 +593,20 @@ if __name__ == '__main__':
 
     plot_confidence(np.asarray(all_test_probs, dtype='float32'), np.asarray(all_test_probs_cal, dtype='float32'), np.asarray(all_test_truth, dtype='uint8'), results_dir)
 
-    plot_roc(None, None, np.asarray(all_val_truth, dtype='float32'), np.mean(np.asarray(all_val_probs, dtype='float32'), axis=1), np.asarray(all_test_truth, dtype='float32'), np.mean(np.asarray(all_test_probs, dtype='float32'), axis=1), results_dir, -1, fold_num=-1)
-    plot_roc(None, None, np.asarray(all_val_truth, dtype='float32'), np.mean(np.asarray(all_val_probs_cal, dtype='float32'), axis=1), np.asarray(all_test_truth, dtype='float32'), np.mean(np.asarray(all_test_probs_cal, dtype='float32'), axis=1), results_dir, -2, fold_num=-1)
+
+    all_val_truth = np.asarray(all_val_truth, dtype='float32')
+    all_test_truth = np.asarray(all_test_truth, dtype='float32')
+
+    ground_truth = [all_val_truth, all_test_truth]
+    bagged_ground_truth = [np.asarray(all_bagged_val_truth, dtype='float32'), np.asarray(all_bagged_test_truth, dtype='float32'), np.asarray(all_bagged_ds030_truth, dtype='float32')]
+
+    output_probabilities = [np.mean(np.asarray(all_val_probs, dtype='float32'), axis=1), np.mean(np.asarray(all_test_probs, dtype='float32'), axis=-1)]
+    bagged_probabilities = [np.asarray(all_bagged_val_probs, dtype='float32'), np.asarray(all_bagged_test_probs, dtype='float32'), np.asarray(all_bagged_ds030_probs, dtype='float32')]
+    calibrated_probabilities = [np.asarray(all_val_probs_cal, dtype='float32'), np.asarray(all_test_probs_cal, dtype='float32')]
+    segment_labels = ['Val', 'Test', 'ds030']
+
+    plot_roc(ground_truth, output_probabilities, segment_labels, results_dir, -1, fold_num=-1)
+    plot_roc(bagged_ground_truth, bagged_probabilities, segment_labels, results_dir, -2, fold_num=-1)
 
     sens_plot = [best_sensitivity[:, 0], best_sensitivity[:, 1], best_sensitivity[:, 2], ds030_results[:, 0]]
     spec_plot = [best_specificity[:, 0], best_specificity[:, 1], best_specificity[:, 2], ds030_results[:, 1]]

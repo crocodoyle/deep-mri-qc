@@ -26,36 +26,21 @@ def make_roc_gif(results_dir, epochs, fold_num=1):
     imageio.mimsave(results_dir + 'ROC_fold_' + str(fold_num) + '.gif', images)
 
 
-def plot_roc(train_truth, train_probs, val_truth, val_probs, test_truth, test_probs, results_dir, epoch_num=-1, fold_num=-1):
+def plot_roc(ground_truth, probabilities, segment_labels, results_dir, epoch_num=-1, fold_num=-1):
     plt.figure(figsize=(8, 8))
+
+    colors = ['darkorange', 'red', 'darkred', 'hotpink']
 
     lw = 2
     plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
 
-    train_roc_auc, val_roc_auc, test_roc_auc = 0, 0, 0
+    rocs = []
+    for i, (truth, probs, label) in enumerate(zip(ground_truth, probabilities, segment_labels)):
+        roc = roc_auc_score(truth, probs[:, 1], 'weighted')
+        fpr, tpr, _ = roc_curve(truth, probs[:, 1])
+        plt.plot(fpr, tpr, color=colors[i], lw=lw, label=label + ' ROC (area = %0.2f)' % roc)
 
-    try:
-        train_roc_auc = roc_auc_score(train_truth, train_probs[:, 1], 'weighted')
-        train_fpr, train_tpr, _ = roc_curve(train_truth, train_probs[:, 1])
-        plt.plot(train_fpr, train_tpr, color='darkorange', lw=lw, label='Train ROC (area = %0.2f)' % train_roc_auc)
-    except:
-        print('Couldnt plot training')
-
-    try:
-        print('validation results shapes:', val_truth.shape, val_probs.shape)
-        val_roc_auc = roc_auc_score(val_truth, val_probs[:, 1], 'weighted')
-        val_fpr, val_tpr, _ = roc_curve(val_truth, val_probs[:, 1])
-        plt.plot(val_fpr, val_tpr, color='red', lw=lw, label='Val ROC (area = %0.2f)' % val_roc_auc)
-    except Exception as e:
-        print(e)
-        print('Couldnt plot validation')
-
-    try:
-        test_roc_auc = roc_auc_score(test_truth, test_probs[:, 1], 'weighted')
-        test_fpr, test_tpr, _ = roc_curve(test_truth, test_probs[:, 1])
-        plt.plot(test_fpr, test_tpr, color='darkred', lw=lw, label='Test ROC (area = %0.2f)' % test_roc_auc)
-    except:
-        print('Couldnt plot test')
+        rocs.append(roc)
 
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
@@ -76,7 +61,7 @@ def plot_roc(train_truth, train_probs, val_truth, val_probs, test_truth, test_pr
     plt.savefig(results_dir + filename, bbox_inches='tight')
     plt.close()
 
-    return train_roc_auc, val_roc_auc, test_roc_auc
+    return rocs
 
 
 def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_spec, best_epoch_idx, results_dir):
