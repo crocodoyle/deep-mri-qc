@@ -476,8 +476,11 @@ if __name__ == '__main__':
 
             # print('probs shape:', test_probabilities.shape, val_probabilities.shape)
 
-            train_auc, val_auc, test_auc = plot_roc(train_truth, train_probabilities, val_truth, val_average_probs,
-                                                    test_truth, test_average_probs, results_dir, epoch, fold_num)
+            truths = [train_truth, val_truth, test_truth]
+            probs = [train_probabilities, val_average_probs, test_average_probs]
+            plot_labels = ['Train', 'Validation', 'Test']
+
+            train_auc, val_auc, test_auc = plot_roc(truths, probs, plot_labels, results_dir, epoch, fold_num)
 
             train_tn, train_fp, train_fn, train_tp = confusion_matrix(np.asarray(train_truth, dtype='uint8'), np.asarray(train_predictions, dtype='uint8')).ravel()
             print('Training TP:', train_tp, 'TN:', train_tn, 'FP:', train_fp, 'FN:', train_fn)
