@@ -361,9 +361,9 @@ if __name__ == '__main__':
     abide_indices = pickle.load(open(workdir + 'abide_indices.pkl', 'rb'))
     ds030_indices = pickle.load(open(workdir + 'ds030_indices.pkl', 'rb'))
 
-    np.random.shuffle(abide_indices)
+    # np.random.shuffle(abide_indices)
 
-    labels = np.copy(abide_f['qc_label'][np.array(abide_indices)])
+    labels = abide_f['qc_label'][abide_indices]
 
     n_total = len(abide_indices)
 
