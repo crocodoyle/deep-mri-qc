@@ -157,7 +157,7 @@ def learn_bag_distribution(model, f, f2, train_indices, validation_indices, test
     bag_model.output.train()
 
     bag_model_params = list(bag_model.bag_classifier.parameters()) + list(bag_model.output.parameters())
-    print('Bag model has', len(bag_model_params), 'parameters')
+    print('Parameters:', sum([p.data.nelement() for p in bag_model_params]))
 
     bag_optimizer = torch.optim.Adam(bag_model_params, lr=0.0002)
 
@@ -173,12 +173,10 @@ def learn_bag_distribution(model, f, f2, train_indices, validation_indices, test
         np.random.shuffle(train_indices)
 
         for sample_idx, train_idx in enumerate(train_indices):
-            data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
-            target[:, 0] = torch.LongTensor([int(labels[train_idx])])
-            sample_weight[0] = torch.LongTensor([float(label_confidence[train_idx])])
+            data[:, 0, ...] = torch.cuda.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
+            target[:, 0] = torch.cuda.LongTensor([int(labels[train_idx])])
+            sample_weight[0] = torch.cuda.LongTensor([float(label_confidence[train_idx])])
 
-            if args.cuda:
-                data, target = data.cuda(), target.cuda()
             data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
 
             output = bag_model(data)
