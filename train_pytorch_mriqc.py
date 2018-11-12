@@ -546,7 +546,7 @@ if __name__ == '__main__':
 
 
         # test images using best model this fold
-        model.load_state_dict(torch.load(results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch'))
+        # model.load_state_dict(torch.load(results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch'))
         model.cuda()
         model.eval()
 
