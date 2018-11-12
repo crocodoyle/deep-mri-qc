@@ -353,6 +353,8 @@ if __name__ == '__main__':
         torch.cuda.manual_seed(args.seed)
 
     model = densenet.DenseNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],), growthRate=4, depth=64, reduction=0.5, bottleneck=True, nClasses=2)
+    if args.cuda:
+        model.cuda()
     # model = BigConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
 
     print('Parameters:', sum([p.data.nelement() for p in model.parameters()]))
