@@ -168,8 +168,7 @@ class ModelWithBagDistribution(nn.Module):
     """
     def __init__(self, model, n_slices):
         super(ModelWithBagDistribution, self).__init__()
-        self.features = model.features
-        self.slice_classifier = model.classifier
+        self.slice_model = nn.Module(model)
 
         self.n_slices = n_slices
 
@@ -189,11 +188,8 @@ class ModelWithBagDistribution(nn.Module):
 
     def forward(self, input):
         print('input:', input.shape)
-        x = self.features(input)
-        x = x.view(x.size(0), -1)
-        x = self.slice_classifier(x)
+        x = self.slice_model(input)
         x = x.view(1, -1)
-
         out = self.bag_classifier(x)
         return self.output(out)
 

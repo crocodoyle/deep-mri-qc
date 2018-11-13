@@ -150,11 +150,10 @@ def test(f, test_indices, n_slices):
 
 
 def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, test_indices, n_slices, batch_size, n_epochs):
-    bag_model.features.eval()
-    bag_model.slice_classifier.eval()
+    bag_model.slice_model.eval()
     bag_model.bag_classifier.train()
     bag_model.output.train()
-    bag_model = bag_model.cuda()
+    bag_model.cuda()
 
     total_params = bag_model.parameters()
     bag_model_params = list(bag_model.bag_classifier.parameters()) + list(bag_model.output.parameters())
