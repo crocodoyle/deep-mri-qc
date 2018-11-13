@@ -76,6 +76,18 @@ class DenseNet(nn.Module):
 
         self.fc = nn.Linear(self.flat_features, nClasses)
 
+        self.features = nn.Sequential(
+            self.conv1,
+            self.dense1,
+            self.trans1,
+            self.dense2,
+            self.trans2,
+            self.dense3,
+            self.bn1,
+            nn.ReLU(inplace=True),
+            nn.AvgPool2d(8),
+        )
+
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
@@ -99,15 +111,6 @@ class DenseNet(nn.Module):
     def _get_flat_features(self, image_shape, features):
         f = features(torch.ones(1,*image_shape))
         return int(np.prod(f.size()))
-
-    def features(self, x):
-        # print('input features:', x.shape)
-        out = self.conv1(x)
-        out = self.trans1(self.dense1(out))
-        out = self.trans2(self.dense2(out))
-        out = self.dense3(out)
-        out = F.avg_pool2d(F.relu(self.bn1(out)), 8)
-        return out
 
     def forward(self, x):
         # print('input forward:', x.shape)

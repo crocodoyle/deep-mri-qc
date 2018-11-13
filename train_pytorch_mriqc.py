@@ -186,7 +186,6 @@ def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, 
 
             output = bag_model(data)
 
-
             loss = nn.NLLLoss()
             loss_val = loss(output, target) * sample_weight
             loss_val.backward()

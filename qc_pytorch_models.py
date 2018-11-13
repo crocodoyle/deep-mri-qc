@@ -183,9 +183,7 @@ class ModelWithBagDistribution(nn.Module):
 
     def forward(self, input):
         print('input:', input.shape)
-        x = self.slice_model.features(input)
-        x = x.view(x.size(0), -1)
-        x = self.slice_model.fc(x)
+        x = self.slice_model(input)
         x = x.view(1, -1)
         out = self.bag_classifier(x)
         return out
