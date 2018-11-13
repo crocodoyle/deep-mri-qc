@@ -149,11 +149,7 @@ def test(f, test_indices, n_slices):
     return truth, probabilities
 
 
-def learn_bag_distribution(model, f, f2, train_indices, validation_indices, test_indices, n_slices, batch_size, n_epochs):
-    bag_model = ModelWithBagDistribution(model, n_slices)
-
-    bag_model.cuda()
-
+def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, test_indices, n_slices, batch_size, n_epochs):
     bag_model.model.eval()
     bag_model.bag_classifier.train()
     bag_model.output.train()
@@ -566,10 +562,13 @@ if __name__ == '__main__':
         ds030_results[fold_idx, 2] = accuracy_score(ds030_truth, ds030_predictions)
         ds030_results[fold_idx, 3] = roc_auc_score(ds030_truth, ds030_predictions)
 
-        bag_model, train_res, val_res, test_res, ds030_res = learn_bag_distribution(model, abide_f, ds030_f, train_indices, validation_indices, test_indices, n_slices, batch_size=32, n_epochs=20)
+        bag_model = ModelWithBagDistribution(model, n_slices)
+        bag_model.cuda()
+        bag_model, train_res, val_res, test_res, ds030_res = learn_bag_distribution(bag_model, abide_f, ds030_f, train_indices, validation_indices, test_indices, n_slices, batch_size=32, n_epochs=20)
 
         #calibrate model probability on validation set
         model_with_temperature = ModelWithTemperature(bag_model)
+        model_with_temperature.cuda()
         model_with_temperature = set_temperature(model_with_temperature, abide_f, validation_indices, n_slices)
 
         val_truth, val_probabilities_calibrated = test(abide_f, validation_indices, n_slices)
