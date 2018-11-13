@@ -153,7 +153,7 @@ def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, 
     bag_model.model.eval()
     bag_model.bag_classifier.train()
     bag_model.output.train()
-    bag_model.cuda()
+    bag_model = bag_model.cuda()
 
     bag_model_params = list(bag_model.bag_classifier.parameters()) + list(bag_model.output.parameters())
     print('Parameters:', sum([p.data.nelement() for p in bag_model_params]))
