@@ -72,10 +72,6 @@ class DenseNet(nn.Module):
 
         self.bn1 = nn.BatchNorm2d(nChannels)
 
-        self.flat_features = self._get_flat_features(input_shape, self.features)
-
-        self.fc = nn.Linear(self.flat_features, nClasses)
-
         self.features = nn.Sequential(
             self.conv1,
             self.dense1,
@@ -87,6 +83,10 @@ class DenseNet(nn.Module):
             nn.ReLU(inplace=True),
             nn.AvgPool2d(8),
         )
+
+        self.n_flat_features = self._get_flat_features(input_shape, self.features)
+
+        self.fc = nn.Linear(self.n_flat_features, nClasses)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
