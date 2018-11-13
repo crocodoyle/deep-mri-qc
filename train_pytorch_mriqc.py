@@ -47,7 +47,7 @@ epsilon = 1e-6
 
 image_shape = (189, 233, 197)
 
-class QCDataset(Dataset):
+class RandomSlicesQCDataset(Dataset):
     def __init__(self, f, all_indices, n_slices=40):
         self.images = f['MRI']
         self.labels = f['qc_label']
@@ -71,6 +71,32 @@ class QCDataset(Dataset):
         image_slice = self.images[good_index, :, image_shape[0] // 2 + slice_modifier, :, :]
 
         return image_slice, label, label_confidence
+
+    def __len__(self):
+        return self.n_subjects
+
+class AllSlicesQCDataset(Dataset):
+    def __init__(self, f, all_indices, n_slices=40):
+        self.images = f['MRI']
+        self.labels = f['qc_label']
+        self.confidence = f['label_confidence']
+
+        self.n_subjects = len(all_indices)
+        self.indices = np.zeros((self.n_subjects))
+
+        self.n_slices = n_slices
+
+        for i, index in enumerate(all_indices):
+            self.indices[i] = index
+
+    def __getitem__(self, index):
+        good_index = self.indices[index]
+
+        label = self.labels[good_index]
+        label_confidence = self.confidence[good_index]
+        image_slices = self.images[good_index, :, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, :, :]
+
+        return image_slices, label, label_confidence
 
     def __len__(self):
         return self.n_subjects
@@ -149,16 +175,19 @@ def test(f, test_indices, n_slices):
 def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, test_indices, n_slices, batch_size, n_epochs):
     bag_model.slice_model.eval()
     bag_model.bag_classifier.train()
-    bag_model.cuda()
+
+    bag_model.features.cuda()
+    bag_model.slice_classifier.cuda()
+    bag_model.bag_classifier.cuda()
 
     m = nn.Softmax(dim=-1)
 
-    total_params = bag_model.parameters()
-    bag_model_params = bag_model.bag_classifier.parameters()
+    total_params = list(bag_model.parameters())
+    bag_model_params = list(bag_model.bag_classifier.parameters())
     print('Parameters:', sum([p.data.nelement() for p in bag_model_params]), '/', sum([p.data.nelement() for p in total_params]))
 
     on_gpu, on_cpu = 0, 0
-    for param in bag_model.bag_classifier.parameters():
+    for param in bag_model_params:
         if param.is_cuda:
             on_gpu += 1
         else:
@@ -166,7 +195,7 @@ def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, 
 
     print(on_gpu, 'params on GPU,', on_cpu, 'params on CPU')
 
-    bag_optimizer = torch.optim.Adam(bag_model.bag_classifier.parameters(), lr=0.0002)
+    bag_optimizer = torch.optim.Adam(bag_model_params, lr=0.0002)
 
     images = f['MRI']
     labels = f['qc_label']
@@ -470,7 +499,11 @@ if __name__ == '__main__':
                 scheduler.step()
 
             abide_f = h5py.File(workdir + 'abide.hdf5', 'r')
-            train_dataset = QCDataset(abide_f, train_indices, n_slices=n_slices)
+            train_dataset = RandomSlicesQCDataset(abide_f, train_indices, n_slices=n_slices)
+            train_dataset_bag = AllSlicesQCDataset(abide_f, train_indices, n_slices=n_slices)
+            validation_dataset = AllSlicesQCDataset(abide_f, validation_indices, n_slices=n_slices)
+            test_dataset = AllSlicesQCDataset(abide_f, test_indices, n_slices=n_slices)
+            ds030_dataset = AllSlicesQCDataset(ds030_f, ds030_indices, n_slices=n_slices)
 
             sampler = WeightedRandomSampler(weights=train_sample_weights, num_samples=len(train_sample_weights))
             train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=False,
