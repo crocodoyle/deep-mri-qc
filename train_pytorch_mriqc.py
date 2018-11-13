@@ -172,13 +172,10 @@ def test(f, test_indices, n_slices):
     return truth, probabilities
 
 
-def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, test_indices, n_slices, batch_size, n_epochs):
-    bag_model.slice_model.eval()
+def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indices, n_slices, batch_size, n_epochs):
+    bag_model.features.eval()
+    bag_model.slice_classifier.eval()
     bag_model.bag_classifier.train()
-
-    bag_model.features.cuda()
-    bag_model.slice_classifier.cuda()
-    bag_model.bag_classifier.cuda()
 
     m = nn.Softmax(dim=-1)
 
@@ -188,7 +185,6 @@ def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, 
 
     on_gpu, on_cpu = 0, 0
     for param in total_params:
-        print(param)
         if param.is_cuda:
             on_gpu += param.data.nelement()
         else:
@@ -291,7 +287,7 @@ def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, 
 
         ds030_probabilities[i, :] = output.data.cpu().numpy()
 
-    return bag_model, (train_truth, train_probabilities), (validation_truth, validation_probabilities), (test_truth, test_probabilities), (ds030_truth, ds030_probabilities)
+    return (train_truth, train_probabilities), (validation_truth, validation_probabilities), (test_truth, test_probabilities), (ds030_truth, ds030_probabilities)
 
 
 
@@ -510,6 +506,12 @@ if __name__ == '__main__':
             train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=False,
                                                        **kwargs)
 
+            train_loader_bag = torch.utils.data.DataLoader(train_dataset_bag, num_workers=1, pin_memory=True)
+            validation_loader = torch.utils.data.DataLoader(validation_dataset, num_workers=1, pin_memory=True)
+            test_loader = torch.utils.data.DataLoader(test_dataset, num_workers=1, pin_memory=True)
+            ds030_loader = torch.utils.data.DataLoader(ds030_dataset, num_workers=1, pin_memory=True)
+
+
             class_weights = [0.5, 0.5]
 
             train_truth, train_probabilities = train(epoch, class_weight=None)
@@ -615,7 +617,7 @@ if __name__ == '__main__':
 
         bag_model = ModelWithBagDistribution(model, n_slices)
         bag_model.cuda()
-        bag_model, train_res, val_res, test_res, ds030_res = learn_bag_distribution(bag_model, abide_f, ds030_f, train_indices, validation_indices, test_indices, n_slices, batch_size=32, n_epochs=20)
+        train_res, val_res, test_res, ds030_res = learn_bag_distribution(abide_f, ds030_f, train_indices, validation_indices, test_indices, n_slices, batch_size=32, n_epochs=20)
 
         #calibrate model probability on validation set
         model_with_temperature = ModelWithTemperature(bag_model)
