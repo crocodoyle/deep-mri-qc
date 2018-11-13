@@ -80,7 +80,7 @@ class DenseNet(nn.Module):
             self.trans2,
             self.dense3,
             self.bn1,
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
             nn.AvgPool2d(8),
         )
 

@@ -170,6 +170,9 @@ class ModelWithBagDistribution(nn.Module):
         super(ModelWithBagDistribution, self).__init__()
         self.slice_model = model
 
+        self.features = model.features
+        self.slice_classifier = model.fc
+
         self.n_slices = n_slices
 
         self.bag_classifier = nn.Sequential(
@@ -183,15 +186,9 @@ class ModelWithBagDistribution(nn.Module):
 
     def forward(self, input):
         print('input:', input.shape)
-        x = self.slice_model(input)
+        x = self.features(input)
+        x = x.view(x.size(0), -1)
+        x = self.slice_classifier(x)
         x = x.view(1, -1)
         out = self.bag_classifier(x)
         return out
-
-    def temperature_scale(self, logits):
-        """
-        Perform temperature scaling on logits
-        """
-        # Expand temperature to match the size of logits
-        temperature = self.temperature.unsqueeze(1).expand(logits.size(0), logits.size(1))
-        return logits / temperature
