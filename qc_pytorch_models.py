@@ -169,6 +169,7 @@ class ModelWithBagDistribution(nn.Module):
     def __init__(self, model, n_slices):
         super(ModelWithBagDistribution, self).__init__()
         self.slice_model = model
+        self.slice_model.cuda()
 
         self.n_slices = n_slices
 
