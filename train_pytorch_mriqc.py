@@ -187,11 +187,12 @@ def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, 
     print('Parameters:', sum([p.data.nelement() for p in bag_model_params]), '/', sum([p.data.nelement() for p in total_params]))
 
     on_gpu, on_cpu = 0, 0
-    for param in bag_model_params:
+    for param in total_params:
+        print(param)
         if param.is_cuda:
-            on_gpu += 1
+            on_gpu += param.data.nelement()
         else:
-            on_cpu += 1
+            on_cpu += param.data.nelement()
 
     print(on_gpu, 'params on GPU,', on_cpu, 'params on CPU')
 
