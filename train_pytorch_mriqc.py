@@ -90,6 +90,7 @@ def train(epoch, class_weight=None):
         n_in_batch = data.shape[0]
         truth[batch_idx * args.batch_size:batch_idx * args.batch_size + n_in_batch] = target
 
+        target = target.type(torch.LongTensor)
         if args.cuda:
             data, target = data.cuda(), target.cuda()
             if not class_weight is None:
