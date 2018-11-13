@@ -138,7 +138,7 @@ def test(f, test_indices, n_slices):
             truth[i] = int(labels[test_idx])
 
             if args.cuda:
-                data, target = data.cuda(), target.cuda()
+                data = data.cuda()
 
             output = model(data)
             output = m(output)
