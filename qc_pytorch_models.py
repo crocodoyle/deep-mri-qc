@@ -168,7 +168,7 @@ class ModelWithBagDistribution(nn.Module):
     """
     def __init__(self, model, n_slices):
         super(ModelWithBagDistribution, self).__init__()
-        self.model = model
+        self.model = nn.Sequential(model)
 
         self.n_slices = n_slices
 

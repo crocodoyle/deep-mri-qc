@@ -568,6 +568,7 @@ if __name__ == '__main__':
 
         bag_model = ModelWithBagDistribution(model, n_slices)
         bag_model.cuda()
+        print(bag_model)
         bag_model, train_res, val_res, test_res, ds030_res = learn_bag_distribution(bag_model, abide_f, ds030_f, train_indices, validation_indices, test_indices, n_slices, batch_size=32, n_epochs=20)
 
         #calibrate model probability on validation set
