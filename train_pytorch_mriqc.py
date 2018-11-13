@@ -151,13 +151,12 @@ def test(f, test_indices, n_slices):
 def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, test_indices, n_slices, batch_size, n_epochs):
     bag_model.slice_model.eval()
     bag_model.bag_classifier.train()
-    bag_model.output.train()
     bag_model.cuda()
 
     m = nn.Softmax(dim=-1)
 
     total_params = bag_model.parameters()
-    bag_model_params = list(bag_model.bag_classifier.parameters()) + list(bag_model.output.parameters())
+    bag_model_params = list(bag_model.bag_classifier.parameters())
     print('Parameters:', sum([p.data.nelement() for p in bag_model_params]), '/', sum([p.data.nelement() for p in total_params]))
 
     bag_optimizer = torch.optim.Adam(bag_model_params, lr=0.0002)
