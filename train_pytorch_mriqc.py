@@ -70,7 +70,7 @@ class QCDataset(Dataset):
         label_confidence = self.confidence[good_index]
         image_slice = self.images[good_index, :, image_shape[0] // 2 + slice_modifier, :, :]
 
-        return image_slice, torch.LongTensor(int(label)), label_confidence
+        return image_slice, torch.LongTensor(label), label_confidence
 
     def __len__(self):
         return self.n_subjects
@@ -90,7 +90,7 @@ def train(epoch, class_weight=None):
         n_in_batch = data.shape[0]
         truth[batch_idx * args.batch_size:batch_idx * args.batch_size + n_in_batch] = target
 
-        target = torch.LongTensor(target)
+        target = Variable(target).type(torch.LongTensor)
 
         if args.cuda:
             data, target = data.cuda(), target.cuda()
