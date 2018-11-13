@@ -170,8 +170,6 @@ class ModelWithBagDistribution(nn.Module):
         super(ModelWithBagDistribution, self).__init__()
         self.slice_model = model
 
-        self.slice_model.cuda()
-
         self.n_slices = n_slices
 
         self.bag_classifier = nn.Sequential(
@@ -183,16 +181,14 @@ class ModelWithBagDistribution(nn.Module):
             nn.Dropout(0.5)
         )
 
-        self.output = nn.Softmax(dim=-1)
-
     def forward(self, input):
         print('input:', input.shape)
         x = self.slice_model.features(input)
         x = x.view(x.size(0), -1)
-        x = self.fc(x)
+        x = self.slice_model.fc(x)
         x = x.view(1, -1)
         out = self.bag_classifier(x)
-        return self.output(out)
+        return out
 
     def temperature_scale(self, logits):
         """
