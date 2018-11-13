@@ -168,11 +168,7 @@ class ModelWithBagDistribution(nn.Module):
     """
     def __init__(self, model, n_slices):
         super(ModelWithBagDistribution, self).__init__()
-        self.slice_model = nn.Sequential()
-
-        for i, m in enumerate(model.modules()):
-            print(m)
-            self.slice_model.add_module('slice_model_' + str(i), m)
+        self.slice_model = model
 
         self.slice_model.cuda()
 
