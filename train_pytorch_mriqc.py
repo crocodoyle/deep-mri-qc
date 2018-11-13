@@ -128,12 +128,10 @@ def test(f, test_indices, n_slices):
     labels = f['qc_label']
 
     data = torch.zeros((1, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
-    target = torch.zeros((1, 1), dtype=torch.int64).pin_memory()
 
     for i, test_idx in enumerate(test_indices):
         for j, slice_idx in enumerate(range(image_shape[0] // 2 - n_slices, image_shape[0] // 2 + n_slices)):
             data[0, 0, ...] = torch.FloatTensor(images[test_idx, 0, j, ...])
-            target[0, 0] = torch.LongTensor([int(labels[test_idx])])
 
             truth[i] = int(labels[test_idx])
 
@@ -156,8 +154,17 @@ def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, 
     m = nn.Softmax(dim=-1)
 
     total_params = bag_model.parameters()
-    bag_model_params = list(bag_model.bag_classifier.parameters())
+    bag_model_params = bag_model.bag_classifier.parameters()
     print('Parameters:', sum([p.data.nelement() for p in bag_model_params]), '/', sum([p.data.nelement() for p in total_params]))
+
+    on_gpu, on_cpu = 0, 0
+    for param in bag_model_params:
+        if param.is_cuda:
+            on_gpu += 1
+        else:
+            on_cpu += 1
+
+    print(on_gpu, 'params on GPU,', on_cpu, 'params on CPU')
 
     bag_optimizer = torch.optim.Adam(bag_model_params, lr=0.0002)
 
@@ -570,6 +577,7 @@ if __name__ == '__main__':
         ds030_results[fold_idx, 1] = ds030_tn / (ds030_tn + ds030_fp + epsilon)
         ds030_results[fold_idx, 2] = accuracy_score(ds030_truth, ds030_predictions)
         ds030_results[fold_idx, 3] = roc_auc_score(ds030_truth, ds030_predictions)
+
 
         bag_model = ModelWithBagDistribution(model, n_slices)
         bag_model.cuda()
