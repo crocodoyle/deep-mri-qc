@@ -163,9 +163,9 @@ def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, 
     labels = f['qc_label']
     label_confidence = f['label_confidence']
 
-    data = torch.empty((n_slices*2, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
-    target = torch.empty((data.shape[0], 1), dtype=torch.int64).pin_memory()
-    sample_weight = torch.empty((1), dtype=torch.float32).pin_memory()
+    data = torch.zeros((n_slices*2, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
+    target = torch.zeros((data.shape[0], 1), dtype=torch.int64).pin_memory()
+    sample_weight = torch.zeros((1), dtype=torch.float32).pin_memory()
 
     for epoch_idx in range(n_epochs):
         np.random.shuffle(train_indices)
@@ -176,6 +176,9 @@ def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, 
             sample_weight[0] = torch.cuda.LongTensor([float(label_confidence[train_idx])])
 
             data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
+
+            print('data', data.shape)
+            print('target', target.shape)
 
             output = bag_model(data)
 
