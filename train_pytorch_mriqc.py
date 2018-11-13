@@ -154,6 +154,8 @@ def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, 
     bag_model.output.train()
     bag_model.cuda()
 
+    m = nn.Softmax(dim=-1)
+
     total_params = bag_model.parameters()
     bag_model_params = list(bag_model.bag_classifier.parameters()) + list(bag_model.output.parameters())
     print('Parameters:', sum([p.data.nelement() for p in bag_model_params]), '/', sum([p.data.nelement() for p in total_params]))
@@ -172,14 +174,18 @@ def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, 
         np.random.shuffle(train_indices)
 
         for sample_idx, train_idx in enumerate(train_indices):
-            data[:, 0, ...] = torch.cuda.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
-            target[:, 0] = torch.cuda.LongTensor([int(labels[train_idx])])
-            sample_weight[0] = torch.cuda.LongTensor([float(label_confidence[train_idx])])
+            data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
+            target[:, 0] = torch.LongTensor([int(labels[train_idx])])
+            sample_weight[0] = torch.LongTensor([float(label_confidence[train_idx])])
 
             print('data', data.shape)
             print('target', target.shape)
 
+            if args.cuda:
+                data.cuda(), target.cuda(), sample_weight.cuda()
+
             output = bag_model(data)
+
 
             loss = nn.NLLLoss()
             loss_val = loss(output, target) * sample_weight
@@ -208,6 +214,7 @@ def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, 
             data, target = data.cuda(), target.cuda()
 
         output = bag_model(data)
+        output = m(output)
 
         train_probabilities[i, :] = output.data.cpu().numpy()
 
@@ -220,6 +227,7 @@ def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, 
         data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
 
         output = bag_model(data)
+        output = m(output)
 
         validation_probabilities[i, :] = output.data.cpu().numpy()
 
@@ -231,6 +239,7 @@ def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, 
             data, target = data.cuda(), target.cuda()
 
         output = bag_model(data)
+        output = m(output)
 
         test_probabilities[i, :] = output.data.cpu().numpy()
 
@@ -243,6 +252,7 @@ def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, 
             data, target = data.cuda(), target.cuda()
 
         output = bag_model(data)
+        output = m(output)
 
         ds030_probabilities[i, :] = output.data.cpu().numpy()
 
