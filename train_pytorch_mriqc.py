@@ -70,7 +70,7 @@ class QCDataset(Dataset):
         label_confidence = self.confidence[good_index]
         image_slice = self.images[good_index, :, image_shape[0] // 2 + slice_modifier, :, :]
 
-        return image_slice, torch.LongTensor(label), label_confidence
+        return image_slice, label, label_confidence
 
     def __len__(self):
         return self.n_subjects
