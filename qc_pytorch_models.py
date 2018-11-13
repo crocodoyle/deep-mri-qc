@@ -192,6 +192,7 @@ class ModelWithBagDistribution(nn.Module):
         x = self.slice_classifier(x)
         print('slices', x.shape)
         x = x.view(1, -1)
+        x = x.repeat(self.n_slices, 1)
         print('reshaped')
         out = self.bag_classifier(x)
         return out
