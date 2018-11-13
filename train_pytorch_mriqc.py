@@ -158,7 +158,7 @@ def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, 
     print('Parameters:', sum([p.data.nelement() for p in bag_model_params]), '/', sum([p.data.nelement() for p in total_params]))
 
     on_gpu, on_cpu = 0, 0
-    for param in bag_model_params:
+    for param in bag_model.bag_classifier.parameters():
         if param.is_cuda:
             on_gpu += 1
         else:
@@ -166,7 +166,7 @@ def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, 
 
     print(on_gpu, 'params on GPU,', on_cpu, 'params on CPU')
 
-    bag_optimizer = torch.optim.Adam(bag_model_params, lr=0.0002)
+    bag_optimizer = torch.optim.Adam(bag_model.bag_classifier.parameters(), lr=0.0002)
 
     images = f['MRI']
     labels = f['qc_label']
