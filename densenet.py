@@ -97,7 +97,7 @@ class DenseNet(nn.Module):
         return nn.Sequential(*layers)
 
     def _get_flat_features(self, image_shape, features):
-        f = features(Variable(torch.ones(1,*image_shape)))
+        f = features(torch.ones(1,*image_shape))
         return int(np.prod(f.size()))
 
     def features(self, x):

@@ -96,7 +96,6 @@ def train(epoch, class_weight=None):
                 w.cuda()
                 w = Variable(w).type(torch.cuda.FloatTensor)
 
-        data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
         optimizer.zero_grad()
         output = model(data)
 
@@ -139,7 +138,6 @@ def test(f, test_indices, n_slices):
 
             if args.cuda:
                 data, target = data.cuda(), target.cuda()
-            data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
 
             output = model(data)
             output = m(output)
@@ -177,8 +175,6 @@ def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, 
             target[:, 0] = torch.cuda.LongTensor([int(labels[train_idx])])
             sample_weight[0] = torch.cuda.LongTensor([float(label_confidence[train_idx])])
 
-            data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
-
             print('data', data.shape)
             print('target', target.shape)
 
@@ -209,7 +205,6 @@ def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, 
 
         if args.cuda:
             data, target = data.cuda(), target.cuda()
-        data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
 
         output = bag_model(data)
 
@@ -233,7 +228,6 @@ def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, 
 
         if args.cuda:
             data, target = data.cuda(), target.cuda()
-        data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
 
         output = bag_model(data)
 
@@ -246,7 +240,6 @@ def learn_bag_distribution(bag_model, f, f2, train_indices, validation_indices, 
 
         if args.cuda:
             data, target = data.cuda(), target.cuda()
-        data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
 
         output = bag_model(data)
 
