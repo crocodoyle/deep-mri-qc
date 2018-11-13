@@ -168,7 +168,7 @@ class ModelWithBagDistribution(nn.Module):
     """
     def __init__(self, model, n_slices):
         super(ModelWithBagDistribution, self).__init__()
-        self.slice_model = nn.Sequential(model)
+        self.slice_model = model
 
         self.n_slices = n_slices
 
@@ -183,12 +183,11 @@ class ModelWithBagDistribution(nn.Module):
 
         self.output = nn.Softmax(dim=-1)
 
-        for m in self.modules():
-            print(m)
-
     def forward(self, input):
         print('input:', input.shape)
-        x = self.slice_model(input)
+        x = self.slice_model.features(input)
+        x = x.view(x.size(0), -1)
+        x = self.fc(x)
         x = x.view(1, -1)
         out = self.bag_classifier(x)
         return self.output(out)
