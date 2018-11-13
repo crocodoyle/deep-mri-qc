@@ -170,8 +170,8 @@ class ModelWithBagDistribution(nn.Module):
         super(ModelWithBagDistribution, self).__init__()
         self.slice_model = model
 
-        self.features = model.features
-        self.slice_classifier = model.fc
+        self.features = self.slice_model.features
+        self.slice_classifier = self.slice_model.fc
 
         self.n_slices = n_slices
 

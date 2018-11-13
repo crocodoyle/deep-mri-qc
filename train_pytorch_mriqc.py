@@ -216,7 +216,7 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
             if args.cuda:
                 data.cuda(), target.cuda(), sample_weight.cuda()
 
-            output = bag_model(data)
+            output = bag_model(data.cuda())
 
             loss = nn.NLLLoss()
             loss_val = loss(output, target) * sample_weight
