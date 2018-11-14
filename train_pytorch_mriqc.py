@@ -238,37 +238,40 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
         data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
         train_truth[i] = int(labels[train_idx])
 
-        data, target = data.cuda(), target.cuda()
+        data, target = data.cuda()
 
         output = bag_model(data)
         output = m(output)
 
-        train_probabilities[i, :] = output.data.cpu().numpy()
+        if i==0:
+            print('output', output.shape)
+        train_probabilities[i, :] = output.data.cpu().numpy()[0, ...]
 
     for i, validation_idx in enumerate(validation_indices):
         data[:, 0, ...] = torch.FloatTensor(images[validation_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
         validation_truth[i] = int(labels[validation_idx])
 
         if args.cuda:
-            data, target = data.cuda(), target.cuda()
-        data, target = Variable(data), Variable(target).type(torch.cuda.LongTensor)
+            data, target = data.cuda()
+
+        data.cuda()
 
         output = bag_model(data)
         output = m(output)
 
-        validation_probabilities[i, :] = output.data.cpu().numpy()
+        validation_probabilities[i, :] = output.data.cpu().numpy()[0, ...]
 
     for i, test_idx in enumerate(test_indices):
         data[:, 0, ...] = torch.FloatTensor(images[test_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
         test_truth[i] = int(labels[test_idx])
 
         if args.cuda:
-            data, target = data.cuda(), target.cuda()
+            data = data.cuda()
 
         output = bag_model(data)
         output = m(output)
 
-        test_probabilities[i, :] = output.data.cpu().numpy()
+        test_probabilities[i, :] = output.data.cpu().numpy()[0, ...]
 
     images = f2['MRI']
     labels = f2['qc_label']
@@ -282,7 +285,7 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
         output = bag_model(data)
         output = m(output)
 
-        ds030_probabilities[i, :] = output.data.cpu().numpy()
+        ds030_probabilities[i, :] = output.data.cpu().numpy()[0, ...]
 
     return (train_truth, train_probabilities), (validation_truth, validation_probabilities), (test_truth, test_probabilities), (ds030_truth, ds030_probabilities)
 
