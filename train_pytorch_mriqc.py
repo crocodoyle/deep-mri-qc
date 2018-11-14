@@ -216,9 +216,10 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
             data, target, sample_weight = data.cuda(), target.cuda(), sample_weight.cuda()
 
             output = bag_model(data)
+            print('output', output.shape)
 
             loss = nn.NLLLoss()
-            loss_val = loss(output, target) * sample_weight
+            loss_val = loss(output[0:0, :], target) * sample_weight
             loss_val.backward()
 
             if (sample_idx + 1) % batch_size == 0:
