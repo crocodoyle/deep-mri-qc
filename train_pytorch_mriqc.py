@@ -200,7 +200,7 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
 
     data = torch.zeros((n_slices*2, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
     target = torch.zeros((n_slices*2), dtype=torch.int64).pin_memory()
-    sample_weight = torch.zeros((1), dtype=torch.float32).pin_memory()
+    sample_weight = torch.zeros((n_slices*2), dtype=torch.float32).pin_memory()
 
     for epoch_idx in range(n_epochs):
         np.random.shuffle(train_indices)
@@ -208,7 +208,7 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
         for sample_idx, train_idx in enumerate(train_indices):
             data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
             target[:] = torch.LongTensor([int(labels[train_idx])])
-            sample_weight = torch.FloatTensor([float(label_confidence[train_idx]) / n_slices*2])
+            sample_weight[:] = torch.FloatTensor([float(label_confidence[train_idx]) / n_slices*2])
 
             print('data', data.shape)
             print('target', target.shape)
