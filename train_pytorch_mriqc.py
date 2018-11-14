@@ -208,7 +208,7 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
         for sample_idx, train_idx in enumerate(train_indices):
             data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
             target[:] = torch.LongTensor([int(labels[train_idx])])
-            sample_weight = torch.FloatTensor(float(label_confidence[train_idx]) / (n_slices*2))
+            sample_weight = float(label_confidence[train_idx]) / (n_slices*2)
 
             print('data', data.shape)
             print('target', target.shape)
@@ -218,7 +218,7 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
             output = bag_model(data)
             print('output', output.shape)
             print('target', target.shape)
-            print('sample weight', sample_weight.shape)
+            # print('sample weight', sample_weight.shape)
             loss = nn.CrossEntropyLoss()
             loss_val = loss(output, target)
             print('loss val:', loss_val)
