@@ -181,7 +181,7 @@ class ModelWithBagDistribution(nn.Module):
             nn.Dropout(0.5),
             nn.Linear(n_slices*2, n_slices),
             nn.LeakyReLU(0.1),
-            nn.Dropout(0.5)
+            nn.Dropout(0.5),
             nn.Linear(n_slices, 2)
         )
 
