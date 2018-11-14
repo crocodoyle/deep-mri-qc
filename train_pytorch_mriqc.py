@@ -217,7 +217,6 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
 
             output = bag_model(data)
             print('output', output.shape)
-            print('single output:', output[0:0, :])
             loss = nn.CrossEntropyLoss()
             loss_val = loss(output, target)
             loss_val *= sample_weight
