@@ -132,7 +132,6 @@ def train(epoch, class_weight=None):
             loss = nn.CrossEntropyLoss()
 
         loss_val = loss(output, target)
-        loss_val.data *= float(target_confidence)
         loss_val.backward()
         optimizer.step()
         if batch_idx % args.log_interval == 0:
