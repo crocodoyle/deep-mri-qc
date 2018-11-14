@@ -199,7 +199,7 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
     label_confidence = f['label_confidence']
 
     data = torch.zeros((n_slices*2, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
-    target = torch.zeros((1), dtype=torch.int64).pin_memory()
+    target = torch.zeros((n_slices*2), dtype=torch.int64).pin_memory()
     sample_weight = torch.zeros((1), dtype=torch.float32).pin_memory()
 
     for epoch_idx in range(n_epochs):
@@ -217,9 +217,10 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
 
             output = bag_model(data)
             print('output', output.shape)
+            print(output)
             loss = nn.CrossEntropyLoss()
             loss_val = loss(output, target)
-            loss_val *= sample_weight
+            loss_val *= (sample_weight / torch.FloatTensor(n_slices*2).cuda())
             loss_val.backward()
 
             if (sample_idx + 1) % batch_size == 0:
