@@ -213,7 +213,7 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
             print('data', data.shape)
             print('target', target.shape)
 
-            data, target, sample_weight = data.cuda(), target.cuda(), sample_weight.cuda()
+            data, target = data.cuda(), target.cuda()
 
             output = bag_model(data)
             print('output', output.shape)
