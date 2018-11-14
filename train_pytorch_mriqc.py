@@ -132,6 +132,7 @@ def train(epoch, class_weight=None):
             loss = nn.CrossEntropyLoss()
 
         loss_val = loss(output, target)
+        loss_val.data *= float(target_confidence)
         loss_val.backward()
         optimizer.step()
         if batch_idx % args.log_interval == 0:
@@ -210,19 +211,12 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
             target[:] = torch.LongTensor([int(labels[train_idx])])
             sample_weight = float(label_confidence[train_idx]) / (n_slices*2)
 
-            print('data', data.shape)
-            print('target', target.shape)
-
             data, target = data.cuda(), target.cuda()
 
             output = bag_model(data)
-            print('output', output.shape)
-            print('target', target.shape)
-            # print('sample weight', sample_weight.shape)
+
             loss = nn.CrossEntropyLoss()
             loss_val = loss(output, target)
-            print('loss val:', loss_val)
-            print(loss_val.shape)
             loss_val.data *= sample_weight
             loss_val.backward()
 
@@ -278,6 +272,7 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
         test_probabilities[i, :] = output.data.cpu().numpy()
 
     images = f2['MRI']
+    labels = f2['qc_label']
     for i, ds030_idx in enumerate(ds030_indices):
         data[:, 0, ...] = torch.FloatTensor(images[ds030_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
         ds030_truth[i] = int(labels[ds030_idx])
@@ -291,8 +286,6 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
         ds030_probabilities[i, :] = output.data.cpu().numpy()
 
     return (train_truth, train_probabilities), (validation_truth, validation_probabilities), (test_truth, test_probabilities), (ds030_truth, ds030_probabilities)
-
-
 
 
 def set_temperature(model, f, validation_indices, n_slices):
