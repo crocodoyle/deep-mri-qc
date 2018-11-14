@@ -221,7 +221,9 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
             print('sample weight', sample_weight.shape)
             loss = nn.CrossEntropyLoss()
             loss_val = loss(output, target)
-            loss_val *= sample_weight
+            print('loss val:', loss_val)
+            print(loss_val.shape)
+            # loss_val *= sample_weight
             loss_val.backward()
 
             if (sample_idx + 1) % batch_size == 0:
