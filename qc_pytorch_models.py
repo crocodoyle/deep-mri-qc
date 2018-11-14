@@ -193,7 +193,7 @@ class ModelWithBagDistribution(nn.Module):
         x = self.slice_classifier(x)
         print('slices', x.shape)
         x = x[:, 0:1]
-        x = x.permute(0, 1)
+        x = x.permute(1, 0)
         print('reshaped', x.shape)
         x = x.repeat(self.n_slices*2, 1)
         print('repeated', x.shape)
