@@ -186,16 +186,16 @@ class ModelWithBagDistribution(nn.Module):
         )
 
     def forward(self, input):
-        print('input:', input.shape)
+        # print('input:', input.shape)
         x = self.features(input)
-        print('features:', x.shape)
+        # print('features:', x.shape)
         x = x.view(x.size(0), -1)
         x = self.slice_classifier(x)
-        print('slices', x.shape)
+        # print('slices', x.shape)
         x = x[:, 0:1]
         x = x.permute(1, 0)
-        print('reshaped', x.shape)
+        # print('reshaped', x.shape)
         x = x.repeat(self.n_slices*2, 1)
-        print('repeated', x.shape)
+        # print('repeated', x.shape)
         out = self.bag_classifier(x)
         return out
