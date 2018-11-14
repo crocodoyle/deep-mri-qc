@@ -199,7 +199,7 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
     label_confidence = f['label_confidence']
 
     data = torch.zeros((n_slices*2, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
-    target = torch.zeros((data.shape[0], 1), dtype=torch.int64).pin_memory()
+    target = torch.zeros((1, 1), dtype=torch.int64).pin_memory()
     sample_weight = torch.zeros((1), dtype=torch.float32).pin_memory()
 
     for epoch_idx in range(n_epochs):

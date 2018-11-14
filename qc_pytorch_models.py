@@ -176,12 +176,13 @@ class ModelWithBagDistribution(nn.Module):
         self.n_slices = n_slices
 
         self.bag_classifier = nn.Sequential(
-            nn.Linear(n_slices*2, n_slices*2, bias=False),
+            nn.Linear(n_slices*2, n_slices*2),
             nn.LeakyReLU(0.1),
             nn.Dropout(0.5),
-            nn.Linear(n_slices*2, n_slices, bias=False),
+            nn.Linear(n_slices*2, n_slices),
             nn.LeakyReLU(0.1),
             nn.Dropout(0.5)
+            nn.Linear(n_slices, 2)
         )
 
     def forward(self, input):
