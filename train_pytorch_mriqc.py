@@ -213,7 +213,7 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
             print('data', data.shape)
             print('target', target.shape)
 
-            output = bag_model(data.cuda())
+            output = bag_model(data)
 
             loss = nn.NLLLoss()
             loss_val = loss(output, target) * sample_weight
@@ -506,7 +506,6 @@ if __name__ == '__main__':
             validation_loader = torch.utils.data.DataLoader(validation_dataset, num_workers=1, pin_memory=True)
             test_loader = torch.utils.data.DataLoader(test_dataset, num_workers=1, pin_memory=True)
             ds030_loader = torch.utils.data.DataLoader(ds030_dataset, num_workers=1, pin_memory=True)
-
 
             class_weights = [0.5, 0.5]
 
