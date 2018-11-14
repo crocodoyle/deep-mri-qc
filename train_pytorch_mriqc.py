@@ -206,12 +206,14 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
         np.random.shuffle(train_indices)
 
         for sample_idx, train_idx in enumerate(train_indices):
-            data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...]).cuda()
-            target[:, 0] = torch.LongTensor([int(labels[train_idx])]).cuda()
-            sample_weight[0] = torch.LongTensor([float(label_confidence[train_idx])]).cuda()
+            data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
+            target[:, 0] = torch.LongTensor([int(labels[train_idx])])
+            sample_weight[0] = torch.LongTensor([float(label_confidence[train_idx])])
 
             print('data', data.shape)
             print('target', target.shape)
+
+            data, target, sample_weight = data.cuda(), target.cuda(), sample_weight.cuda()
 
             output = bag_model(data)
 
