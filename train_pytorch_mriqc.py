@@ -156,7 +156,7 @@ def test(test_loader, n_slices):
     # data = torch.zeros((1, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
 
     for i, (data, target, sample_weight) in enumerate(test_loader):
-        print('data', data.shape)
+        # print('data', data.shape)
         truth[i] = target
         for j, slice_idx in enumerate(range(image_shape[0] // 2 - n_slices, image_shape[0] // 2 + n_slices)):
             # data[0, 0, ...] = torch.FloatTensor(images[test_idx, 0, j, ...])
@@ -484,10 +484,10 @@ if __name__ == '__main__':
 
             abide_f = h5py.File(workdir + 'abide.hdf5', 'r')
             train_dataset = RandomSlicesQCDataset(abide_f, train_indices, n_slices=n_slices)
-            validation_dataset = RandomSlicesQCDataset(abide_f, validation_indices, n_slices=n_slices)
+            # validation_dataset = RandomSlicesQCDataset(abide_f, validation_indices, n_slices=n_slices)
 
             train_dataset_bag = AllSlicesQCDataset(abide_f, train_indices, n_slices=n_slices)
-            validation_dataset_bag = AllSlicesQCDataset(abide_f, validation_indices, n_slices=n_slices)
+            validation_dataset = AllSlicesQCDataset(abide_f, validation_indices, n_slices=n_slices)
             test_dataset = AllSlicesQCDataset(abide_f, test_indices, n_slices=n_slices)
             ds030_dataset = AllSlicesQCDataset(ds030_f, ds030_indices, n_slices=n_slices)
 
