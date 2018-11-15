@@ -172,7 +172,7 @@ def test(f, test_indices, n_slices):
     return truth, probabilities
 
 
-def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indices, n_slices, batch_size, n_epochs):
+def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indices, n_slices, n_epochs):
     model.eval()
     bag_model.train()
 
@@ -485,19 +485,20 @@ if __name__ == '__main__':
 
             abide_f = h5py.File(workdir + 'abide.hdf5', 'r')
             train_dataset = RandomSlicesQCDataset(abide_f, train_indices, n_slices=n_slices)
-            train_dataset_bag = AllSlicesQCDataset(abide_f, train_indices, n_slices=n_slices)
-            validation_dataset = AllSlicesQCDataset(abide_f, validation_indices, n_slices=n_slices)
-            test_dataset = AllSlicesQCDataset(abide_f, test_indices, n_slices=n_slices)
-            ds030_dataset = AllSlicesQCDataset(ds030_f, ds030_indices, n_slices=n_slices)
+            validation_dataset = RandomSlicesQCDataset(abide_f, validation_indices, n_slices=n_slices)
+
+            # train_dataset_bag = AllSlicesQCDataset(abide_f, train_indices, n_slices=n_slices)
+            # validation_dataset_bag = AllSlicesQCDataset(abide_f, validation_indices, n_slices=n_slices)
+            # test_dataset = AllSlicesQCDataset(abide_f, test_indices, n_slices=n_slices)
+            # ds030_dataset = AllSlicesQCDataset(ds030_f, ds030_indices, n_slices=n_slices)
 
             sampler = WeightedRandomSampler(weights=train_sample_weights, num_samples=len(train_sample_weights))
-            train_loader = DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=False,
-                                                       **kwargs)
+            train_loader = DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=False, **kwargs)
 
-            train_loader_bag = DataLoader(train_dataset_bag, num_workers=1, pin_memory=True)
-            validation_loader = DataLoader(validation_dataset, num_workers=1, pin_memory=True)
-            test_loader = DataLoader(test_dataset, num_workers=1, pin_memory=True)
-            ds030_loader = DataLoader(ds030_dataset, num_workers=1, pin_memory=True)
+            # train_loader_bag = DataLoader(train_dataset_bag, num_workers=1, pin_memory=True)
+            # validation_loader = DataLoader(validation_dataset, num_workers=1, pin_memory=True)
+            # test_loader = DataLoader(test_dataset, num_workers=1, pin_memory=True)
+            # ds030_loader = DataLoader(ds030_dataset, num_workers=1, pin_memory=True)
 
             class_weights = [0.5, 0.5]
 
@@ -583,7 +584,6 @@ if __name__ == '__main__':
 
         model.load_state_dict(torch.load(results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch'))
         model.cuda()
-        model.eval()
 
         val_truth, val_probabilities = test(abide_f, validation_indices, n_slices)
         test_truth, test_probabilities = test(abide_f, test_indices, n_slices)
@@ -603,7 +603,7 @@ if __name__ == '__main__':
 
         bag_model = BagDistributionModel(n_slices)
         bag_model.cuda()
-        train_res, val_res, test_res, ds030_res = learn_bag_distribution(abide_f, ds030_f, train_indices, validation_indices, test_indices, n_slices, batch_size=32, n_epochs=20)
+        train_res, val_res, test_res, ds030_res = learn_bag_distribution(abide_f, ds030_f, train_indices, validation_indices, test_indices, n_slices, n_epochs=20)
 
         #calibrate model probability on validation set
         model_with_temperature = ModelWithTemperature(bag_model)
