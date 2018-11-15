@@ -183,7 +183,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
 
     bag_optimizer = torch.optim.Adam(bag_model.parameters(), lr=0.0002)
 
-    all_train_slice_predictions = torch.FloatTensor((len(train_loader_bag), n_slices*2, 1))
+    all_train_slice_predictions = torch.FloatTensor((len(train_loader_bag), n_slices*2))
     all_train_targets = torch.LongTensor((len(train_loader_bag)))
     all_sample_weights = torch.FloatTensor((len(train_loader_bag)))
 
@@ -193,7 +193,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         output = model(data)
         slice_predictions = output[:, 0:1].permute(1, 0)
 
-        all_train_slice_predictions[sample_idx, :, :] = slice_predictions
+        all_train_slice_predictions[sample_idx, :] = slice_predictions
         all_train_targets[sample_idx] = target
 
     for epoch_idx in range(n_epochs):
