@@ -93,7 +93,7 @@ class AllSlicesQCDataset(Dataset):
         good_index = self.indices[index]
 
         label = self.labels[good_index]
-        label_confidence = self.confidence[good_index]
+        label_confidence = torch.FloatTensor(self.confidence[good_index])
         image_slices = torch.FloatTensor(self.images[good_index, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, :, :])
 
         return image_slices, int(label), label_confidence
@@ -194,7 +194,10 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         for sample_idx, (data, target, sample_weight) in enumerate(train_loader_bag):
             # data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
             # target[:] = torch.LongTensor([int(labels[train_idx])])
-            weight_multiplier = torch.ones((1, 2), dtype=torch.float32).pin_memory() * sample_weight
+            print(sample_weight)
+
+            weight_multiplier = torch.ones((1, 2), dtype=torch.float32)
+            weight_multiplier = weight_multiplier * sample_weight
             weight_multiplier.cuda()
 
             data, target = data.cuda(), target.cuda()
