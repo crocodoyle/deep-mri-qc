@@ -94,7 +94,7 @@ class AllSlicesQCDataset(Dataset):
 
         label = self.labels[good_index]
         label_confidence = self.confidence[good_index]
-        image_slices = torch.FloatTensor(self.images[good_index, :, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, :, :]).permute(1, 0)
+        image_slices = torch.FloatTensor(self.images[good_index, :, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, :, :])
 
         return image_slices, label, label_confidence
 
@@ -158,10 +158,12 @@ def test(test_loader, n_slices):
     for i, (data, target, sample_weight) in enumerate(test_loader):
         print('data', data.shape)
         truth[i] = target
+        data = data.permute(1, 0)
+        print('data', data.shape)
         for slice_idx in range(n_slices*2):
             # data[0, 0, ...] = torch.FloatTensor(images[test_idx, 0, j, ...])
 
-            slice = data[0, slice_idx:slice_idx+1, ...].cuda()
+            slice = data[slice_idx:slice_idx+1, ...].cuda()
             print('slice', slice.shape)
             slice.cuda()
 
