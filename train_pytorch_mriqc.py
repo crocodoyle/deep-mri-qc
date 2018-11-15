@@ -187,7 +187,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
     # labels = f['qc_label']
     # label_confidence = f['label_confidence']
     #
-    # data = torch.zeros((n_slices*2, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
+    weight = torch.ones((n_slices*2, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
     # target = torch.zeros((1), dtype=torch.int64).pin_memory()
 
     for epoch_idx in range(n_epochs):
@@ -195,7 +195,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         for sample_idx, (data, target, sample_weight) in enumerate(train_loader_bag):
             # data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
             # target[:] = torch.LongTensor([int(labels[train_idx])])
-            # sample_weight = float(label_confidence[train_idx])
+            weight += sample_weight
 
             data, target = data.cuda(), target.cuda()
             data = data.permute(1, 0, 2, 3)
@@ -207,7 +207,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
 
             loss = nn.CrossEntropyLoss()
             loss_val = loss(output, target)
-            loss_val.data *= sample_weight
+            loss_val.data *= weight
             loss_val.backward()
 
             if (sample_idx + 1) % batch_size == 0:
@@ -251,7 +251,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         output = bag_model(slice_predictions)
         output = m(output)
 
-        validation_probabilities[i, :] = output.data.cpu().numpy()[0, ...]
+        validation_probabilities[i, :] = output.data.cpu().numpy()
 
     for i, (data, target, sample_weight) in enumerate(test_loader):
         # data[:, 0, ...] = torch.FloatTensor(images[test_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
@@ -264,10 +264,8 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         output = bag_model(slice_predictions)
         output = m(output)
 
-        test_probabilities[i, :] = output.data.cpu().numpy()[0, ...]
+        test_probabilities[i, :] = output.data.cpu().numpy()
 
-    images = f2['MRI']
-    labels = f2['qc_label']
     for i, (data, target, sample_weight) in enumerate(ds030_loader):
         # data[:, 0, ...] = torch.FloatTensor(images[ds030_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
         ds030_truth[i] = target
@@ -278,7 +276,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         slice_predictions = output[:, 0:1].permute(1, 0)
         output = bag_model(slice_predictions)
         output = m(output)
-        ds030_probabilities[i, :] = output.data.cpu().numpy()[0, ...]
+        ds030_probabilities[i, :] = output.data.cpu().numpy()
 
     return (train_truth, train_probabilities), (validation_truth, validation_probabilities), (test_truth, test_probabilities), (ds030_truth, ds030_probabilities)
 
