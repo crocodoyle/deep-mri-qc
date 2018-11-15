@@ -70,7 +70,7 @@ class RandomSlicesQCDataset(Dataset):
         label_confidence = self.confidence[good_index]
         image_slice = self.images[good_index, :, image_shape[0] // 2 + slice_modifier, :, :]
 
-        return image_slice, label, label_confidence
+        return image_slice, int(label), label_confidence
 
     def __len__(self):
         return self.n_subjects
@@ -144,27 +144,24 @@ def train(epoch, class_weight=None):
     return truth, probabilities
 
 
-def test(f, test_indices, n_slices):
+def test(test_loader, n_slices):
     model.eval()
 
     truth, probabilities = np.zeros(len(test_indices), dtype='uint8'), np.zeros((len(test_indices), n_slices*2, 2), dtype='float32')
     m = torch.nn.Softmax(dim=-1)
 
-    images = f['MRI']
-    labels = f['qc_label']
+    # images = f['MRI']
+    # labels = f['qc_label']
 
-    data = torch.zeros((1, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
+    # data = torch.zeros((1, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
 
-    for i, test_idx in enumerate(test_indices):
+    for i, (data, target, sample_weight) in enumerate(test_loader):
         for j, slice_idx in enumerate(range(image_shape[0] // 2 - n_slices, image_shape[0] // 2 + n_slices)):
-            data[0, 0, ...] = torch.FloatTensor(images[test_idx, 0, j, ...])
+            # data[0, 0, ...] = torch.FloatTensor(images[test_idx, 0, j, ...])
 
-            truth[i] = int(labels[test_idx])
+            truth[i] = target
 
-            if args.cuda:
-                data = data.cuda()
-
-            output = model(data)
+            output = model(data[j, ...].cuda())
             output = m(output)
 
             probabilities[i, j, :] = output.data.cpu().numpy()
@@ -172,7 +169,7 @@ def test(f, test_indices, n_slices):
     return truth, probabilities
 
 
-def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indices, n_slices, batch_size, n_epochs):
+def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds030_loader, n_slices, batch_size, n_epochs):
     model.eval()
     bag_model.train()
 
@@ -180,20 +177,20 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
 
     bag_optimizer = torch.optim.Adam(bag_model.parameters(), lr=0.0002)
 
-    images = f['MRI']
-    labels = f['qc_label']
-    label_confidence = f['label_confidence']
-
-    data = torch.zeros((n_slices*2, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
-    target = torch.zeros((1), dtype=torch.int64).pin_memory()
+    # images = f['MRI']
+    # labels = f['qc_label']
+    # label_confidence = f['label_confidence']
+    #
+    # data = torch.zeros((n_slices*2, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
+    # target = torch.zeros((1), dtype=torch.int64).pin_memory()
 
     for epoch_idx in range(n_epochs):
         np.random.shuffle(train_indices)
 
-        for sample_idx, train_idx in enumerate(train_indices):
-            data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
-            target[:] = torch.LongTensor([int(labels[train_idx])])
-            sample_weight = float(label_confidence[train_idx])
+        for sample_idx, (data, target, sample_weight) in enumerate(train_loader_bag):
+            # data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
+            # target[:] = torch.LongTensor([int(labels[train_idx])])
+            # sample_weight = float(label_confidence[train_idx])
 
             data, target = data.cuda(), target.cuda()
 
@@ -222,9 +219,9 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
     test_truth, test_probabilities = np.zeros(len(test_indices), dtype='uint8'), np.zeros((len(test_indices)), dtype='float32')
     ds030_truth, ds030_probabilities = np.zeros(len(ds030_indices), dtype='uint8'), np.zeros((len(ds030_indices)), dtype='float32')
 
-    for i, train_idx in enumerate(train_indices):
-        data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
-        train_truth[i] = int(labels[train_idx])
+    for i, (data, target, sample_weight) in enumerate(train_loader_bag):
+        # data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
+        train_truth[i] = target
 
         data = data.cuda()
 
@@ -235,7 +232,7 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
 
         if i == 0:
             print('output', output.shape)
-        train_probabilities[i, :] = output.data.cpu().numpy()[0, ...]
+        train_probabilities[i, :] = output.data.cpu().numpy()
 
     for i, validation_idx in enumerate(validation_indices):
         data[:, 0, ...] = torch.FloatTensor(images[validation_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
@@ -487,18 +484,18 @@ if __name__ == '__main__':
             train_dataset = RandomSlicesQCDataset(abide_f, train_indices, n_slices=n_slices)
             validation_dataset = RandomSlicesQCDataset(abide_f, validation_indices, n_slices=n_slices)
 
-            # train_dataset_bag = AllSlicesQCDataset(abide_f, train_indices, n_slices=n_slices)
-            # validation_dataset_bag = AllSlicesQCDataset(abide_f, validation_indices, n_slices=n_slices)
-            # test_dataset = AllSlicesQCDataset(abide_f, test_indices, n_slices=n_slices)
-            # ds030_dataset = AllSlicesQCDataset(ds030_f, ds030_indices, n_slices=n_slices)
+            train_dataset_bag = AllSlicesQCDataset(abide_f, train_indices, n_slices=n_slices)
+            validation_dataset_bag = AllSlicesQCDataset(abide_f, validation_indices, n_slices=n_slices)
+            test_dataset = AllSlicesQCDataset(abide_f, test_indices, n_slices=n_slices)
+            ds030_dataset = AllSlicesQCDataset(ds030_f, ds030_indices, n_slices=n_slices)
 
             sampler = WeightedRandomSampler(weights=train_sample_weights, num_samples=len(train_sample_weights))
             train_loader = DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=False, **kwargs)
 
-            # train_loader_bag = DataLoader(train_dataset_bag, num_workers=1, pin_memory=True)
-            # validation_loader = DataLoader(validation_dataset, num_workers=1, pin_memory=True)
-            # test_loader = DataLoader(test_dataset, num_workers=1, pin_memory=True)
-            # ds030_loader = DataLoader(ds030_dataset, num_workers=1, pin_memory=True)
+            train_loader_bag = DataLoader(train_dataset_bag, num_workers=1, pin_memory=True)
+            validation_loader = DataLoader(validation_dataset, num_workers=1, pin_memory=True)
+            test_loader = DataLoader(test_dataset, num_workers=1, pin_memory=True)
+            ds030_loader = DataLoader(ds030_dataset, num_workers=1, pin_memory=True)
 
             class_weights = [0.5, 0.5]
 
@@ -603,7 +600,7 @@ if __name__ == '__main__':
 
         bag_model = BagDistributionModel(n_slices)
         bag_model.cuda()
-        train_res, val_res, test_res, ds030_res = learn_bag_distribution(abide_f, ds030_f, train_indices, validation_indices, test_indices, n_slices, batch_size=32, n_epochs=5)
+        train_res, val_res, test_res, ds030_res = learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds030_loader, n_slices, batch_size=32, n_epochs=5)
 
         #calibrate model probability on validation set
         model_with_temperature = ModelWithTemperature(bag_model)
