@@ -191,7 +191,6 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
     # target = torch.zeros((1), dtype=torch.int64).pin_memory()
 
     for epoch_idx in range(n_epochs):
-        np.random.shuffle(train_indices)
 
         for sample_idx, (data, target, sample_weight) in enumerate(train_loader_bag):
             # data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
@@ -199,6 +198,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
             # sample_weight = float(label_confidence[train_idx])
 
             data, target = data.cuda(), target.cuda()
+            data = data.permute(1, 0, 2, 3)
 
             output = model(data)
             slice_predictions = output[:, 0:1].permute(1, 0)
@@ -220,10 +220,10 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
 
     bag_model.eval()
 
-    train_truth, train_probabilities = np.zeros(len(train_indices), dtype='uint8'), np.zeros((len(train_indices)), dtype='float32')
-    validation_truth, validation_probabilities = np.zeros(len(validation_indices), dtype='uint8'), np.zeros((len(validation_indices)), dtype='float32')
-    test_truth, test_probabilities = np.zeros(len(test_indices), dtype='uint8'), np.zeros((len(test_indices)), dtype='float32')
-    ds030_truth, ds030_probabilities = np.zeros(len(ds030_indices), dtype='uint8'), np.zeros((len(ds030_indices)), dtype='float32')
+    train_truth, train_probabilities = np.zeros(len(train_loader_bag), dtype='uint8'), np.zeros((len(train_loader_bag)), dtype='float32')
+    validation_truth, validation_probabilities = np.zeros(len(validation_loader), dtype='uint8'), np.zeros((len(validation_loader)), dtype='float32')
+    test_truth, test_probabilities = np.zeros(len(test_loader), dtype='uint8'), np.zeros((len(test_loader)), dtype='float32')
+    ds030_truth, ds030_probabilities = np.zeros(len(ds030_loader), dtype='uint8'), np.zeros((len(ds030_loader)), dtype='float32')
 
     for i, (data, target, sample_weight) in enumerate(train_loader_bag):
         # data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
@@ -240,9 +240,9 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
             print('output', output.shape)
         train_probabilities[i, :] = output.data.cpu().numpy()
 
-    for i, validation_idx in enumerate(validation_indices):
-        data[:, 0, ...] = torch.FloatTensor(images[validation_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
-        validation_truth[i] = int(labels[validation_idx])
+    for i, (data, target, sample_weight) in enumerate(validation_loader):
+        # data[:, 0, ...] = torch.FloatTensor(images[validation_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
+        validation_truth[i] = target
 
         data.cuda()
 
@@ -253,9 +253,9 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
 
         validation_probabilities[i, :] = output.data.cpu().numpy()[0, ...]
 
-    for i, test_idx in enumerate(test_indices):
-        data[:, 0, ...] = torch.FloatTensor(images[test_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
-        test_truth[i] = int(labels[test_idx])
+    for i, (data, target, sample_weight) in enumerate(test_loader):
+        # data[:, 0, ...] = torch.FloatTensor(images[test_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
+        test_truth[i] = target
 
         data.cuda()
 
@@ -268,9 +268,9 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
 
     images = f2['MRI']
     labels = f2['qc_label']
-    for i, ds030_idx in enumerate(ds030_indices):
-        data[:, 0, ...] = torch.FloatTensor(images[ds030_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
-        ds030_truth[i] = int(labels[ds030_idx])
+    for i, (data, target, sample_weight) in enumerate(ds030_loader):
+        # data[:, 0, ...] = torch.FloatTensor(images[ds030_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
+        ds030_truth[i] = target
 
         data.cuda()
 
