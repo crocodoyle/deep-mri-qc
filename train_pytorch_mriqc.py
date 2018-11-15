@@ -399,7 +399,7 @@ if __name__ == '__main__':
     n_folds = args.folds
     n_slices = args.n_slices
 
-    results_shape = (n_folds, args.epochs)
+    results_shape = (n_folds, args.slice_epochs)
 
     training_sensitivity, training_specificity, validation_sensitivity, validation_specificity, test_sensitivity, test_specificity, val_aucs = np.zeros(
         results_shape), np.zeros(results_shape), np.zeros(results_shape), np.zeros(results_shape), np.zeros(
