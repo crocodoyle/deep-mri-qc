@@ -94,7 +94,7 @@ class AllSlicesQCDataset(Dataset):
 
         label = self.labels[good_index]
         label_confidence = torch.FloatTensor([self.confidence[good_index]])
-        image_slices = torch.FloatTensor(self.images[good_index, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, :, :])
+        image_slices = torch.FloatTensor(self.images[good_index, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, :, :]).permute(1, 0, 2, 3)
 
         return image_slices, int(label), label_confidence
 
@@ -183,28 +183,24 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
 
     bag_optimizer = torch.optim.Adam(bag_model.parameters(), lr=0.0002)
 
-    # images = f['MRI']
-    # labels = f['qc_label']
-    # label_confidence = f['label_confidence']
-    #
-    # target = torch.zeros((1), dtype=torch.int64).pin_memory()
+    all_train_slice_predictions = torch.FloatTensor((len(train_loader_bag), n_slices*2, 1))
+    all_train_targets = torch.LongTensor((len(train_loader_bag)))
+    all_sample_weights = torch.FloatTensor((len(train_loader_bag)))
+
+    for sample_idx, (data, target, sample_weight) in enumerate(train_loader_bag):
+        data = data.cuda()
+        output = model(data)
+        slice_predictions = output[:, 0:1].permute(1, 0)
+
+        all_train_slice_predictions[sample_idx, :, :] = slice_predictions
+        all_train_targets[sample_idx] = target
 
     for epoch_idx in range(n_epochs):
+        for sample_idx, (data, target, sample_weight) in zip(all_train_slice_predictions, all_train_targets, all_sample_weights):
+            data = data.cuda()
+            target = target.cuda()
 
-        for sample_idx, (data, target, sample_weight) in enumerate(train_loader_bag):
-            # data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
-            # target[:] = torch.LongTensor([int(labels[train_idx])])
-            # print(sample_weight)
-
-            # weight_multiplier = torch.ones((1, 2), dtype=torch.float32) * sample_weight
-
-            data, target = data.cuda(), target.cuda()
-            data = data.permute(1, 0, 2, 3)
-
-            output = model(data)
-            slice_predictions = output[:, 0:1].permute(1, 0)
-
-            output = bag_model(slice_predictions)
+            output = bag_model(data)
 
             loss = nn.CrossEntropyLoss()
             loss_val = loss(output, target)
