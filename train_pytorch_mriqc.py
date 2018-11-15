@@ -161,7 +161,7 @@ def test(test_loader, n_slices):
 
             truth[i] = target
 
-            output = model(data[j, ...].cuda())
+            output = model(data[j:j+1, ...].cuda())
             output = m(output)
 
             probabilities[i, j, :] = output.data.cpu().numpy()
