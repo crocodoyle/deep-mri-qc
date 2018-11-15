@@ -94,7 +94,7 @@ class AllSlicesQCDataset(Dataset):
 
         label = self.labels[good_index]
         label_confidence = self.confidence[good_index]
-        image_slices = torch.FloatTensor(self.images[good_index, :, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, :, :])
+        image_slices = torch.FloatTensor(self.images[good_index, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, :, :])
 
         return image_slices, label, label_confidence
 
