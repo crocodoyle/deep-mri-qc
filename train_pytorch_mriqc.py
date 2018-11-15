@@ -221,10 +221,10 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
 
     bag_model.eval()
 
-    train_truth, train_probabilities = np.zeros(len(train_loader_bag), dtype='uint8'), np.zeros((len(train_loader_bag)), dtype='float32')
-    validation_truth, validation_probabilities = np.zeros(len(validation_loader), dtype='uint8'), np.zeros((len(validation_loader)), dtype='float32')
-    test_truth, test_probabilities = np.zeros(len(test_loader), dtype='uint8'), np.zeros((len(test_loader)), dtype='float32')
-    ds030_truth, ds030_probabilities = np.zeros(len(ds030_loader), dtype='uint8'), np.zeros((len(ds030_loader)), dtype='float32')
+    train_truth, train_probabilities = np.zeros(len(train_loader_bag), dtype='uint8'), np.zeros((len(train_loader_bag), 2), dtype='float32')
+    validation_truth, validation_probabilities = np.zeros(len(validation_loader), dtype='uint8'), np.zeros((len(validation_loader), 2), dtype='float32')
+    test_truth, test_probabilities = np.zeros(len(test_loader), dtype='uint8'), np.zeros((len(test_loader), 2), dtype='float32')
+    ds030_truth, ds030_probabilities = np.zeros(len(ds030_loader), dtype='uint8'), np.zeros((len(ds030_loader), 2), dtype='float32')
 
     for i, (data, target, sample_weight) in enumerate(train_loader_bag):
         # data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
