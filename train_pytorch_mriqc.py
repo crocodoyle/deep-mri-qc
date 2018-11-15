@@ -18,7 +18,7 @@ from torch.autograd import Variable
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
 from temperature_scaling import ModelWithTemperature, ModelWithSoftmax, ECELoss
 
-from qc_pytorch_models import ConvolutionalQCNet, BigConvolutionalQCNet, ModelWithBagDistribution
+from qc_pytorch_models import ConvolutionalQCNet, BigConvolutionalQCNet, ModelWithBagDistribution, BagDistributionModel
 
 import h5py, pickle, os, time, sys, csv
 import numpy as np
@@ -200,7 +200,6 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
 
     data = torch.zeros((n_slices*2, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
     target = torch.zeros((n_slices*2), dtype=torch.int64).pin_memory()
-    # sample_weight = torch.zeros(1, dtype=torch.float32).pin_memory()
 
     for epoch_idx in range(n_epochs):
         np.random.shuffle(train_indices)
@@ -208,11 +207,14 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
         for sample_idx, train_idx in enumerate(train_indices):
             data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
             target[:] = torch.LongTensor([int(labels[train_idx])])
-            sample_weight = float(label_confidence[train_idx]) / (n_slices*2)
+            sample_weight = float(label_confidence[train_idx])
 
             data, target = data.cuda(), target.cuda()
 
-            output = bag_model(data)
+            output = model(data)
+            slice_predictions = output[:, 0:1].permute(1, 0)
+
+            output = bag_model(slice_predictions)
 
             loss = nn.CrossEntropyLoss()
             loss_val = loss(output, target)
@@ -238,12 +240,14 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
         data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
         train_truth[i] = int(labels[train_idx])
 
-        data, target = data.cuda()
+        data = data.cuda()
 
-        output = bag_model(data)
+        output = model(data)
+        slice_predictions = output[:, 0:1].permute(1, 0)
+        output = bag_model(slice_predictions)
         output = m(output)
 
-        if i==0:
+        if i == 0:
             print('output', output.shape)
         train_probabilities[i, :] = output.data.cpu().numpy()[0, ...]
 
@@ -251,12 +255,11 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
         data[:, 0, ...] = torch.FloatTensor(images[validation_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
         validation_truth[i] = int(labels[validation_idx])
 
-        if args.cuda:
-            data, target = data.cuda()
-
         data.cuda()
 
-        output = bag_model(data)
+        output = model(data)
+        slice_predictions = output[:, 0:1].permute(1, 0)
+        output = bag_model(slice_predictions)
         output = m(output)
 
         validation_probabilities[i, :] = output.data.cpu().numpy()[0, ...]
@@ -265,10 +268,11 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
         data[:, 0, ...] = torch.FloatTensor(images[test_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
         test_truth[i] = int(labels[test_idx])
 
-        if args.cuda:
-            data = data.cuda()
+        data.cuda()
 
-        output = bag_model(data)
+        output = model(data)
+        slice_predictions = output[:, 0:1].permute(1, 0)
+        output = bag_model(slice_predictions)
         output = m(output)
 
         test_probabilities[i, :] = output.data.cpu().numpy()[0, ...]
@@ -279,12 +283,12 @@ def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indice
         data[:, 0, ...] = torch.FloatTensor(images[ds030_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
         ds030_truth[i] = int(labels[ds030_idx])
 
-        if args.cuda:
-            data, target = data.cuda(), target.cuda()
+        data.cuda()
 
-        output = bag_model(data)
+        output = model(data)
+        slice_predictions = output[:, 0:1].permute(1, 0)
+        output = bag_model(slice_predictions)
         output = m(output)
-
         ds030_probabilities[i, :] = output.data.cpu().numpy()[0, ...]
 
     return (train_truth, train_probabilities), (validation_truth, validation_probabilities), (test_truth, test_probabilities), (ds030_truth, ds030_probabilities)
@@ -611,8 +615,7 @@ if __name__ == '__main__':
         ds030_results[fold_idx, 2] = accuracy_score(ds030_truth, ds030_predictions)
         ds030_results[fold_idx, 3] = roc_auc_score(ds030_truth, ds030_predictions)
 
-
-        bag_model = ModelWithBagDistribution(model, n_slices)
+        bag_model = BagDistributionModel(n_slices)
         bag_model.cuda()
         train_res, val_res, test_res, ds030_res = learn_bag_distribution(abide_f, ds030_f, train_indices, validation_indices, test_indices, n_slices, batch_size=32, n_epochs=20)
 

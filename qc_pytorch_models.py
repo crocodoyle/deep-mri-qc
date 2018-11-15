@@ -199,3 +199,24 @@ class ModelWithBagDistribution(nn.Module):
         # print('repeated', x.shape)
         out = self.bag_classifier(x)
         return out
+
+
+class BagDistributionModel(nn.Module):
+    def __init__(self, n_slices):
+        super(ModelWithBagDistribution, self).__init__()
+
+        self.n_slices = n_slices
+
+        self.bag_classifier = nn.Sequential(
+            nn.Linear(n_slices * 2, n_slices * 2),
+            nn.LeakyReLU(0.1),
+            nn.Dropout(0.5),
+            nn.Linear(n_slices * 2, n_slices),
+            nn.LeakyReLU(0.1),
+            nn.Dropout(0.5),
+            nn.Linear(n_slices, 2)
+        )
+
+    def forward(self, input):
+        out = self.bag_classifier(input)
+        return out
