@@ -161,7 +161,7 @@ def test(test_loader, n_slices):
         for j, slice_idx in enumerate(range(image_shape[0] // 2 - n_slices, image_shape[0] // 2 + n_slices)):
             # data[0, 0, ...] = torch.FloatTensor(images[test_idx, 0, j, ...])
 
-            output = model(data[j:j+1, ...].unsqueeze(0).cuda())
+            output = model(data[j:j+1, ...].cuda())
             output = m(output)
 
             probabilities[i, j, :] = output.data.cpu().numpy()
