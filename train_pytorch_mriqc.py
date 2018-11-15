@@ -156,12 +156,12 @@ def test(test_loader, n_slices):
     # data = torch.zeros((1, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
 
     for i, (data, target, sample_weight) in enumerate(test_loader):
+        print('data', data.shape)
+        truth[i] = target
         for j, slice_idx in enumerate(range(image_shape[0] // 2 - n_slices, image_shape[0] // 2 + n_slices)):
             # data[0, 0, ...] = torch.FloatTensor(images[test_idx, 0, j, ...])
 
-            truth[i] = target
-
-            output = model(data[j:j+1, ...].cuda())
+            output = model(data[j:j+1, ...].unsqueeze(0).cuda())
             output = m(output)
 
             probabilities[i, j, :] = output.data.cpu().numpy()
