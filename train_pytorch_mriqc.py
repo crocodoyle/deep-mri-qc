@@ -94,7 +94,7 @@ class AllSlicesQCDataset(Dataset):
 
         label = self.labels[good_index]
         label_confidence = self.confidence[good_index]
-        image_slices = self.images[good_index, :, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, :, :]
+        image_slices = torch.FloatTensor(self.images[good_index, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, :, :]).unsqueeze(1)
 
         return image_slices, label, label_confidence
 
@@ -156,19 +156,19 @@ def test(test_loader, n_slices):
     # data = torch.zeros((1, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
 
     for i, (data, target, sample_weight) in enumerate(test_loader):
-        # print('data', data.shape)
+        print('data', data.shape)
         truth[i] = target
-        for j, slice_idx in enumerate(range(image_shape[0] // 2 - n_slices, image_shape[0] // 2 + n_slices)):
+        for slice_idx in range(n_slices*2):
             # data[0, 0, ...] = torch.FloatTensor(images[test_idx, 0, j, ...])
 
-            slice = data[0, j, ...].unsqueeze(1).cuda()
+            slice = data[slice_idx:slice_idx+1, ...].cuda()
             print('slice', slice.shape)
             slice.cuda()
 
             output = model(slice)
             output = m(output)
 
-            probabilities[i, j, :] = output.data.cpu().numpy()
+            probabilities[i, slice_idx, :] = output.data.cpu().numpy()
 
     return truth, probabilities
 
