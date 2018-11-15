@@ -161,7 +161,7 @@ def test(test_loader, n_slices):
         for j, slice_idx in enumerate(range(image_shape[0] // 2 - n_slices, image_shape[0] // 2 + n_slices)):
             # data[0, 0, ...] = torch.FloatTensor(images[test_idx, 0, j, ...])
 
-            slice = data[j, ...].cuda()
+            slice = data[0, j, ...].unsqueeze(1).cuda()
             print('slice', slice.shape)
             slice.cuda()
 
