@@ -203,7 +203,7 @@ class ModelWithBagDistribution(nn.Module):
 
 class BagDistributionModel(nn.Module):
     def __init__(self, n_slices):
-        super(ModelWithBagDistribution, self).__init__()
+        super(BagDistributionModel, self).__init__()
 
         self.n_slices = n_slices
 

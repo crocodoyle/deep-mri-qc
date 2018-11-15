@@ -505,13 +505,13 @@ if __name__ == '__main__':
             ds030_dataset = AllSlicesQCDataset(ds030_f, ds030_indices, n_slices=n_slices)
 
             sampler = WeightedRandomSampler(weights=train_sample_weights, num_samples=len(train_sample_weights))
-            train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=False,
+            train_loader = DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=False,
                                                        **kwargs)
 
-            train_loader_bag = torch.utils.data.DataLoader(train_dataset_bag, num_workers=1, pin_memory=True)
-            validation_loader = torch.utils.data.DataLoader(validation_dataset, num_workers=1, pin_memory=True)
-            test_loader = torch.utils.data.DataLoader(test_dataset, num_workers=1, pin_memory=True)
-            ds030_loader = torch.utils.data.DataLoader(ds030_dataset, num_workers=1, pin_memory=True)
+            train_loader_bag = DataLoader(train_dataset_bag, num_workers=1, pin_memory=True)
+            validation_loader = DataLoader(validation_dataset, num_workers=1, pin_memory=True)
+            test_loader = DataLoader(test_dataset, num_workers=1, pin_memory=True)
+            ds030_loader = DataLoader(ds030_dataset, num_workers=1, pin_memory=True)
 
             class_weights = [0.5, 0.5]
 
