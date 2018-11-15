@@ -474,9 +474,9 @@ if __name__ == '__main__':
         # optimizer = optim.Adam(model.parameters(), lr=0.002, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
         optimizer = optim.SGD(model.parameters(), lr=0.002, momentum=0.9, dampening=0, weight_decay=0, nesterov=True)
         if not args.no_scheduler:
-            scheduler = StepLR(optimizer, args.epochs // 4, gamma=0.5)
+            scheduler = StepLR(optimizer, args.slice_epochs // 4, gamma=0.5)
 
-        for epoch_idx, epoch in enumerate(range(1, args.epochs + 1)):
+        for epoch_idx, epoch in enumerate(range(1, args.slice_epochs + 1)):
             epoch_start = time.time()
 
             if not args.no_scheduler:
@@ -688,7 +688,7 @@ if __name__ == '__main__':
     # torch.onnx.export(model, dummy_input, results_dir + "deepqc.onnx", verbose=False)
 
     for fold in range(skf.get_n_splits()):
-        make_roc_gif(results_dir, args.epochs, fold + 1)
+        make_roc_gif(results_dir, args.slice_epochs, fold + 1)
 
     time_elapsed = time.time() - start_time
     print('Whole experiment took', time_elapsed / (60*60), 'hours')
