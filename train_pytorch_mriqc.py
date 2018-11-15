@@ -94,7 +94,7 @@ class AllSlicesQCDataset(Dataset):
 
         label = self.labels[good_index]
         label_confidence = torch.FloatTensor([self.confidence[good_index]])
-        image_slices = torch.FloatTensor(self.images[good_index, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, :, :]).permute(1, 0, 2, 3)
+        image_slices = torch.FloatTensor(self.images[good_index, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, :, :])
 
         return image_slices, int(label), label_confidence
 
@@ -188,6 +188,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
     all_sample_weights = torch.FloatTensor((len(train_loader_bag)))
 
     for sample_idx, (data, target, sample_weight) in enumerate(train_loader_bag):
+        data = data.permute(1, 0, 2, 3)
         data = data.cuda()
         output = model(data)
         slice_predictions = output[:, 0:1].permute(1, 0)
