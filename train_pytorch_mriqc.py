@@ -214,7 +214,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
             if (sample_idx + 1) % batch_size == 0:
                 bag_optimizer.step()
                 bag_optimizer.zero_grad()
-                print('Bag classifier training epoch:', epoch_idx, '[', sample_idx, '/', len(train_loader_bag), ']\t Loss:', loss_val)
+                print('Bag classifier training epoch:', epoch_idx, '[', sample_idx, '/', len(train_loader_bag), ']\t Loss:', loss_val.data.cpu().numpy())
 
         bag_optimizer.step()
         bag_optimizer.zero_grad()
@@ -230,6 +230,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         # data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
         train_truth[i] = target
 
+        data = data.permute(1, 0, 2, 3)
         data = data.cuda()
 
         output = model(data)
@@ -245,6 +246,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         # data[:, 0, ...] = torch.FloatTensor(images[validation_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
         validation_truth[i] = target
 
+        data = data.permute(1, 0, 2, 3)
         data.cuda()
 
         output = model(data)
@@ -258,6 +260,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         # data[:, 0, ...] = torch.FloatTensor(images[test_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
         test_truth[i] = target
 
+        data = data.permute(1, 0, 2, 3)
         data.cuda()
 
         output = model(data)
@@ -271,6 +274,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         # data[:, 0, ...] = torch.FloatTensor(images[ds030_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
         ds030_truth[i] = target
 
+        data = data.permute(1, 0, 2, 3)
         data.cuda()
 
         output = model(data)
