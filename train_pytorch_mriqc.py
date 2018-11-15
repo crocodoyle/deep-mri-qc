@@ -195,6 +195,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
             # data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
             # target[:] = torch.LongTensor([int(labels[train_idx])])
             weight_multiplier = torch.ones((1, 2), dtype=torch.float32).pin_memory() * sample_weight
+            weight_multiplier.cuda()
 
             data, target = data.cuda(), target.cuda()
             data = data.permute(1, 0, 2, 3)
