@@ -147,7 +147,7 @@ def train(epoch, class_weight=None):
 def test(test_loader, n_slices):
     model.eval()
 
-    truth, probabilities = np.zeros(len(test_indices), dtype='uint8'), np.zeros((len(test_indices), n_slices*2, 2), dtype='float32')
+    truth, probabilities = np.zeros(len(test_loader), dtype='uint8'), np.zeros((len(test_loader), n_slices*2, 2), dtype='float32')
     m = torch.nn.Softmax(dim=-1)
 
     # images = f['MRI']
@@ -156,15 +156,15 @@ def test(test_loader, n_slices):
     # data = torch.zeros((1, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
 
     for i, (data, target, sample_weight) in enumerate(test_loader):
-        print('data', data.shape)
+        # print('data', data.shape)
         truth[i] = target
         data = data.permute(1, 0, 2, 3)
-        print('data', data.shape)
+        # print('data', data.shape)
         for slice_idx in range(n_slices*2):
             # data[0, 0, ...] = torch.FloatTensor(images[test_idx, 0, j, ...])
 
             slice = data[slice_idx:slice_idx+1, ...].cuda()
-            print('slice', slice.shape)
+            # print('slice', slice.shape)
             slice.cuda()
 
             output = model(slice)
