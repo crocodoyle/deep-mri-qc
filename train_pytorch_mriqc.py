@@ -187,7 +187,6 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
     # labels = f['qc_label']
     # label_confidence = f['label_confidence']
     #
-    weight = torch.ones((n_slices * 2, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
     # target = torch.zeros((1), dtype=torch.int64).pin_memory()
 
     for epoch_idx in range(n_epochs):
@@ -195,7 +194,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         for sample_idx, (data, target, sample_weight) in enumerate(train_loader_bag):
             # data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
             # target[:] = torch.LongTensor([int(labels[train_idx])])
-            weight_multiplier = weight*sample_weight
+            weight_multiplier = torch.ones((1, 2), dtype=torch.float32).pin_memory() * sample_weight
 
             data, target = data.cuda(), target.cuda()
             data = data.permute(1, 0, 2, 3)
@@ -207,7 +206,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
 
             loss = nn.CrossEntropyLoss()
             loss_val = loss(output, target)
-            loss_val.data *= weight_multiplier
+            loss_val = loss_val * weight_multiplier
             loss_val.backward()
 
             if (sample_idx + 1) % batch_size == 0:
