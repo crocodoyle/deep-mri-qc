@@ -158,7 +158,7 @@ def test(test_loader, n_slices):
     for i, (data, target, sample_weight) in enumerate(test_loader):
         print('data', data.shape)
         truth[i] = target
-        data = data.permute(1, 0)
+        data = data.permute(1, 0, 2, 3)
         print('data', data.shape)
         for slice_idx in range(n_slices*2):
             # data[0, 0, ...] = torch.FloatTensor(images[test_idx, 0, j, ...])
