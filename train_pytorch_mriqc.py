@@ -208,7 +208,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
 
             loss = nn.CrossEntropyLoss()
             loss_val = loss(output, target)
-            loss_val = loss_val * weight_multiplier
+            loss_val = loss_val * weight_multiplier.cuda()
             loss_val.backward()
 
             if (sample_idx + 1) % batch_size == 0:
