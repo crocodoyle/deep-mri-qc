@@ -173,26 +173,12 @@ def test(f, test_indices, n_slices):
 
 
 def learn_bag_distribution(f, f2, train_indices, validation_indices, test_indices, n_slices, batch_size, n_epochs):
-    bag_model.features.eval()
-    bag_model.slice_classifier.eval()
-    bag_model.bag_classifier.train()
+    model.eval()
+    bag_model.train()
 
     m = nn.Softmax(dim=-1)
 
-    total_params = list(bag_model.parameters())
-    bag_model_params = list(bag_model.bag_classifier.parameters())
-    print('Parameters:', sum([p.data.nelement() for p in bag_model_params]), '/', sum([p.data.nelement() for p in total_params]))
-
-    on_gpu, on_cpu = 0, 0
-    for param in total_params:
-        if param.is_cuda:
-            on_gpu += param.data.nelement()
-        else:
-            on_cpu += param.data.nelement()
-
-    print(on_gpu, 'params on GPU,', on_cpu, 'params on CPU')
-
-    bag_optimizer = torch.optim.Adam(bag_model_params, lr=0.0002)
+    bag_optimizer = torch.optim.Adam(bag_model.parameters(), lr=0.0002)
 
     images = f['MRI']
     labels = f['qc_label']
