@@ -214,7 +214,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
             if (sample_idx + 1) % batch_size == 0:
                 bag_optimizer.step()
                 bag_optimizer.zero_grad()
-                print('Bag classifier training epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch_idx, sample_idx, len(train_indices), sample_idx / len(train_indices), loss_val.data.cpu().numpy()))
+                print('Bag classifier training epoch:', epoch_idx, '[', sample_idx, '/', len(train_loader_bag), ']\t Loss:', loss_val)
 
         bag_optimizer.step()
         bag_optimizer.zero_grad()
