@@ -178,6 +178,7 @@ def test(test_loader, n_slices):
 def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds030_loader, n_slices, batch_size, n_epochs):
     model.eval()
     bag_model.train()
+    model.cuda()
 
     m = nn.Softmax(dim=-1)
 
