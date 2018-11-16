@@ -183,7 +183,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
 
     bag_optimizer = torch.optim.Adam(bag_model.parameters(), lr=0.0002)
 
-    all_train_slice_predictions = torch.zeros((len(train_loader_bag), n_slices*2, 1), dtype=torch.float32)
+    all_train_slice_predictions = torch.zeros((len(train_loader_bag), 1, n_slices*2), dtype=torch.float32)
     all_train_targets = torch.zeros((len(train_loader_bag)), dtype=torch.int64)
     all_sample_weights = torch.zeros((len(train_loader_bag)), dtype=torch.float32)
 
@@ -192,8 +192,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         data = data.cuda()
         output = model(data)
         slice_predictions = output[:, 0:1].permute(1, 0)
-        print(slice_predictions.shape)
-
+        # print(slice_predictions.shape)
 
         all_train_slice_predictions[sample_idx, :, :] = slice_predictions
         all_train_targets[sample_idx] = target
