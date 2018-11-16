@@ -206,7 +206,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
             slice[...] = data[slice_idx:slice_idx + 1, ...]
             slice.cuda()
 
-            output = model(slice)
+            output = model(slice.cuda()).cuda()
             slice_prediction = output[:, 0:1].permute(1, 0)
 
             all_train_slice_predictions[sample_idx, :, slice_idx] = slice_prediction.cpu()
