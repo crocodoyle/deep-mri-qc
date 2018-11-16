@@ -197,11 +197,13 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
     test_truth, test_probabilities = np.zeros(len(test_loader), dtype='uint8'), np.zeros((len(test_loader), 2), dtype='float32')
     ds030_truth, ds030_probabilities = np.zeros(len(ds030_loader), dtype='uint8'), np.zeros((len(ds030_loader), 2), dtype='float32')
 
+    slice = torch.zeros((1, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
+
     for sample_idx, (data, target, sample_weight) in enumerate(train_loader_bag):
         data = data.permute(1, 0, 2, 3)
 
         for slice_idx in range(n_slices * 2):
-            slice = data[slice_idx:slice_idx + 1, ...]
+            slice[...] = data[slice_idx:slice_idx + 1, ...]
             slice.cuda()
 
             output = model(slice)
@@ -219,7 +221,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         data = data.permute(1, 0, 2, 3)
 
         for slice_idx in range(n_slices * 2):
-            slice = data[slice_idx:slice_idx + 1, ...]
+            slice[...] = data[slice_idx:slice_idx + 1, ...]
             slice.cuda()
 
             output = model(slice)
@@ -235,7 +237,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         data = data.permute(1, 0, 2, 3)
 
         for slice_idx in range(n_slices * 2):
-            slice = data[slice_idx:slice_idx + 1, ...]
+            slice[...] = data[slice_idx:slice_idx + 1, ...]
             slice.cuda()
 
             output = model(slice)
@@ -251,7 +253,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         data = data.permute(1, 0, 2, 3)
 
         for slice_idx in range(n_slices * 2):
-            slice = data[slice_idx:slice_idx + 1, ...]
+            slice[...] = data[slice_idx:slice_idx + 1, ...]
             slice.cuda()
 
             output = model(slice)
@@ -264,15 +266,17 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
     print('Predicted all slices in ds030')
     print('Starting to train bag classifier...')
 
+    slice_predictions = torch.zeros((1, n_slices*2))
+
     for epoch_idx in range(n_epochs):
         for sample_idx in range(len(all_train_targets)):
-            data = all_train_slice_predictions[sample_idx, :, :]
+            slice_predictions = all_train_slice_predictions[sample_idx, :, :]
             target = all_train_targets[sample_idx, :, :]
 
-            data = data.cuda()
+            slice_predictions = slice_predictions.cuda()
             target = target.cuda()
 
-            output = bag_model(data)
+            output = bag_model(slice_predictions)
 
             loss = nn.CrossEntropyLoss()
             loss_val = loss(output, target)
@@ -290,38 +294,38 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
     bag_model.eval()
 
     for sample_idx in range(len(all_train_targets)):
-        data = all_train_slice_predictions[sample_idx, :, :]
+        slice_predictions = all_train_slice_predictions[sample_idx, :, :]
 
-        data = data.cuda()
+        slice_predictions = slice_predictions.cuda()
 
-        output = bag_model(data)
+        output = bag_model(slice_predictions)
         output = m(output)
 
         train_probabilities[sample_idx, :] = output.data.cpu().numpy()
 
     for sample_idx in range(len(validation_loader)):
-        data = all_validation_slice_predictions[sample_idx, :, :]
-        data.cuda()
+        slice_predictions = all_validation_slice_predictions[sample_idx, :, :]
+        slice_predictions.cuda()
 
-        output = bag_model(data)
+        output = bag_model(slice_predictions)
         output = m(output)
 
         validation_probabilities[sample_idx, :] = output.data.cpu().numpy()
 
     for sample_idx in range(len(test_loader)):
-        data = all_test_slice_predictions[sample_idx, :, :]
-        data.cuda()
+        slice_predictions = all_test_slice_predictions[sample_idx, :, :]
+        slice_predictions.cuda()
 
-        output = bag_model(data)
+        output = bag_model(slice_predictions)
         output = m(output)
 
         test_probabilities[sample_idx, :] = output.data.cpu().numpy()
 
     for sample_idx in range(len(ds030_loader)):
-        data = all_ds030_slice_predictions[sample_idx, :, :]
-        data.cuda()
+        slice_predictions = all_ds030_slice_predictions[sample_idx, :, :]
+        slice_predictions.cuda()
 
-        output = bag_model(data)
+        output = bag_model(slice_predictions)
         output = m(output)
 
         ds030_probabilities[sample_idx, :] = output.data.cpu().numpy()
