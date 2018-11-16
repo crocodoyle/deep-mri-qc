@@ -435,7 +435,7 @@ if __name__ == '__main__':
     if args.cuda:
         torch.cuda.manual_seed(args.seed)
 
-    model = densenet.DenseNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],), growthRate=4, depth=64, reduction=0.5, bottleneck=True, nClasses=2)
+    model = densenet.DenseNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],), growthRate=2, depth=48, reduction=0.5, bottleneck=True, nClasses=2)
     if args.cuda:
         model.cuda()
     # model = BigConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
@@ -495,7 +495,8 @@ if __name__ == '__main__':
         fold_num = fold_idx + 1
 
         # model = ConvolutionalQCNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],))
-        model = densenet.DenseNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],), growthRate=4, depth=64, reduction=0.5, bottleneck=True, nClasses=2)
+        model = densenet.DenseNet(input_shape=(1,) + (image_shape[1],) + (image_shape[2],), growthRate=2, depth=48,
+                                  reduction=0.5, bottleneck=True, nClasses=2)
 
         if args.cuda:
             model.cuda()
