@@ -185,21 +185,89 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
 
     all_train_slice_predictions = torch.zeros((len(train_loader_bag), 1, n_slices*2), dtype=torch.float32)
     all_train_targets = torch.zeros((len(train_loader_bag)), dtype=torch.int64)
-    all_sample_weights = torch.zeros((len(train_loader_bag)), dtype=torch.float32)
+    all_train_sample_weights = torch.zeros((len(train_loader_bag)), dtype=torch.float32)
+
+    all_validation_slice_predictions = torch.zeros((len(validation_loader), 1, n_slices*2), dtype=torch.float32)
+    all_test_slice_predictions = torch.zeros((len(test_loader), 1, n_slices*2), dtype=torch.float32)
+    all_ds030_slice_predictions = torch.zeros((len(ds030_loader), 1, n_slices*2), dtype=torch.float32)
+
+    train_truth, train_probabilities = np.zeros(len(train_loader_bag), dtype='uint8'), np.zeros((len(train_loader_bag), 2), dtype='float32')
+    validation_truth, validation_probabilities = np.zeros(len(validation_loader), dtype='uint8'), np.zeros((len(validation_loader), 2), dtype='float32')
+    test_truth, test_probabilities = np.zeros(len(test_loader), dtype='uint8'), np.zeros((len(test_loader), 2), dtype='float32')
+    ds030_truth, ds030_probabilities = np.zeros(len(ds030_loader), dtype='uint8'), np.zeros((len(ds030_loader), 2), dtype='float32')
 
     for sample_idx, (data, target, sample_weight) in enumerate(train_loader_bag):
         data = data.permute(1, 0, 2, 3)
-        data = data.cuda()
-        output = model(data)
-        slice_predictions = output[:, 0:1].permute(1, 0)
 
-        all_train_slice_predictions[sample_idx, :, :] = slice_predictions
+        for slice_idx in range(n_slices * 2):
+            slice = data[slice_idx:slice_idx + 1, ...].cuda()
+            slice.cuda()
+
+            output = model(slice)
+            slice_prediction = output[:, 0:1].permute(1, 0)
+
+            all_train_slice_predictions[sample_idx, :, slice_idx] = slice_prediction.cpu()
+
         all_train_targets[sample_idx] = target
+        all_train_sample_weights[sample_idx] = sample_weight
+        train_truth[sample_idx] = target
 
     print('Predicted all slices in training set(', len(train_loader_bag)*n_slices*2, 'total)')
 
+    for sample_idx, (data, target, sample_weight) in enumerate(validation_loader):
+        data = data.permute(1, 0, 2, 3)
+
+        for slice_idx in range(n_slices * 2):
+            slice = data[slice_idx:slice_idx + 1, ...].cuda()
+            slice.cuda()
+
+            output = model(slice)
+            slice_prediction = output[:, 0:1].permute(1, 0)
+
+            all_validation_slice_predictions[sample_idx, :, slice_idx] = slice_prediction.cpu()
+
+        validation_truth[sample_idx] = target
+
+    print('Predicted all slices in validation set')
+
+    for sample_idx, (data, target, sample_weight) in enumerate(test_loader):
+        data = data.permute(1, 0, 2, 3)
+
+        for slice_idx in range(n_slices * 2):
+            slice = data[slice_idx:slice_idx + 1, ...].cuda()
+            slice.cuda()
+
+            output = model(slice)
+            slice_prediction = output[:, 0:1].permute(1, 0)
+
+            all_test_slice_predictions[sample_idx, :, slice_idx] = slice_prediction.cpu()
+
+        test_truth[sample_idx] = target
+
+    print('Predicted all slices in test set')
+
+    for sample_idx, (data, target, sample_weight) in enumerate(ds030_loader):
+        data = data.permute(1, 0, 2, 3)
+
+        for slice_idx in range(n_slices * 2):
+            slice = data[slice_idx:slice_idx + 1, ...].cuda()
+            slice.cuda()
+
+            output = model(slice)
+            slice_prediction = output[:, 0:1].permute(1, 0)
+
+            all_ds030_slice_predictions[sample_idx, :, slice_idx] = slice_prediction.cpu()
+
+        ds030_truth[sample_idx] = target
+
+    print('Predicted all slices in ds030')
+    print('Starting to train bag classifier...')
+
     for epoch_idx in range(n_epochs):
-        for sample_idx, (data, target, sample_weight) in zip(all_train_slice_predictions, all_train_targets, all_sample_weights):
+        for sample_idx in range(len(all_train_targets)):
+            data = all_train_slice_predictions[sample_idx, :, :]
+            target = all_train_targets[sample_idx, :, :]
+
             data = data.cuda()
             target = target.cuda()
 
@@ -207,7 +275,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
 
             loss = nn.CrossEntropyLoss()
             loss_val = loss(output, target)
-            loss_val = loss_val * sample_weight.cuda()
+            loss_val = loss_val * all_train_sample_weights[sample_idx]
             loss_val.backward()
 
             if (sample_idx + 1) % batch_size == 0:
@@ -220,65 +288,42 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
 
     bag_model.eval()
 
-    train_truth, train_probabilities = np.zeros(len(train_loader_bag), dtype='uint8'), np.zeros((len(train_loader_bag), 2), dtype='float32')
-    validation_truth, validation_probabilities = np.zeros(len(validation_loader), dtype='uint8'), np.zeros((len(validation_loader), 2), dtype='float32')
-    test_truth, test_probabilities = np.zeros(len(test_loader), dtype='uint8'), np.zeros((len(test_loader), 2), dtype='float32')
-    ds030_truth, ds030_probabilities = np.zeros(len(ds030_loader), dtype='uint8'), np.zeros((len(ds030_loader), 2), dtype='float32')
+    for sample_idx in range(len(all_train_targets)):
+        data = all_train_slice_predictions[sample_idx, :, :]
 
-    for i, (data, target, sample_weight) in enumerate(train_loader_bag):
-        train_truth[i] = target
-
-        data = data.permute(1, 0, 2, 3)
         data = data.cuda()
 
-        output = model(data)
-        slice_predictions = output[:, 0:1].permute(1, 0)
-        output = bag_model(slice_predictions)
+        output = bag_model(data)
         output = m(output)
 
-        if i == 0:
-            print('output', output.shape)
-        train_probabilities[i, :] = output.data.cpu().numpy()
+        train_probabilities[sample_idx, :] = output.data.cpu().numpy()
 
-    for i, (data, target, sample_weight) in enumerate(validation_loader):
-        validation_truth[i] = target
-
-        data = data.permute(1, 0, 2, 3)
+    for sample_idx in range(len(validation_loader)):
+        data = all_validation_slice_predictions[sample_idx, :, :]
         data.cuda()
 
-        output = model(data)
-        slice_predictions = output[:, 0:1].permute(1, 0)
-        output = bag_model(slice_predictions)
+        output = bag_model(data)
         output = m(output)
 
-        validation_probabilities[i, :] = output.data.cpu().numpy()
+        validation_probabilities[sample_idx, :] = output.data.cpu().numpy()
 
-    for i, (data, target, sample_weight) in enumerate(test_loader):
-        # data[:, 0, ...] = torch.FloatTensor(images[test_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
-        test_truth[i] = target
-
-        data = data.permute(1, 0, 2, 3)
+    for sample_idx in range(len(test_loader)):
+        data = all_test_slice_predictions[sample_idx, :, :]
         data.cuda()
 
-        output = model(data)
-        slice_predictions = output[:, 0:1].permute(1, 0)
-        output = bag_model(slice_predictions)
+        output = bag_model(data)
         output = m(output)
 
-        test_probabilities[i, :] = output.data.cpu().numpy()
+        test_probabilities[sample_idx, :] = output.data.cpu().numpy()
 
-    for i, (data, target, sample_weight) in enumerate(ds030_loader):
-        # data[:, 0, ...] = torch.FloatTensor(images[ds030_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
-        ds030_truth[i] = target
-
-        data = data.permute(1, 0, 2, 3)
+    for sample_idx in range(len(ds030_loader)):
+        data = all_ds030_slice_predictions[sample_idx, :, :]
         data.cuda()
 
-        output = model(data)
-        slice_predictions = output[:, 0:1].permute(1, 0)
-        output = bag_model(slice_predictions)
+        output = bag_model(data)
         output = m(output)
-        ds030_probabilities[i, :] = output.data.cpu().numpy()
+
+        ds030_probabilities[sample_idx, :] = output.data.cpu().numpy()
 
     return (train_truth, train_probabilities), (validation_truth, validation_probabilities), (test_truth, test_probabilities), (ds030_truth, ds030_probabilities)
 
