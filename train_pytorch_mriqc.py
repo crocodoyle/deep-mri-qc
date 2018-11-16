@@ -192,6 +192,8 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         data = data.cuda()
         output = model(data)
         slice_predictions = output[:, 0:1].permute(1, 0)
+        print(slice_predictions.shape)
+
 
         all_train_slice_predictions[sample_idx, :, :] = slice_predictions
         all_train_targets[sample_idx] = target
