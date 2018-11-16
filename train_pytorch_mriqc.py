@@ -178,6 +178,7 @@ def test(test_loader, n_slices):
 def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds030_loader, n_slices, batch_size, n_epochs):
     model.eval()
     bag_model.train()
+    bag_model.cpu()
     model.cuda()
 
     m = nn.Softmax(dim=-1)
@@ -263,10 +264,13 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
 
         ds030_truth[sample_idx] = target
 
+    model.cpu()
+    bag_model.cuda()
+
     print('Predicted all slices in ds030')
     print('Starting to train bag classifier...')
 
-    slice_predictions = torch.zeros((1, n_slices*2))
+    slice_predictions = torch.zeros((1, n_slices*2), dtype=torch.float32)
 
     for epoch_idx in range(n_epochs):
         for sample_idx in range(len(all_train_targets)):
