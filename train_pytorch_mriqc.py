@@ -183,9 +183,9 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
 
     bag_optimizer = torch.optim.Adam(bag_model.parameters(), lr=0.0002)
 
-    all_train_slice_predictions = torch.FloatTensor((len(train_loader_bag), n_slices*2))
-    all_train_targets = torch.LongTensor((len(train_loader_bag)))
-    all_sample_weights = torch.FloatTensor((len(train_loader_bag)))
+    all_train_slice_predictions = torch.zeros((len(train_loader_bag), n_slices*2, 1), dtype=torch.float32)
+    all_train_targets = torch.zeros((len(train_loader_bag)), dtype=torch.int64)
+    all_sample_weights = torch.zeros((len(train_loader_bag)), dtype=torch.float32)
 
     for sample_idx, (data, target, sample_weight) in enumerate(train_loader_bag):
         data = data.permute(1, 0, 2, 3)
@@ -193,8 +193,10 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         output = model(data)
         slice_predictions = output[:, 0:1].permute(1, 0)
 
-        all_train_slice_predictions[sample_idx, :] = slice_predictions
+        all_train_slice_predictions[sample_idx, :, :] = slice_predictions
         all_train_targets[sample_idx] = target
+
+    print('Predicted all slices in training set(', len(train_loader_bag)*n_slices*2, 'total)')
 
     for epoch_idx in range(n_epochs):
         for sample_idx, (data, target, sample_weight) in zip(all_train_slice_predictions, all_train_targets, all_sample_weights):
@@ -224,7 +226,6 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
     ds030_truth, ds030_probabilities = np.zeros(len(ds030_loader), dtype='uint8'), np.zeros((len(ds030_loader), 2), dtype='float32')
 
     for i, (data, target, sample_weight) in enumerate(train_loader_bag):
-        # data[:, 0, ...] = torch.FloatTensor(images[train_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
         train_truth[i] = target
 
         data = data.permute(1, 0, 2, 3)
@@ -240,7 +241,6 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         train_probabilities[i, :] = output.data.cpu().numpy()
 
     for i, (data, target, sample_weight) in enumerate(validation_loader):
-        # data[:, 0, ...] = torch.FloatTensor(images[validation_idx, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, ...])
         validation_truth[i] = target
 
         data = data.permute(1, 0, 2, 3)
