@@ -201,12 +201,14 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
     # slice = torch.zeros((1, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
 
     for sample_idx, (data, target, sample_weight) in enumerate(train_loader_bag):
-        data.permute(1, 0, 2, 3)
+        # data.permute(1, 0, 2, 3)
+        print('data', data.shape)
 
         for slice_idx in range(n_slices * 2):
             slice = data[slice_idx:slice_idx + 1, ...]
             slice.cuda()
 
+            print('slice:', slice.shape)
             output = model(slice)
             slice_prediction = output[:, 0:1].permute(1, 0)
 
