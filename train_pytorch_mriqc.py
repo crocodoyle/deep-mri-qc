@@ -228,9 +228,11 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
             slice = slice.cuda()
 
             output = model(slice)
-            slice_prediction = output[:, 0:1].permute(1, 0)
+            slice_prediction = output[:, 0:1]
+            slice_prediction = slice_prediction.permute(1, 0)
+            slice_prediction = slice_prediction.data.cpu()
 
-            all_validation_slice_predictions[sample_idx, :, slice_idx] = slice_prediction.cpu()
+            all_validation_slice_predictions[sample_idx, :, slice_idx] = slice_prediction
 
         validation_truth[sample_idx] = target
 
@@ -244,9 +246,11 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
             slice = slice.cuda()
 
             output = model(slice)
-            slice_prediction = output[:, 0:1].permute(1, 0)
+            slice_prediction = output[:, 0:1]
+            slice_prediction = slice_prediction.permute(1, 0)
+            slice_prediction = slice_prediction.data.cpu()
 
-            all_test_slice_predictions[sample_idx, :, slice_idx] = slice_prediction.cpu()
+            all_test_slice_predictions[sample_idx, :, slice_idx] = slice_prediction
 
         test_truth[sample_idx] = target
 
@@ -260,9 +264,11 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
             slice = slice.cuda()
 
             output = model(slice)
-            slice_prediction = output[:, 0:1].permute(1, 0)
+            slice_prediction = output[:, 0:1]
+            slice_prediction = slice_prediction.permute(1, 0)
+            slice_prediction = slice_prediction.data.cpu()
 
-            all_ds030_slice_predictions[sample_idx, :, slice_idx] = slice_prediction.cpu()
+            all_ds030_slice_predictions[sample_idx, :, slice_idx] = slice_prediction
 
         ds030_truth[sample_idx] = target
 
