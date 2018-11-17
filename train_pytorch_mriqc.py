@@ -198,21 +198,21 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
     test_truth, test_probabilities = np.zeros(len(test_loader), dtype='uint8'), np.zeros((len(test_loader), 2), dtype='float32')
     ds030_truth, ds030_probabilities = np.zeros(len(ds030_loader), dtype='uint8'), np.zeros((len(ds030_loader), 2), dtype='float32')
 
-    # slice = torch.zeros((1, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
+    slice = torch.zeros((1, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
 
     for sample_idx, (data, target, sample_weight) in enumerate(train_loader_bag):
         data = data.permute(1, 0, 2, 3)
-        print('data', data.shape)
 
         for slice_idx in range(n_slices * 2):
             slice = data[slice_idx:slice_idx + 1, ...]
             slice = slice.cuda()
 
-            print('slice:', slice.shape)
             output = model(slice)
-            slice_prediction = output[:, 0:1].permute(1, 0)
+            slice_prediction = output[:, 0:1]
+            slice_prediction = slice_prediction.permute(1, 0)
+            slice_prediction = slice_prediction.data.cpu()
 
-            all_train_slice_predictions[sample_idx, :, slice_idx] = slice_prediction.cpu()
+            all_train_slice_predictions[sample_idx, :, slice_idx] = slice_prediction
 
         all_train_targets[sample_idx] = target
         all_train_sample_weights[sample_idx] = sample_weight
