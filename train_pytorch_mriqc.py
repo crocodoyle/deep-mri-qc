@@ -204,7 +204,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         data.permute(1, 0, 2, 3)
 
         for slice_idx in range(n_slices * 2):
-            slice = torch.from_numpy(data[slice_idx:slice_idx + 1, ...])
+            slice = data[slice_idx:slice_idx + 1, ...]
             slice.cuda()
 
             output = model(slice)
@@ -222,7 +222,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         data = data.permute(1, 0, 2, 3)
 
         for slice_idx in range(n_slices * 2):
-            slice = torch.from_numpy(data[slice_idx:slice_idx + 1, ...])
+            slice = data[slice_idx:slice_idx + 1, ...]
             slice.cuda()
 
             output = model(slice)
@@ -238,7 +238,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         data = data.permute(1, 0, 2, 3)
 
         for slice_idx in range(n_slices * 2):
-            slice = torch.from_numpy(data[slice_idx:slice_idx + 1, ...])
+            slice = data[slice_idx:slice_idx + 1, ...]
             slice.cuda()
 
             output = model(slice)
@@ -254,7 +254,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         data = data.permute(1, 0, 2, 3)
 
         for slice_idx in range(n_slices * 2):
-            slice = torch.from_numpy(data[slice_idx:slice_idx + 1, ...])
+            slice = data[slice_idx:slice_idx + 1, ...]
             slice.cuda()
 
             output = model(slice)
