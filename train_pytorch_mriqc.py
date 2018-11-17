@@ -283,18 +283,21 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         for sample_idx in range(len(all_train_targets)):
             slice_predictions = all_train_slice_predictions[sample_idx, :, :]
             target = all_train_targets[sample_idx].unsqueeze(0)
-            print('slice predictions', slice_predictions.shape)
-            print('target', target.shape)
+            sample_weight = all_train_sample_weights[sample_idx]
+
+            # print('slice predictions', slice_predictions.shape)
+            # print('target', target.shape)
 
             slice_predictions = slice_predictions.cuda()
             target = target.cuda()
+            sample_weight = sample_weight.cuda()
 
             output = bag_model(slice_predictions)
-            print('output', output.shape)
+            # print('output', output.shape)
 
             loss = nn.CrossEntropyLoss()
             loss_val = loss(output, target)
-            loss_val = loss_val * all_train_sample_weights[sample_idx]
+            loss_val = loss_val * sample_weight
             loss_val.backward()
 
             if (sample_idx + 1) % batch_size == 0:
