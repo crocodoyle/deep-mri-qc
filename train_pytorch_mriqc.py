@@ -278,17 +278,19 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
     print('Predicted all slices in ds030')
     print('Starting to train bag classifier...')
 
-    slice_predictions = torch.zeros((1, n_slices*2), dtype=torch.float32)
-
     for epoch_idx in range(n_epochs):
+        print('Epoch', epoch_idx, 'of', n_epochs)
         for sample_idx in range(len(all_train_targets)):
             slice_predictions = all_train_slice_predictions[sample_idx, :, :]
             target = all_train_targets[sample_idx]
+            print('slice predictions', slice_predictions.shape)
+            print('target', target.shape)
 
             slice_predictions = slice_predictions.cuda()
             target = target.cuda()
 
             output = bag_model(slice_predictions)
+            print('output', output.shape)
 
             loss = nn.CrossEntropyLoss()
             loss_val = loss(output, target)
