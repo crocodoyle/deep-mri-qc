@@ -282,7 +282,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         print('Epoch', epoch_idx, 'of', n_epochs)
         for sample_idx in range(len(all_train_targets)):
             slice_predictions = all_train_slice_predictions[sample_idx, :, :]
-            target = all_train_targets[sample_idx]
+            target = all_train_targets[sample_idx].unsqueeze(0)
             print('slice predictions', slice_predictions.shape)
             print('target', target.shape)
 
