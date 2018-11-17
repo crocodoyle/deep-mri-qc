@@ -322,7 +322,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
 
     for sample_idx in range(len(validation_loader)):
         slice_predictions = all_validation_slice_predictions[sample_idx, :, :]
-        slice_predictions.cuda()
+        slice_predictions = slice_predictions.cuda()
 
         output = bag_model(slice_predictions)
         output = m(output)
@@ -331,7 +331,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
 
     for sample_idx in range(len(test_loader)):
         slice_predictions = all_test_slice_predictions[sample_idx, :, :]
-        slice_predictions.cuda()
+        slice_predictions = slice_predictions.cuda()
 
         output = bag_model(slice_predictions)
         output = m(output)
@@ -340,7 +340,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
 
     for sample_idx in range(len(ds030_loader)):
         slice_predictions = all_ds030_slice_predictions[sample_idx, :, :]
-        slice_predictions.cuda()
+        slice_predictions = slice_predictions.cuda()
 
         output = bag_model(slice_predictions)
         output = m(output)
