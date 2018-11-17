@@ -93,8 +93,8 @@ class AllSlicesQCDataset(Dataset):
         good_index = self.indices[index]
 
         label = self.labels[good_index]
-        label_confidence = torch.FloatTensor([self.confidence[good_index]])
-        image_slices = torch.FloatTensor(self.images[good_index, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, :, :])
+        label_confidence = self.confidence[good_index]
+        image_slices = self.images[good_index, 0, image_shape[0] // 2 - n_slices : image_shape[0] // 2 + n_slices, :, :]
 
         return image_slices, int(label), label_confidence
 
@@ -198,16 +198,16 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
     test_truth, test_probabilities = np.zeros(len(test_loader), dtype='uint8'), np.zeros((len(test_loader), 2), dtype='float32')
     ds030_truth, ds030_probabilities = np.zeros(len(ds030_loader), dtype='uint8'), np.zeros((len(ds030_loader), 2), dtype='float32')
 
-    slice = torch.zeros((1, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
+    # slice = torch.zeros((1, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
 
     for sample_idx, (data, target, sample_weight) in enumerate(train_loader_bag):
-        data = data.permute(1, 0, 2, 3)
+        data.permute(1, 0, 2, 3)
 
         for slice_idx in range(n_slices * 2):
-            slice[...] = data[slice_idx:slice_idx + 1, ...]
+            slice = torch.from_numpy(data[slice_idx:slice_idx + 1, ...])
             slice.cuda()
 
-            output = model(slice.cuda()).cuda()
+            output = model(slice)
             slice_prediction = output[:, 0:1].permute(1, 0)
 
             all_train_slice_predictions[sample_idx, :, slice_idx] = slice_prediction.cpu()
@@ -222,7 +222,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         data = data.permute(1, 0, 2, 3)
 
         for slice_idx in range(n_slices * 2):
-            slice[...] = data[slice_idx:slice_idx + 1, ...]
+            slice = torch.from_numpy(data[slice_idx:slice_idx + 1, ...])
             slice.cuda()
 
             output = model(slice)
@@ -238,7 +238,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         data = data.permute(1, 0, 2, 3)
 
         for slice_idx in range(n_slices * 2):
-            slice[...] = data[slice_idx:slice_idx + 1, ...]
+            slice = torch.from_numpy(data[slice_idx:slice_idx + 1, ...])
             slice.cuda()
 
             output = model(slice)
@@ -254,7 +254,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds0
         data = data.permute(1, 0, 2, 3)
 
         for slice_idx in range(n_slices * 2):
-            slice[...] = data[slice_idx:slice_idx + 1, ...]
+            slice = torch.from_numpy(data[slice_idx:slice_idx + 1, ...])
             slice.cuda()
 
             output = model(slice)
