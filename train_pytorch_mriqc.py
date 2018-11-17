@@ -679,9 +679,9 @@ if __name__ == '__main__':
         train_res, val_res, test_res, ds030_res = learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds030_loader, n_slices, batch_size=32, n_epochs=args.bag_epochs)
 
         #calibrate model probability on validation set
-        model_with_temperature = ModelWithTemperature(bag_model)
-        model_with_temperature.cuda()
-        model_with_temperature = set_temperature(model_with_temperature, abide_f, validation_indices, n_slices)
+        # model_with_temperature = ModelWithTemperature(bag_model)
+        # model_with_temperature.cuda()
+        # model_with_temperature = set_temperature(model_with_temperature, abide_f, validation_indices, n_slices)
 
         val_truth, val_probabilities_calibrated = test(validation_loader, n_slices)
         test_truth, test_probabilities_calibrated = test(test_loader, n_slices)
@@ -705,8 +705,8 @@ if __name__ == '__main__':
             all_bagged_ds030_truth(ds030_res[0][i, ...])
 
 
-        model_filename = os.path.join(results_dir, 'calibrated_qc_fold_' + str(fold_num) + '.tch')
-        torch.save(model_with_temperature, model_filename)
+        model_filename = os.path.join(results_dir, 'bagged_qc_model_fold_' + str(fold_num) + '.tch')
+        torch.save(bag_model, model_filename)
 
     plot_sens_spec(training_sensitivity, training_specificity,
                            validation_sensitivity, validation_specificity,
@@ -732,14 +732,14 @@ if __name__ == '__main__':
     sens_plot = [best_sensitivity[:, 0], best_sensitivity[:, 1], best_sensitivity[:, 2], ds030_results[:, 0]]
     spec_plot = [best_specificity[:, 0], best_specificity[:, 1], best_specificity[:, 2], ds030_results[:, 1]]
 
-    print('Sensitivity')
-    print('Average:', np.mean(best_sensitivity[:, 0]), np.mean(best_sensitivity[:, 1]), np.mean(best_sensitivity[:, 2]))
-    print('Best:', np.max(best_sensitivity[:, 0]), np.max(best_sensitivity[:, 1]), np.max(best_sensitivity[:, 2]))
-
-    print('Specificity')
-    print('Average:', np.mean(best_specificity[:, 0]), np.mean(best_specificity[:, 1]), np.mean(best_specificity[:, 2]))
-    print('Best:', np.max(best_specificity[:, 0]), np.max(best_specificity[:, 1]), np.max(best_specificity[:, 2]))
-    print('(train, val, test)')
+    # print('Sensitivity')
+    # print('Average:', np.mean(best_sensitivity[:, 0]), np.mean(best_sensitivity[:, 1]), np.mean(best_sensitivity[:, 2]))
+    # print('Best:', np.max(best_sensitivity[:, 0]), np.max(best_sensitivity[:, 1]), np.max(best_sensitivity[:, 2]))
+    #
+    # print('Specificity')
+    # print('Average:', np.mean(best_specificity[:, 0]), np.mean(best_specificity[:, 1]), np.mean(best_specificity[:, 2]))
+    # print('Best:', np.max(best_specificity[:, 0]), np.max(best_specificity[:, 1]), np.max(best_specificity[:, 2]))
+    # print('(train, val, test)')
 
     print('Test sens/spec:', np.mean(best_sensitivity[:, 2]), np.mean(best_specificity[:, 2]))
     print('ds030:', np.mean(ds030_results[:, 0]), np.mean(ds030_results[:, 1]))
