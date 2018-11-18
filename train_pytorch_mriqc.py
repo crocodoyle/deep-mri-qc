@@ -145,6 +145,10 @@ def train(epoch, class_weight=None):
 
 def test_bags(loader, n_slices):
     model.eval()
+    model.cuda()
+
+    bag_model.eval()
+    bag_model.cuda()
 
     m = torch.nn.Softmax(dim=-1)
 
