@@ -178,7 +178,7 @@ def test_bags(loader, n_slices):
         output = bag_model(slice_predictions)
         output = m(output)
 
-        all_predictions[sample_idx, :] = output.data.cpu().numpy()
+        all_predictions[sample_idx, :] = output.data
 
     return truth.data.cpu().numpy(), all_predictions.data.cpu().numpy()
 
