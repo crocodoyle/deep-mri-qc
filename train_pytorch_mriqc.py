@@ -165,7 +165,7 @@ def test_bags(loader, n_slices):
             output = model(slice)
             slice_prediction = output[:, 0:1]
             slice_prediction = slice_prediction.permute(1, 0)
-            slice_prediction = slice_prediction.data.cpu()
+            slice_prediction = slice_prediction.data
 
             all_predictions[sample_idx, :, slice_idx] = slice_prediction
 
