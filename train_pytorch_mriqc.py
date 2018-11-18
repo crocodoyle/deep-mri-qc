@@ -143,10 +143,8 @@ def train(epoch, class_weight=None):
 
     return truth, probabilities
 
-def test_bags(loader):
+def test_bags(loader, n_slices):
     model.eval()
-
-    n_slices = loader.n_slices
 
     m = torch.nn.Softmax(dim=-1)
 
@@ -180,10 +178,8 @@ def test_bags(loader):
 
     return truth, all_predictions
 
-def test_slices(loader, softmax=True):
+def test_slices(loader, n_slices, softmax=True):
     model.eval()
-
-    n_slices = loader.n_slices
 
     all_predictions = torch.zeros((len(loader), n_slices*2, 2), dtype=torch.float32)
     truth = torch.zeros((len(loader)), dtype=torch.int64)
