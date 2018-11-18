@@ -153,6 +153,8 @@ def test_bags(loader, n_slices):
     m = torch.nn.Softmax(dim=-1)
 
     all_predictions = torch.zeros((len(loader), 1, n_slices*2), dtype=torch.float32)
+    bag_predictions = torch.zeros((len(loader), 2), dtype=torch.float32)
+    
     truth = torch.zeros((len(loader)), dtype=torch.int64)
 
     for sample_idx, (data, target, sample_weight) in enumerate(loader):
@@ -178,9 +180,9 @@ def test_bags(loader, n_slices):
         output = bag_model(slice_predictions)
         output = m(output)
 
-        all_predictions[sample_idx, :] = output.data
+        bag_predictions[sample_idx, :] = output.data
 
-    return truth.data.cpu().numpy(), all_predictions.data.cpu().numpy()
+    return truth.data.cpu().numpy(), bag_predictions.data.cpu().numpy()
 
 def test_slices(loader, n_slices, softmax=True):
     model.eval()
