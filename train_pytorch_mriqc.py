@@ -745,7 +745,7 @@ if __name__ == '__main__':
                            validation_sensitivity, validation_specificity,
                            test_sensitivity, test_specificity, best_epoch_idx, results_dir)
 
-    plot_confidence(np.asarray(all_test_probs, dtype='float32'), np.asarray(all_test_probs_cal, dtype='float32'), np.asarray(all_test_truth, dtype='uint8'), results_dir)
+    # plot_confidence(np.asarray(all_test_probs, dtype='float32'), np.asarray(all_test_probs_cal, dtype='float32'), np.asarray(all_test_truth, dtype='uint8'), results_dir)
 
 
     all_val_truth = np.asarray(all_val_truth, dtype='float32')
