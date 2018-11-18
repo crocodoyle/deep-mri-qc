@@ -154,7 +154,7 @@ def test_bags(loader, n_slices):
 
     all_predictions = torch.zeros((len(loader), 1, n_slices*2), dtype=torch.float32)
     bag_predictions = torch.zeros((len(loader), 2), dtype=torch.float32)
-    
+
     truth = torch.zeros((len(loader)), dtype=torch.int64)
 
     for sample_idx, (data, target, sample_weight) in enumerate(loader):
@@ -734,8 +734,8 @@ if __name__ == '__main__':
             all_bagged_test_truth.append(test_res[0][i, ...])
 
         for i, ds030_idx in enumerate(ds030_indices):
-            all_bagged_ds030_probs(ds030_res[1][i, ...])
-            all_bagged_ds030_truth(ds030_res[0][i, ...])
+            all_bagged_ds030_probs.append(ds030_res[1][i, ...])
+            all_bagged_ds030_truth.append(ds030_res[0][i, ...])
 
 
         model_filename = os.path.join(results_dir, 'bagged_qc_model_fold_' + str(fold_num) + '.tch')
