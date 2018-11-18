@@ -609,11 +609,11 @@ if __name__ == '__main__':
             train_truth, train_probabilities = train(epoch, class_weight=None)
             train_predictions = np.argmax(train_probabilities, axis=-1)
 
-            val_truth, val_probabilities = test(validation_loader, n_slices)
+            val_truth, val_probabilities = test_slices(validation_loader, n_slices)
             val_average_probs = np.mean(val_probabilities, axis=1)
             val_predictions = np.argmax(val_average_probs, axis=-1)
 
-            test_truth, test_probabilities = test(test_loader, n_slices)
+            test_truth, test_probabilities = test_slices(test_loader, n_slices)
             test_average_probs = np.mean(test_probabilities, axis=1)
             test_predictions = np.argmax(test_average_probs, axis=-1)
 
@@ -689,9 +689,9 @@ if __name__ == '__main__':
         model.load_state_dict(torch.load(results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch'))
         model.cuda()
 
-        val_truth, val_probabilities = test(validation_loader, n_slices)
-        test_truth, test_probabilities = test(test_loader, n_slices)
-        ds030_truth, ds030_probabilities = test(ds030_loader, n_slices)
+        val_truth, val_probabilities = test_slices(validation_loader, n_slices)
+        test_truth, test_probabilities = test_slices(test_loader, n_slices)
+        ds030_truth, ds030_probabilities = test_slices(ds030_loader, n_slices)
 
         print('ds030 truth shape:', ds030_truth.shape)
         print('ds030 probabilities shape:', ds030_probabilities.shape)
@@ -714,8 +714,8 @@ if __name__ == '__main__':
         # model_with_temperature.cuda()
         # model_with_temperature = set_temperature(model_with_temperature, abide_f, validation_indices, n_slices)
 
-        val_truth, val_probabilities_calibrated = test(validation_loader, n_slices)
-        test_truth, test_probabilities_calibrated = test(test_loader, n_slices)
+        val_truth, val_probabilities_calibrated = test_bags(validation_loader, n_slices)
+        test_truth, test_probabilities_calibrated = test_bags(test_loader, n_slices)
 
         for i, val_idx in enumerate(validation_indices):
             all_val_probs.append(val_probabilities[i, ...])
