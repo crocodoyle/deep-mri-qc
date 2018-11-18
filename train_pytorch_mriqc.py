@@ -176,7 +176,7 @@ def test_bags(loader, n_slices):
 
         all_predictions[sample_idx, :] = output.data.cpu().numpy()
 
-    return truth, all_predictions
+    return truth.data.cpu().numpy(), all_predictions.data.cpu().numpy()
 
 def test_slices(loader, n_slices, softmax=True):
     model.eval()
@@ -199,7 +199,7 @@ def test_slices(loader, n_slices, softmax=True):
 
             all_predictions[i, slice_idx, :] = output.data
 
-    return truth, all_predictions
+    return truth.data.cpu().numpy(), all_predictions.data.cpu().numpy()
 
 
 def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds030_loader, n_slices, batch_size, n_epochs):
