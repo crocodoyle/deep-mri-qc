@@ -143,36 +143,67 @@ def train(epoch, class_weight=None):
 
     return truth, probabilities
 
-
-def test(test_loader, n_slices):
+def test_bags(loader):
     model.eval()
 
-    truth, probabilities = np.zeros(len(test_loader), dtype='uint8'), np.zeros((len(test_loader), n_slices*2, 2), dtype='float32')
+    n_slices = loader.n_slices
+
     m = torch.nn.Softmax(dim=-1)
 
-    # images = f['MRI']
-    # labels = f['qc_label']
+    all_predictions = torch.zeros((len(loader), 1, n_slices*2), dtype=torch.float32)
+    truth = torch.zeros((len(loader)), dtype=torch.int64)
 
-    # data = torch.zeros((1, 1, image_shape[1], image_shape[2]), dtype=torch.float32).pin_memory()
-
-    for i, (data, target, sample_weight) in enumerate(test_loader):
-        # print('data', data.shape)
-        truth[i] = target
+    for sample_idx, (data, target, sample_weight) in enumerate(loader):
         data = data.permute(1, 0, 2, 3)
-        # print('data', data.shape)
-        for slice_idx in range(n_slices*2):
-            # data[0, 0, ...] = torch.FloatTensor(images[test_idx, 0, j, ...])
 
-            slice = data[slice_idx:slice_idx+1, ...].cuda()
-            # print('slice', slice.shape)
-            slice.cuda()
+        for slice_idx in range(n_slices * 2):
+            slice = data[slice_idx:slice_idx + 1, ...]
+            slice = slice.cuda()
 
             output = model(slice)
-            output = m(output)
+            slice_prediction = output[:, 0:1]
+            slice_prediction = slice_prediction.permute(1, 0)
+            slice_prediction = slice_prediction.data.cpu()
 
-            probabilities[i, slice_idx, :] = output.data.cpu().numpy()
+            all_predictions[sample_idx, :, slice_idx] = slice_prediction
 
-    return truth, probabilities
+            truth[sample_idx] = target
+
+    for sample_idx in range(len(loader)):
+        slice_predictions = all_predictions[sample_idx, :, :]
+        slice_predictions = slice_predictions.cuda()
+
+        output = bag_model(slice_predictions)
+        output = m(output)
+
+        all_predictions[sample_idx, :] = output.data.cpu().numpy()
+
+    return truth, all_predictions
+
+def test_slices(loader, softmax=True):
+    model.eval()
+
+    n_slices = loader.n_slices
+
+    all_predictions = torch.zeros((len(loader), n_slices*2, 2), dtype=torch.float32)
+    truth = torch.zeros((len(loader)), dtype=torch.int64)
+
+    m = torch.nn.Softmax(dim=-1)
+
+    for i, (data, target, sample_weight) in enumerate(loader):
+        truth[i] = target
+        data = data.permute(1, 0, 2, 3)
+        for slice_idx in range(n_slices*2):
+            slice = data[slice_idx:slice_idx+1, ...].cuda()
+            slice = slice.cuda()
+
+            output = model(slice)
+            if softmax:
+                output = m(output)
+
+            all_predictions[i, slice_idx, :] = output.data
+
+    return truth, all_predictions
 
 
 def learn_bag_distribution(train_loader_bag, validation_loader, test_loader, ds030_loader, n_slices, batch_size, n_epochs):
