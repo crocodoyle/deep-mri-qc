@@ -226,9 +226,9 @@ def test_slices(loader, n_slices):
         for slice_idx in range(n_slices):
             output = model(data[slice_idx:slice_idx+2, ...])
 
-            all_predictions[i, slice_idx:slice_idx+2, :] = m(output)
+            all_predictions[i, slice_idx:slice_idx+2, :] = m(output).data.cpu()
 
-    return truth, all_predictions.cpu().numpy()
+    return truth, all_predictions.numpy()
 
 
 def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_size, n_epochs):
