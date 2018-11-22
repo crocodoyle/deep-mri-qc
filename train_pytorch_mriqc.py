@@ -225,9 +225,8 @@ def test_slices(loader, n_slices):
         data = data.permute(1, 0, 2, 3)
         for slice_idx in range(n_slices*2):
             output = model(data[slice_idx:slice_idx+1, ...])
-            output = m(output)
 
-            all_predictions[i, slice_idx, :] = output.data.cpu().numpy()
+            all_predictions[i, slice_idx, :] = m(output).data.cpu().numpy()
 
     return truth, all_predictions
 
