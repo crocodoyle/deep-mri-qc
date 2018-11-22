@@ -212,7 +212,7 @@ def test_bags(loader, n_slices):
 def test_slices(loader, n_slices):
     model.eval()
 
-    all_predictions = np.zeros((len(loader), n_slices*2, 2), dtype='float32')
+    all_predictions = torch.zeros((len(loader), n_slices*2, 2), dtype=torch.float32).requires_grad_(requires_grad=False)
     truth = np.zeros((len(loader)), dtype='uint8')
 
     m = torch.nn.Softmax(dim=-1)
@@ -223,12 +223,12 @@ def test_slices(loader, n_slices):
 
         data = data.cuda()
         data = data.permute(1, 0, 2, 3)
-        for slice_idx in range(n_slices*2):
-            output = model(data[slice_idx:slice_idx+1, ...])
+        for slice_idx in range(n_slices):
+            output = model(data[slice_idx:slice_idx+2, ...])
 
-            all_predictions[i, slice_idx, :] = m(output).data.cpu().numpy()
+            all_predictions[i, slice_idx:slice_idx+2, :] = m(output)
 
-    return truth, all_predictions
+    return truth, all_predictions.cpu().numpy()
 
 
 def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_size, n_epochs):
