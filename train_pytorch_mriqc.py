@@ -181,12 +181,12 @@ def test_bags(loader, n_slices):
 
     truth, slice_values = test_slices(loader, n_slices, softmax=False)
     print('Output of slice classifier:', slice_values.shape)
-    slice_values = slice_values[:, :, 0:1]
+    slice_values = slice_values[:, :, 0]
     slice_values = torch.from_numpy(slice_values)
     print('Input to bag classifier:', slice_values.shape)
 
     for sample_idx in range(len(loader)):
-        slice_predictions = slice_values[sample_idx, :, :]
+        slice_predictions = slice_values[sample_idx:sample_idx+1, :]
         slice_predictions = slice_predictions.cuda()
         print('slice predictions:', slice_predictions.shape)
 
@@ -797,13 +797,18 @@ if __name__ == '__main__':
 
 
         # re-test images using best model this fold
+        print('Best epoch this folds was:', best_epoch_idx[fold_idx])
+        print('Reloading best model...')
         torch.cuda.empty_cache()
 
         model.load_state_dict(torch.load(results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch'))
         model.cuda()
 
+        print('Re-testing validation set')
         val_truth, val_probabilities = test_slices(validation_loader, n_slices)
+        print('Re-testing test set')
         test_truth, test_probabilities = test_slices(test_loader, n_slices)
+        print('Re-testing ds030 set')
         ds030_truth, ds030_probabilities = test_slices(ds030_loader, n_slices)
 
         val_average_probs = np.mean(val_probabilities, axis=1)
@@ -836,6 +841,7 @@ if __name__ == '__main__':
         # ds030_results[fold_idx, 2] = accuracy_score(ds030_truth, ds030_predictions)
         # ds030_results[fold_idx, 3] = roc_auc_score(ds030_truth, ds030_predictions)
 
+        print('Learning distribution of multiple instances')
         bag_model = BagDistributionModel(n_slices)
         bag_model.cuda()
 
