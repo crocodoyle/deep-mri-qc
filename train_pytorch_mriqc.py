@@ -209,7 +209,7 @@ def test_bags(loader, n_slices):
 
     return truth.data.cpu().numpy(), bag_predictions.data.cpu().numpy()
 
-def test_slices(loader, n_slices):
+def test_slices(loader, n_slices, softmax=True):
     model.eval()
 
     all_predictions = torch.zeros((len(loader), n_slices*2, 2), dtype=torch.float32).requires_grad_(requires_grad=False)
@@ -225,8 +225,10 @@ def test_slices(loader, n_slices):
         data = data.permute(1, 0, 2, 3)
         for slice_idx in range(0, n_slices, 2):
             output = model(data[slice_idx:slice_idx+2, ...])
+            if softmax:
+                output = m(output)
 
-            all_predictions[i, slice_idx:slice_idx+2, :] = m(output).data.cpu()
+            all_predictions[i, slice_idx:slice_idx+2, :] = output.data.cpu()
 
     return truth, all_predictions.numpy()
 
@@ -242,56 +244,68 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
 
     bag_optimizer = torch.optim.Adam(bag_model.parameters(), lr=0.0002)
 
-    all_train_slice_predictions = torch.zeros((len(train_loader_bag), 1, n_slices*2), dtype=torch.float32)
+    # all_train_slice_predictions = torch.zeros((len(train_loader_bag), 1, n_slices*2), dtype=torch.float32)
     all_train_targets = torch.zeros((len(train_loader_bag)), dtype=torch.int64)
     all_train_sample_weights = torch.zeros((len(train_loader_bag)), dtype=torch.float32)
 
-    all_validation_slice_predictions = torch.zeros((len(validation_loader), 1, n_slices*2), dtype=torch.float32)
+    # all_validation_slice_predictions = torch.zeros((len(validation_loader), 1, n_slices*2), dtype=torch.float32)
     # all_test_slice_predictions = torch.zeros((len(test_loader), 1, n_slices*2), dtype=torch.float32)
     # all_ds030_slice_predictions = torch.zeros((len(ds030_loader), 1, n_slices*2), dtype=torch.float32)
 
-    train_truth, train_probabilities = np.zeros(len(train_loader_bag), dtype='uint8'), np.zeros((len(train_loader_bag), 2), dtype='float32')
-    validation_truth, validation_probabilities = np.zeros(len(validation_loader), dtype='uint8'), np.zeros((len(validation_loader), 2), dtype='float32')
+    train_bag_probabilities = torch.zeros((len(train_loader_bag), 2), dtype=torch.float32)
+    validation_bag_probabilities = torch.zeros((len(validation_loader), 2), dtype=torch.float32)
+
     # test_truth, test_probabilities = np.zeros(len(test_loader), dtype='uint8'), np.zeros((len(test_loader), 2), dtype='float32')
     # ds030_truth, ds030_probabilities = np.zeros(len(ds030_loader), dtype='uint8'), np.zeros((len(ds030_loader), 2), dtype='float32')
 
-    for sample_idx, (data, target, sample_weight) in enumerate(train_loader_bag):
-        data = data.permute(1, 0, 2, 3)
+    train_truth, train_probabilities = test_slices(train_loader_bag, n_slices, softmax=False)
+    all_train_slice_predictions = torch.from_numpy(train_probabilities[:, :, 0:1])
+    all_train_slice_predictions = all_train_slice_predictions.permute(0, 2, 1)
+    print('Training slice predictions tensor shape:', all_train_slice_predictions.shape)
+    print('Predicted all slices in training set(', len(train_loader_bag) * n_slices * 2, 'total)')
 
-        for slice_idx in range(n_slices * 2):
-            slice = data[slice_idx:slice_idx + 1, ...]
-            slice = slice.cuda()
-
-            output = model(slice)
-            slice_prediction = output[:, 0:1]
-            slice_prediction = slice_prediction.permute(1, 0)
-            slice_prediction = slice_prediction.data.cpu()
-
-            all_train_slice_predictions[sample_idx, :, slice_idx] = slice_prediction
-
-        all_train_targets[sample_idx] = target
-        all_train_sample_weights[sample_idx] = sample_weight
-        train_truth[sample_idx] = target
-
-    print('Predicted all slices in training set(', len(train_loader_bag)*n_slices*2, 'total)')
-
-    for sample_idx, (data, target, sample_weight) in enumerate(validation_loader):
-        data = data.permute(1, 0, 2, 3)
-
-        for slice_idx in range(n_slices * 2):
-            slice = data[slice_idx:slice_idx + 1, ...]
-            slice = slice.cuda()
-
-            output = model(slice)
-            slice_prediction = output[:, 0:1]
-            slice_prediction = slice_prediction.permute(1, 0)
-            slice_prediction = slice_prediction.data.cpu()
-
-            all_validation_slice_predictions[sample_idx, :, slice_idx] = slice_prediction
-
-        validation_truth[sample_idx] = target
-
+    validation_truth, validation_probabilities = test_slices(validation_loader, n_slices, softmax=False)
+    all_validation_slice_predictions = torch.from_numpy(validation_probabilities[:, :, 0:1])
+    all_validation_slice_predictions = all_validation_slice_predictions.permute(0, 2, 1)
     print('Predicted all slices in validation set')
+
+    # for sample_idx, (data, target, sample_weight) in enumerate(train_loader_bag):
+    #     data = data.permute(1, 0, 2, 3)
+    #
+    #     for slice_idx in range(n_slices * 2):
+    #         slice = data[slice_idx:slice_idx + 1, ...]
+    #         slice = slice.cuda()
+    #
+    #         output = model(slice)
+    #         slice_prediction = output[:, 0:1]
+    #         slice_prediction = slice_prediction.permute(1, 0)
+    #         slice_prediction = slice_prediction.data.cpu()
+    #
+    #         all_train_slice_predictions[sample_idx, :, slice_idx] = slice_prediction
+    #
+    #     all_train_targets[sample_idx] = target
+    #     all_train_sample_weights[sample_idx] = sample_weight
+    #     train_truth[sample_idx] = target
+
+
+
+    # for sample_idx, (data, target, sample_weight) in enumerate(validation_loader):
+    #     data = data.permute(1, 0, 2, 3)
+    #
+    #     for slice_idx in range(n_slices * 2):
+    #         slice = data[slice_idx:slice_idx + 1, ...]
+    #         slice = slice.cuda()
+    #
+    #         output = model(slice)
+    #         slice_prediction = output[:, 0:1]
+    #         slice_prediction = slice_prediction.permute(1, 0)
+    #         slice_prediction = slice_prediction.data.cpu()
+    #
+    #         all_validation_slice_predictions[sample_idx, :, slice_idx] = slice_prediction
+    #
+    #     validation_truth[sample_idx] = target
+    #
+    #
 
     # for sample_idx, (data, target, sample_weight) in enumerate(test_loader):
     #     data = data.permute(1, 0, 2, 3)
@@ -334,7 +348,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
     print('Starting to train bag classifier...')
 
     for epoch_idx in range(n_epochs):
-        print('Epoch', epoch_idx, 'of', n_epochs)
+        print('Epoch', epoch_idx+1, 'of', n_epochs+1)
         for sample_idx in range(len(all_train_targets)):
             slice_predictions = all_train_slice_predictions[sample_idx, :, :]
             target = all_train_targets[sample_idx].unsqueeze(0)
@@ -373,7 +387,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
         output = bag_model(slice_predictions)
         output = m(output)
 
-        train_probabilities[sample_idx, :] = output.data.cpu().numpy()
+        train_bag_probabilities[sample_idx, :] = output.data.cpu()
 
     for sample_idx in range(len(validation_loader)):
         slice_predictions = all_validation_slice_predictions[sample_idx, :, :]
@@ -382,7 +396,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
         output = bag_model(slice_predictions)
         output = m(output)
 
-        validation_probabilities[sample_idx, :] = output.data.cpu().numpy()
+        validation_bag_probabilities[sample_idx, :] = output.data.cpu()
 
     # for sample_idx in range(len(test_loader)):
     #     slice_predictions = all_test_slice_predictions[sample_idx, :, :]
@@ -403,7 +417,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
     #     ds030_probabilities[sample_idx, :] = output.data.cpu().numpy()
 
     # return (train_truth, train_probabilities), (validation_truth, validation_probabilities), (test_truth, test_probabilities), (ds030_truth, ds030_probabilities)
-    return (train_truth, train_probabilities), (validation_truth, validation_probabilities)
+    return (train_truth, train_bag_probabilities.numpy()), (validation_truth, validation_bag_probabilities.numpy())
 
 
 def set_temperature(model, f, validation_indices, n_slices):
@@ -679,7 +693,7 @@ if __name__ == '__main__':
             ds030_truth, ds030_probabilities = test_slices(ds030_loader, n_slices)
             ds030_average_probs = np.mean(ds030_probabilities, axis=1)                     # average of slice predictions
 
-            ds030_maximum_probs = np.zeros_like(test_average_probs)
+            ds030_maximum_probs = np.zeros_like(ds030_average_probs)
             ds030_maximum_probs[:, 0] = np.max(ds030_probabilities[:, :, 0], axis=1)
             ds030_maximum_probs[:, 1] = 1 - ds030_maximum_probs[:, 0]                      # worst slice prediction
 
