@@ -548,7 +548,7 @@ if __name__ == '__main__':
     validation_sensitivity, validation_specificity, test_sensitivity, test_specificity, val_aucs = np.zeros(results_shape), np.zeros(results_shape), np.zeros(
         results_shape), np.zeros(results_shape), np.zeros(results_shape)
 
-    ds030_sensitivity, ds030_specificity = np.zeros(results_shape)
+    ds030_sensitivity, ds030_specificity = np.zeros(results_shape), np.zeros(results_shape)
     ds030_results = np.zeros(n_folds, 4)
 
     best_auc_score, best_sensitivity, best_specificity = np.zeros(n_folds), np.zeros((n_folds, 7)), np.zeros((n_folds, 7))
