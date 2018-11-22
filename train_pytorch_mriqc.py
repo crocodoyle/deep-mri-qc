@@ -211,7 +211,7 @@ def test_slices(loader, n_slices, softmax=True):
 
         data = data.cuda()
         data = data.permute(1, 0, 2, 3)
-        for slice_idx in range(0, n_slices, 2):
+        for slice_idx in range(0, n_slices*2, 2):
             output = model(data[slice_idx:slice_idx+2, ...])
             if softmax:
                 output = m(output)
@@ -340,6 +340,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
         for sample_idx in range(len(train_truth)):
             slice_predictions = all_train_slice_predictions[sample_idx:sample_idx+1, :, :]
             target = train_truth[sample_idx]
+            target = target.unsqueeze(0)
             # sample_weight = all_train_sample_weights[sample_idx]
 
             print('slice predictions', slice_predictions.shape)
