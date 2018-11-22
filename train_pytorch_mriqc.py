@@ -673,8 +673,8 @@ if __name__ == '__main__':
             val_maximum_probs[:, 0] = np.max(val_probabilities[:, :, 0], axis=1)
             val_maximum_probs[:, 1] = 1 - val_maximum_probs[:, 0]                        # worst slice prediction
 
-            val_predictions_avg = np.argmax(val_average_probs, axis=-1)
             val_predictions_max = np.argmax(val_maximum_probs, axis=-1)
+            val_predictions_avg = np.argmax(val_average_probs, axis=-1)
 
             # test results
             print('Test')
@@ -703,7 +703,7 @@ if __name__ == '__main__':
             # plot intermediate results
             # ROC
             truths = [train_truth, val_truth, val_truth, test_truth, test_truth, ds030_truth, ds030_truth]
-            probs = [train_probabilities, val_predictions_avg, val_predictions_max, test_predictions_avg, test_predictions_max, ds030_predictions_avg, ds030_predictions_max]
+            probs = [train_probabilities, val_average_probs, val_maximum_probs, test_average_probs, test_maximum_probs, ds030_average_probs, ds030_maximum_probs]
 
             plot_labels = ['Train', 'Val (slice avg)', 'Val (slice max)', 'Test (slice avg)', 'Test (slice max)', 'ds030 (slice avg)', 'ds030 (slice max)']
 
