@@ -181,6 +181,7 @@ def test_bags(loader, n_slices):
 
     truth, slice_values = test_slices(loader, n_slices, softmax=False)
     print('Output of slice classifier:', slice_values.shape)
+    print(slice_values)
     slice_values = slice_values[:, :, 0]
     slice_values = torch.from_numpy(slice_values)
     print('Input to bag classifier:', slice_values.shape)
@@ -188,13 +189,12 @@ def test_bags(loader, n_slices):
     for sample_idx in range(len(loader)):
         slice_predictions = slice_values[sample_idx:sample_idx+1, :]
         slice_predictions = slice_predictions.cuda()
-        print('slice predictions:', slice_predictions.shape)
 
         output = bag_model(slice_predictions)
 
         bag_predictions[sample_idx, :] = m(output).data.cpu()
 
-    return truth.numpy(), bag_predictions.numpy()
+    return truth, bag_predictions.numpy()
 
 def test_slices(loader, n_slices, softmax=True):
     model.eval()
@@ -338,12 +338,13 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
     for epoch_idx in range(n_epochs):
         print('Epoch', epoch_idx+1, 'of', n_epochs+1)
         for sample_idx in range(len(all_train_targets)):
-            slice_predictions = all_train_slice_predictions[sample_idx, :, :]
-            target = all_train_targets[sample_idx].unsqueeze(0)
+            slice_predictions = all_train_slice_predictions[sample_idx:sample_idx+1, :, :]
+            target = all_train_targets[sample_idx]
             sample_weight = all_train_sample_weights[sample_idx]
 
             # print('slice predictions', slice_predictions.shape)
             # print('target', target.shape)
+            print('sample weight, target:', sample_weight, target)
 
             slice_predictions = slice_predictions.cuda()
             target = target.cuda()
