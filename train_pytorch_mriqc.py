@@ -247,14 +247,12 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
     train_truth, train_probabilities = test_slices(train_loader_bag, n_slices, softmax=False)
     train_truth = torch.from_numpy(train_truth)
 
-    all_train_slice_predictions = torch.from_numpy(train_probabilities)
-    all_train_slice_predictions = all_train_slice_predictions.permute(0, 2, 1)
+    all_train_slice_predictions = torch.from_numpy(train_probabilities[:, :, 0])
     print('Training slice predictions tensor shape:', all_train_slice_predictions.shape)
     print('Predicted all slices in training set(', len(train_loader_bag) * n_slices * 2, 'total)')
 
     validation_truth, validation_probabilities = test_slices(validation_loader, n_slices, softmax=False)
-    all_validation_slice_predictions = torch.from_numpy(validation_probabilities)
-    all_validation_slice_predictions = all_validation_slice_predictions.permute(0, 2, 1)
+    all_validation_slice_predictions = torch.from_numpy(validation_probabilities[:, :, 0])
     print('Predicted all slices in validation set')
 
     # for sample_idx, (data, target, sample_weight) in enumerate(train_loader_bag):
@@ -338,8 +336,8 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
     for epoch_idx in range(n_epochs):
         print('Epoch', epoch_idx+1, 'of', n_epochs+1)
         for sample_idx in range(len(train_truth)):
-            slice_predictions = all_train_slice_predictions[sample_idx:sample_idx+1, :, :]
-            target = train_truth[sample_idx:sample_idx+1]
+            slice_predictions = all_train_slice_predictions[sample_idx, :, :]
+            target = train_truth[sample_idx]
             target = target.unsqueeze(0)
             # sample_weight = all_train_sample_weights[sample_idx]
 
