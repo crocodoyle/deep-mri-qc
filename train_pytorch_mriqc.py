@@ -209,29 +209,31 @@ def test_bags(loader, n_slices):
 
     return truth.data.cpu().numpy(), bag_predictions.data.cpu().numpy()
 
-def test_slices(loader, n_slices, softmax=True):
+def test_slices(loader, n_slices):
     model.eval()
 
-    all_predictions = torch.zeros((len(loader), n_slices*2, 2), dtype=torch.float32)
+    all_predictions = np.zeros((len(loader), n_slices*2, 2), dtype='float32')
     truth = np.zeros((len(loader)), dtype='uint8')
 
     m = torch.nn.Softmax(dim=-1)
     m = m.cuda()
 
+    slice = torch.zeros((1, 1, image_shape[1], image_shape[2]), dtype=torch.float32)
+
     for i, (data, target, sample_weight) in enumerate(loader):
         truth[i] = target
-        data = data.permute(1, 0, 2, 3)
+
+        data.permute(1, 0, 2, 3)
         for slice_idx in range(n_slices*2):
-            slice = data[slice_idx:slice_idx+1, ...]
+            slice[...] = data[slice_idx:slice_idx+1, ...]
             slice = slice.cuda()
 
             output = model(slice)
-            if softmax:
-                output = m(output)
+            output = m(output)
 
-            all_predictions[i, slice_idx, :] = output.data
+            all_predictions[i, slice_idx, :] = output.data.cpu().numpy()
 
-    return truth, all_predictions.data.cpu().numpy()
+    return truth, all_predictions
 
 
 def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_size, n_epochs):
@@ -635,10 +637,10 @@ if __name__ == '__main__':
         sampler = WeightedRandomSampler(weights=train_sample_weights, num_samples=len(train_sample_weights))
         train_loader = DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=False, **kwargs)
 
-        train_loader_bag = DataLoader(train_dataset_bag)
-        validation_loader = DataLoader(validation_dataset)
-        test_loader = DataLoader(test_dataset)
-        ds030_loader = DataLoader(ds030_dataset)
+        train_loader_bag = DataLoader(train_dataset_bag, **kwargs)
+        validation_loader = DataLoader(validation_dataset, **kwargs)
+        test_loader = DataLoader(test_dataset, **kwargs)
+        ds030_loader = DataLoader(ds030_dataset, **kwargs)
 
         class_weights = [0.5, 0.5]
 
