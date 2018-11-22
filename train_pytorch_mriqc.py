@@ -223,7 +223,7 @@ def test_slices(loader, n_slices):
     for i, (data, target, sample_weight) in enumerate(loader):
         truth[i] = target
 
-        data.permute(1, 0, 2, 3)
+        data = data.permute(1, 0, 2, 3)
         for slice_idx in range(n_slices*2):
             slice[...] = data[slice_idx:slice_idx+1, ...]
             slice = slice.cuda()
