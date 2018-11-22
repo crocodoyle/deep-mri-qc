@@ -505,7 +505,7 @@ if __name__ == '__main__':
                         help='specifies how many slices to include about the centre for testing (default: 50)')
     parser.add_argument('--gpu', type=int, default=0, metavar='N',
                         help='specifies which GPU to use')
-    parser.add_argument('--no-scheduler', action='store_false', default=False,
+    parser.add_argument('--no-scheduler', action='store_true', default=False,
                         help='disable learning rate scheduling')
 
     args = parser.parse_args()
