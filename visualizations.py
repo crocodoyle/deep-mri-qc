@@ -29,7 +29,7 @@ def make_roc_gif(results_dir, epochs, fold_num=1):
 def plot_roc(ground_truth, probabilities, segment_labels, results_dir, epoch_num=-1, fold_num=-1, title=None, filename=None):
     plt.figure(figsize=(8, 8))
 
-    colors = ['orange', 'gold', 'peru', 'darkorange', 'red', 'darkred', 'hotpink']
+    colors = ['gold', 'darkorange', 'peru', 'hotpink', 'purple', 'red', 'darkred']
 
     lw = 2
     plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
@@ -40,14 +40,14 @@ def plot_roc(ground_truth, probabilities, segment_labels, results_dir, epoch_num
         print('probs shape:', probs.shape)
         roc = roc_auc_score(truth, probs[:, 1], 'weighted')
         fpr, tpr, _ = roc_curve(truth, probs[:, 1])
-        plt.plot(fpr, tpr, color=colors[i], lw=lw, label=label + ' ROC (area = %0.2f)' % roc)
+        plt.plot(fpr, tpr, color=colors[i], lw=lw, label=label + ' ROC (AUC %0.2f)' % roc)
 
         aucs.append(roc)
 
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
-    plt.xlabel('False Positive Rate', fontsize=20)
-    plt.ylabel('True Positive Rate', fontsize=20)
+    plt.xlabel('False Positive Rate', fontsize=14)
+    plt.ylabel('True Positive Rate', fontsize=14)
 
     if not title is None:
         plt.title(title)

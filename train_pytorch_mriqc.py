@@ -705,7 +705,7 @@ if __name__ == '__main__':
             truths = [train_truth, val_truth, val_truth, test_truth, test_truth, ds030_truth, ds030_truth]
             probs = [train_probabilities, val_average_probs, val_maximum_probs, test_average_probs, test_maximum_probs, ds030_average_probs, ds030_maximum_probs]
 
-            plot_labels = ['Train', 'Val (slice avg)', 'Val (slice max)', 'Test (slice avg)', 'Test (slice max)', 'ds030 (slice avg)', 'ds030 (slice max)']
+            plot_labels = ['Train', 'Val (avg)', 'Val (max)', 'Test (avg)', 'Test (max)', 'ds030 (avg)', 'ds030 (max)']
 
             aucs = plot_roc(truths, probs, plot_labels, results_dir, epoch, fold_num)
             print('AUCS:', aucs)
