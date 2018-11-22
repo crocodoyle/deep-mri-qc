@@ -233,8 +233,6 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
     bag_optimizer = torch.optim.Adam(bag_model.parameters(), lr=0.0002)
 
     # all_train_slice_predictions = torch.zeros((len(train_loader_bag), 1, n_slices*2), dtype=torch.float32)
-    all_train_targets = torch.zeros((len(train_loader_bag)), dtype=torch.int64)
-    all_train_sample_weights = torch.zeros((len(train_loader_bag)), dtype=torch.float32)
 
     # all_validation_slice_predictions = torch.zeros((len(validation_loader), 1, n_slices*2), dtype=torch.float32)
     # all_test_slice_predictions = torch.zeros((len(test_loader), 1, n_slices*2), dtype=torch.float32)
@@ -247,6 +245,8 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
     # ds030_truth, ds030_probabilities = np.zeros(len(ds030_loader), dtype='uint8'), np.zeros((len(ds030_loader), 2), dtype='float32')
 
     train_truth, train_probabilities = test_slices(train_loader_bag, n_slices, softmax=False)
+    train_truth = torch.from_numpy(train_truth)
+
     all_train_slice_predictions = torch.from_numpy(train_probabilities[:, :, 0:1])
     all_train_slice_predictions = all_train_slice_predictions.permute(0, 2, 1)
     print('Training slice predictions tensor shape:', all_train_slice_predictions.shape)
@@ -337,40 +337,41 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
 
     for epoch_idx in range(n_epochs):
         print('Epoch', epoch_idx+1, 'of', n_epochs+1)
-        for sample_idx in range(len(all_train_targets)):
+        for sample_idx in range(len(train_truth)):
             slice_predictions = all_train_slice_predictions[sample_idx:sample_idx+1, :, :]
-            target = all_train_targets[sample_idx]
-            sample_weight = all_train_sample_weights[sample_idx]
+            target = train_truth[sample_idx]
+            # sample_weight = all_train_sample_weights[sample_idx]
 
-            # print('slice predictions', slice_predictions.shape)
+            print('slice predictions', slice_predictions.shape)
+            print(slice_predictions)
             # print('target', target.shape)
-            print('sample weight, target:', sample_weight, target)
+            print('sample weight, target:', target)
 
             slice_predictions = slice_predictions.cuda()
             target = target.cuda()
-            sample_weight = sample_weight.cuda()
+            # sample_weight = sample_weight.cuda()
 
             output = bag_model(slice_predictions)
             # print('output', output.shape)
 
             loss = nn.CrossEntropyLoss()
             loss_val = loss(output, target)
-            loss_val = loss_val * sample_weight
+            # loss_val = loss_val * sample_weight
             loss_val.backward()
 
             if (sample_idx + 1) % batch_size == 0:
                 bag_optimizer.step()
                 bag_optimizer.zero_grad()
-                print('Bag classifier training epoch:', epoch_idx, '[', sample_idx, '/', len(train_loader_bag), ']\t Loss:', loss_val.data.cpu().numpy())
+                # print('Bag classifier training epoch:', epoch_idx, '[', sample_idx, '/', len(train_loader_bag), ']\t Loss:', loss_val.data.cpu().numpy())
 
         bag_optimizer.step()
         bag_optimizer.zero_grad()
 
     bag_model.eval()
 
-    for sample_idx in range(len(all_train_targets)):
-        slice_predictions = all_train_slice_predictions[sample_idx, :, :]
-
+    # predict multiple instances (training)
+    for sample_idx in range(len(train_loader)):
+        slice_predictions = all_train_slice_predictions[sample_idx: sample_idx+1, :, :]
         slice_predictions = slice_predictions.cuda()
 
         output = bag_model(slice_predictions)
@@ -378,8 +379,9 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
 
         train_bag_probabilities[sample_idx, :] = output.data.cpu()
 
+    # predict multiple instances (validation)
     for sample_idx in range(len(validation_loader)):
-        slice_predictions = all_validation_slice_predictions[sample_idx, :, :]
+        slice_predictions = all_validation_slice_predictions[sample_idx: sample_idx+1, :, :]
         slice_predictions = slice_predictions.cuda()
 
         output = bag_model(slice_predictions)
@@ -621,25 +623,6 @@ if __name__ == '__main__':
             print('Using learning rate scheduler')
             scheduler = StepLR(optimizer, args.slice_epochs // 4, gamma=0.5)
 
-        # set up DataSets and DataLoaders
-        abide_f = h5py.File(workdir + 'abide.hdf5', 'r')
-        ds030_f = h5py.File(workdir + ds030_filename, 'r')
-
-        train_dataset = RandomSlicesQCDataset(abide_f, train_indices, n_slices=n_slices)
-
-        train_dataset_bag = AllSlicesQCDataset(abide_f, train_indices, n_slices=n_slices)
-        validation_dataset = AllSlicesQCDataset(abide_f, validation_indices, n_slices=n_slices)
-        test_dataset = AllSlicesQCDataset(abide_f, test_indices, n_slices=n_slices)
-        ds030_dataset = AllSlicesQCDataset(ds030_f, ds030_indices, n_slices=n_slices)
-
-        sampler = WeightedRandomSampler(weights=train_sample_weights, num_samples=len(train_sample_weights))
-        train_loader = DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=False, **kwargs)
-
-        train_loader_bag = DataLoader(train_dataset_bag, **kwargs)
-        validation_loader = DataLoader(validation_dataset, **kwargs)
-        test_loader = DataLoader(test_dataset, **kwargs)
-        ds030_loader = DataLoader(ds030_dataset, **kwargs)
-
         class_weights = [0.5, 0.5]
 
         for epoch_idx, epoch in enumerate(range(1, args.slice_epochs + 1)):
@@ -647,6 +630,26 @@ if __name__ == '__main__':
 
             if not args.no_scheduler:
                 scheduler.step()
+
+            # set up DataSets and DataLoaders
+            abide_f = h5py.File(workdir + abide_filename, 'r')
+            ds030_f = h5py.File(workdir + ds030_filename, 'r')
+
+            train_dataset = RandomSlicesQCDataset(abide_f, train_indices, n_slices=n_slices)
+
+            train_dataset_bag = AllSlicesQCDataset(abide_f, train_indices, n_slices=n_slices)
+            validation_dataset = AllSlicesQCDataset(abide_f, validation_indices, n_slices=n_slices)
+            test_dataset = AllSlicesQCDataset(abide_f, test_indices, n_slices=n_slices)
+            ds030_dataset = AllSlicesQCDataset(ds030_f, ds030_indices, n_slices=n_slices)
+
+            sampler = WeightedRandomSampler(weights=train_sample_weights, num_samples=len(train_sample_weights))
+            train_loader = DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=False,
+                                      **kwargs)
+
+            train_loader_bag = DataLoader(train_dataset_bag, **kwargs)
+            validation_loader = DataLoader(validation_dataset, **kwargs)
+            test_loader = DataLoader(test_dataset, **kwargs)
+            ds030_loader = DataLoader(ds030_dataset, **kwargs)
 
             # training results
             print('Training')
@@ -800,8 +803,6 @@ if __name__ == '__main__':
         # re-test images using best model this fold
         print('Best epoch this folds was:', best_epoch_idx[fold_idx])
         print('Reloading best model...')
-        torch.cuda.empty_cache()
-
         model.load_state_dict(torch.load(results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch'))
         model.cuda()
 
