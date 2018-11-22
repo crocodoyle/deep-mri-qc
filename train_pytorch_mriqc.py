@@ -177,17 +177,18 @@ def test_bags(loader, n_slices):
     m = torch.nn.Softmax(dim=-1)
     m = m.cuda()
 
-    bag_predictions = torch.zeros((len(loader), 2), dtype=torch.float32)
+    bag_predictions = torch.zeros((len(loader), 2), dtype=torch.float32).requires_grad_(requires_grad=False)
 
     truth, slice_values = test_slices(loader, n_slices, softmax=False)
+    print('Output of slice classifier:', slice_values.shape)
     slice_values = slice_values[:, :, 0:1]
     slice_values = torch.from_numpy(slice_values)
-    slice_values.permute(0, 2, 1)
     print('Input to bag classifier:', slice_values.shape)
 
     for sample_idx in range(len(loader)):
         slice_predictions = slice_values[sample_idx, :, :]
         slice_predictions = slice_predictions.cuda()
+        print('slice predictions:', slice_predictions.shape)
 
         output = bag_model(slice_predictions)
 
