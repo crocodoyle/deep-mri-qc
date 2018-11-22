@@ -218,17 +218,13 @@ def test_slices(loader, n_slices):
     m = torch.nn.Softmax(dim=-1)
     m = m.cuda()
 
-    slice = torch.zeros((1, 1, image_shape[1], image_shape[2]), dtype=torch.float32)
-
     for i, (data, target, sample_weight) in enumerate(loader):
         truth[i] = target
 
+        data = data.cuda()
         data = data.permute(1, 0, 2, 3)
         for slice_idx in range(n_slices*2):
-            slice[...] = data[slice_idx:slice_idx+1, ...]
-            slice = slice.cuda()
-
-            output = model(slice)
+            output = model(data[slice_idx:slice_idx+1, ...])
             output = m(output)
 
             all_predictions[i, slice_idx, :] = output.data.cpu().numpy()
