@@ -36,8 +36,6 @@ def plot_roc(ground_truth, probabilities, segment_labels, results_dir, epoch_num
 
     aucs = []
     for i, (truth, probs, label) in enumerate(zip(ground_truth, probabilities, segment_labels)):
-        print(label, 'truth shape:', truth.shape)
-        print('probs shape:', probs.shape)
         roc = roc_auc_score(truth, probs[:, 1], 'weighted')
         fpr, tpr, _ = roc_curve(truth, probs[:, 1])
         plt.plot(fpr, tpr, color=colors[i], lw=lw, label=label + ' ROC (AUC %0.2f)' % roc)
