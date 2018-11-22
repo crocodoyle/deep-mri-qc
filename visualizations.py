@@ -29,7 +29,7 @@ def make_roc_gif(results_dir, epochs, fold_num=1):
 def plot_roc(ground_truth, probabilities, segment_labels, results_dir, epoch_num=-1, fold_num=-1, title=None, filename=None):
     plt.figure(figsize=(8, 8))
 
-    colors = ['darkorange', 'red', 'darkred', 'hotpink']
+    colors = ['orange', 'gold', 'peru', 'darkorange', 'red', 'darkred', 'hotpink']
 
     lw = 2
     plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
