@@ -336,7 +336,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
     for epoch_idx in range(n_epochs):
         print('Epoch', epoch_idx+1, 'of', n_epochs+1)
         for sample_idx in range(len(train_truth)):
-            slice_predictions = all_train_slice_predictions[sample_idx, :, :]
+            slice_predictions = all_train_slice_predictions[sample_idx, :]
             target = train_truth[sample_idx]
             target = target.unsqueeze(0)
             # sample_weight = all_train_sample_weights[sample_idx]
@@ -370,7 +370,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
 
     # predict multiple instances (training)
     for sample_idx in range(len(train_loader)):
-        slice_predictions = all_train_slice_predictions[sample_idx: sample_idx+1, :, :]
+        slice_predictions = all_train_slice_predictions[sample_idx, :]
         slice_predictions = slice_predictions.cuda()
 
         output = bag_model(slice_predictions)
@@ -380,7 +380,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
 
     # predict multiple instances (validation)
     for sample_idx in range(len(validation_loader)):
-        slice_predictions = all_validation_slice_predictions[sample_idx: sample_idx+1, :, :]
+        slice_predictions = all_validation_slice_predictions[sample_idx, :]
         slice_predictions = slice_predictions.cuda()
 
         output = bag_model(slice_predictions)
