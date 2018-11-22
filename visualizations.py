@@ -26,7 +26,7 @@ def make_roc_gif(results_dir, epochs, fold_num=1):
     imageio.mimsave(results_dir + 'ROC_fold_' + str(fold_num) + '.gif', images)
 
 
-def plot_roc(ground_truth, probabilities, segment_labels, results_dir, epoch_num=-1, fold_num=-1):
+def plot_roc(ground_truth, probabilities, segment_labels, results_dir, epoch_num=-1, fold_num=-1, title=None, filename=None):
     plt.figure(figsize=(8, 8))
 
     colors = ['darkorange', 'red', 'darkred', 'hotpink']
@@ -34,72 +34,61 @@ def plot_roc(ground_truth, probabilities, segment_labels, results_dir, epoch_num
     lw = 2
     plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
 
-    rocs = []
+    aucs = []
     for i, (truth, probs, label) in enumerate(zip(ground_truth, probabilities, segment_labels)):
         roc = roc_auc_score(truth, probs[:, 1], 'weighted')
         fpr, tpr, _ = roc_curve(truth, probs[:, 1])
         plt.plot(fpr, tpr, color=colors[i], lw=lw, label=label + ' ROC (area = %0.2f)' % roc)
 
-        rocs.append(roc)
+        aucs.append(roc)
 
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate', fontsize=20)
     plt.ylabel('True Positive Rate', fontsize=20)
+
+    if not title is None:
+        plt.title(title)
+
+    if not filename is None:
+        save_filename = filename
+
     if epoch_num >= 0:
         plt.title('ROC Epoch:' + str(epoch_num).zfill(3), fontsize=24)
-        filename ='ROC_fold_' + str(fold_num) + '_epoch_' + str(epoch_num).zfill(2) + '.png'
-    elif epoch_num == -1:
-        plt.title('ROC')
-        filename = 'unscaled_ROC.png'
-    elif epoch_num == -2:
-        plt.title('ROC (temperature scaled)')
-        filename = 'scaled_ROC.png'
+        save_filename ='ROC_fold_' + str(fold_num) + '_epoch_' + str(epoch_num).zfill(2) + '.png'
 
     plt.legend(loc="lower right", shadow=True, fontsize=20)
 
-    plt.savefig(results_dir + filename, bbox_inches='tight')
+    plt.savefig(results_dir + save_filename, bbox_inches='tight')
     plt.close()
 
-    return rocs
+    return aucs
 
 
-def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_spec, best_epoch_idx, results_dir):
+def plot_sens_spec(senses, specs, curve_labels, best_epoch_idx, results_dir, title):
     f, (sens_ax, spec_ax) = plt.subplots(2, 1, sharex=True, figsize=(12, 6))
 
-    n_folds = train_sens.shape[0]
-    n_epochs = train_sens.shape[-1]
+    n_folds = senses[0].shape[0]
+    n_epochs = senses[0].shape[-1]
     epoch_number = range(n_epochs)
+
+    colours = ['pink', 'blue', 'lightblue', 'green', 'lightgreen', 'hotpink', 'purple']
 
     lw = 1
 
     for fold_num in range(n_folds):
-        if fold_num == 0:
-            sens_ax.plot(epoch_number, train_sens[fold_num, :], color='pink', lw=lw, label='Train')
-            spec_ax.plot(epoch_number, train_spec[fold_num, :], color='pink', linestyle=':', lw=lw, label='Train')
+        for i, (sens, spec, label, colour) in enumerate(zip(senses, specs, curve_labels, colours)):
+            if not fold_num == 0:
+                label = None
+                marker_label = None
+            else:
+                marker_label = 'selected model'
 
-            sens_ax.plot(epoch_number, val_sens[fold_num, :], color='lightblue', lw=lw, label='Validation')
-            spec_ax.plot(epoch_number, val_spec[fold_num, :], color='lightblue', lw=lw, label='Validation')
+            sens_ax.plot(epoch_number, sens[fold_num, :], color=colour, lw=lw, label=label)
+            spec_ax.plot(epoch_number, spec[fold_num, :], color=colour, linestyle=':', lw=lw, label=label)
 
-            sens_ax.plot(epoch_number, test_sens[fold_num, :], color='lightgreen', lw=lw, label='Test')
-            spec_ax.plot(epoch_number, test_spec[fold_num, :], color='lightgreen', lw=lw, label='Test')
-
-            sens_ax.plot(best_epoch_idx[fold_num], val_sens[fold_num, int(best_epoch_idx[fold_num])], color='k',
-                         marker='o', markerfacecolor='None', label='selected model')
-            spec_ax.plot(best_epoch_idx[fold_num], val_spec[fold_num, int(best_epoch_idx[fold_num])], color='k',
-                         marker='o', markerfacecolor='None', label='selected model')
-        else:
-            sens_ax.plot(epoch_number, train_sens[fold_num, :], color='pink', lw=lw)
-            spec_ax.plot(epoch_number, train_spec[fold_num, :], color='pink', lw=lw)
-
-            sens_ax.plot(epoch_number, val_sens[fold_num, :], color='lightblue', lw=lw)
-            spec_ax.plot(epoch_number, val_spec[fold_num, :], color='lightblue', lw=lw)
-
-            sens_ax.plot(epoch_number, test_sens[fold_num, :], color='lightgreen', lw=lw)
-            spec_ax.plot(epoch_number, test_spec[fold_num, :], color='lightgreen', lw=lw)
-
-            sens_ax.plot(best_epoch_idx[fold_num], val_sens[fold_num, int(best_epoch_idx[fold_num])], color='k', marker='o', markerfacecolor='None')
-            spec_ax.plot(best_epoch_idx[fold_num], val_spec[fold_num, int(best_epoch_idx[fold_num])], color='k', marker='o', markerfacecolor='None')
+        sens_ax.plot(best_epoch_idx[fold_num], sens[1][fold_num, int(best_epoch_idx[fold_num])], color='k', marker='o', markerfacecolor='None', label=marker_label)
+        spec_ax.plot(best_epoch_idx[fold_num], spec[1][fold_num, int(best_epoch_idx[fold_num])], color='k', marker='o', markerfacecolor='None', label=marker_label)
 
     sens_ax.set_xlim([0, n_epochs])
     spec_ax.set_xlim([0, n_epochs])
@@ -112,11 +101,11 @@ def plot_sens_spec(train_sens, train_spec, val_sens, val_spec, test_sens, test_s
     spec_ax.legend(shadow=True, fontsize=20, loc='center left', bbox_to_anchor=(1, 0.5))
 
     plt.tight_layout()
-    plt.savefig(results_dir + 'sens_spec.png', bbox_inches='tight')
+    plt.savefig(results_dir + title + '.png', bbox_inches='tight')
     plt.close()
 
 
-def sens_spec_across_folds(sens_to_plot, spec_to_plot, labels, results_dir):
+def sens_spec_across_folds(sens_to_plot, spec_to_plot, labels, results_dir, filename):
     fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True, figsize=(12, 4))
 
     bplot1 = ax1.boxplot(sens_to_plot, patch_artist=True)
@@ -138,7 +127,7 @@ def sens_spec_across_folds(sens_to_plot, spec_to_plot, labels, results_dir):
 
     ax1.grid()
     ax2.grid()
-    plt.savefig(results_dir + 'sensitivity_specificity_all_folds.png', dpi=500)
+    plt.savefig(results_dir + filename + '.png', dpi=500)
     plt.close()
 
 
