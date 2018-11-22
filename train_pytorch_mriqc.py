@@ -177,37 +177,23 @@ def test_bags(loader, n_slices):
     m = torch.nn.Softmax(dim=-1)
     m = m.cuda()
 
-    all_predictions = torch.zeros((len(loader), 1, n_slices*2), dtype=torch.float32)
     bag_predictions = torch.zeros((len(loader), 2), dtype=torch.float32)
 
-    truth = np.zeros((len(loader)), dtype='uint8')
-
-    for sample_idx, (data, target, sample_weight) in enumerate(loader):
-        data = data.permute(1, 0, 2, 3)
-
-        for slice_idx in range(n_slices * 2):
-            slice = data[slice_idx:slice_idx + 1, ...]
-            slice = slice.cuda()
-
-            output = model(slice)
-            slice_prediction = output[:, 0:1]
-            slice_prediction = slice_prediction.permute(1, 0)
-            slice_prediction = slice_prediction.data
-
-            all_predictions[sample_idx, :, slice_idx] = slice_prediction
-
-            truth[sample_idx] = target
+    truth, slice_values = test_slices(loader, n_slices, softmax=False)
+    slice_values = slice_values[:, :, 0:1]
+    slice_values = torch.from_numpy(slice_values)
+    slice_values.permute(0, 2, 1)
+    print('Input to bag classifier:', slice_values.shape)
 
     for sample_idx in range(len(loader)):
-        slice_predictions = all_predictions[sample_idx, :, :]
+        slice_predictions = slice_values[sample_idx, :, :]
         slice_predictions = slice_predictions.cuda()
 
         output = bag_model(slice_predictions)
-        output = m(output)
 
-        bag_predictions[sample_idx, :] = output.data
+        bag_predictions[sample_idx, :] = m(output).data.cpu()
 
-    return truth.data.cpu().numpy(), bag_predictions.data.cpu().numpy()
+    return truth.numpy(), bag_predictions.numpy()
 
 def test_slices(loader, n_slices, softmax=True):
     model.eval()
@@ -215,8 +201,9 @@ def test_slices(loader, n_slices, softmax=True):
     all_predictions = torch.zeros((len(loader), n_slices*2, 2), dtype=torch.float32).requires_grad_(requires_grad=False)
     truth = np.zeros((len(loader)), dtype='uint8')
 
-    m = torch.nn.Softmax(dim=-1)
-    m = m.cuda()
+    if softmax:
+        m = torch.nn.Softmax(dim=-1)
+        m = m.cuda()
 
     for i, (data, target, sample_weight) in enumerate(loader):
         truth[i] = target
