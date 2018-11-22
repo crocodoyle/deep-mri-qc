@@ -223,7 +223,7 @@ def test_slices(loader, n_slices):
 
         data = data.cuda()
         data = data.permute(1, 0, 2, 3)
-        for slice_idx in range(n_slices):
+        for slice_idx in range(0, n_slices, 2):
             output = model(data[slice_idx:slice_idx+2, ...])
 
             all_predictions[i, slice_idx:slice_idx+2, :] = m(output).data.cpu()
