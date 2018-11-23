@@ -101,14 +101,16 @@ class AllSlicesQCDataset(Dataset):
     def __len__(self):
         return self.n_subjects
 
-class SlicePredictionQCDataset(Dataset):
-    def __init__(self, slice_predictions, labels, all_indices):
+class QC3DDataset(Dataset):
+    def __init__(self, f, all_indices, n_slices=40):
+        self.images = f['MRI']
+        self.labels = f['qc_label']
+        self.confidence = f['label_confidence']
+
         self.n_subjects = len(all_indices)
+        self.indices = np.zeros((self.n_subjects))
 
-        self.indices = np.zeros((self.n_subjects), dtype='uint8')
-
-        self.slice_predictions = slice_predictions
-        self.labels = labels
+        self.n_slices = n_slices
 
         for i, index in enumerate(all_indices):
             self.indices[i] = index
@@ -117,12 +119,22 @@ class SlicePredictionQCDataset(Dataset):
         good_index = self.indices[index]
 
         label = self.labels[good_index]
-        slice_predictions = self.slice_predictions[good_index, :]
+        label_confidence = self.confidence[good_index]
+        image = self.images[good_index, :, :, :, :]
 
-        return slice_predictions, label
+        return image, int(label), label_confidence
 
     def __len__(self):
         return self.n_subjects
+
+
+def sensitivity(tp, fn):
+    sens = tp / (tp + fn + epsilon)
+    return sens
+
+def specificity(tn, fp):
+    spec = tn / (tn + fp + epsilon)
+    return spec
 
 
 def train(epoch, class_weight=None):
@@ -166,6 +178,40 @@ def train(epoch, class_weight=None):
         probabilities[batch_idx * args.batch_size:batch_idx * args.batch_size + n_in_batch] = output.data.cpu().numpy()
 
     return truth, probabilities
+
+def train_3d(epoch):
+    model_3d.train()
+
+    truth, probabilities = np.zeros((len(train_loader.dataset))), np.zeros((len(train_loader.dataset), 2))
+
+    m = torch.nn.Softmax(dim=-1)
+    m = m.cuda()
+
+    for batch_idx, (data, target, target_confidence) in enumerate(train_loader):
+        n_in_batch = data.shape[0]
+        truth[batch_idx * args.batch_size:batch_idx * args.batch_size + n_in_batch] = target
+
+        target = target.type(torch.LongTensor)
+        if args.cuda:
+            data, target = data.cuda(), target.cuda()
+
+        optimizer.zero_grad()
+        output = model_3d(data)
+
+        loss = nn.CrossEntropyLoss()
+
+        loss_val = loss(output, target)
+        loss_val.backward()
+        optimizer.step()
+        if batch_idx % args.log_interval == 0:
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch, batch_idx * args.batch_size, len(train_loader.dataset), 100. * batch_idx * args.batch_size / len(train_loader.dataset), loss_val.data.cpu().numpy()))
+
+        output = m(output)
+
+        probabilities[batch_idx * args.batch_size:batch_idx * args.batch_size + n_in_batch] = output.data.cpu().numpy()
+
+    return truth, probabilities
+
 
 def test_bags(loader, n_slices):
     model.eval()
@@ -232,100 +278,20 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
 
     bag_optimizer = torch.optim.Adam(bag_model.parameters(), lr=0.0002)
 
-    # all_train_slice_predictions = torch.zeros((len(train_loader_bag), 1, n_slices*2), dtype=torch.float32)
-
-    # all_validation_slice_predictions = torch.zeros((len(validation_loader), 1, n_slices*2), dtype=torch.float32)
-    # all_test_slice_predictions = torch.zeros((len(test_loader), 1, n_slices*2), dtype=torch.float32)
-    # all_ds030_slice_predictions = torch.zeros((len(ds030_loader), 1, n_slices*2), dtype=torch.float32)
-
     train_bag_probabilities = torch.zeros((len(train_loader_bag), 2), dtype=torch.float32)
     validation_bag_probabilities = torch.zeros((len(validation_loader), 2), dtype=torch.float32)
 
-    # test_truth, test_probabilities = np.zeros(len(test_loader), dtype='uint8'), np.zeros((len(test_loader), 2), dtype='float32')
-    # ds030_truth, ds030_probabilities = np.zeros(len(ds030_loader), dtype='uint8'), np.zeros((len(ds030_loader), 2), dtype='float32')
-
     train_truth, train_probabilities = test_slices(train_loader_bag, n_slices, softmax=False)
-    train_truth = torch.from_numpy(train_truth)
+    train_truth = torch.LongTensor(train_truth)
 
     all_train_slice_predictions = torch.from_numpy(train_probabilities[:, :, 0])
     print('Training slice predictions tensor shape:', all_train_slice_predictions.shape)
     print('Predicted all slices in training set(', len(train_loader_bag) * n_slices * 2, 'total)')
 
     validation_truth, validation_probabilities = test_slices(validation_loader, n_slices, softmax=False)
+    validation_truth = torch.LongTensor(validation_truth)
     all_validation_slice_predictions = torch.from_numpy(validation_probabilities[:, :, 0])
     print('Predicted all slices in validation set')
-
-    # for sample_idx, (data, target, sample_weight) in enumerate(train_loader_bag):
-    #     data = data.permute(1, 0, 2, 3)
-    #
-    #     for slice_idx in range(n_slices * 2):
-    #         slice = data[slice_idx:slice_idx + 1, ...]
-    #         slice = slice.cuda()
-    #
-    #         output = model(slice)
-    #         slice_prediction = output[:, 0:1]
-    #         slice_prediction = slice_prediction.permute(1, 0)
-    #         slice_prediction = slice_prediction.data.cpu()
-    #
-    #         all_train_slice_predictions[sample_idx, :, slice_idx] = slice_prediction
-    #
-    #     all_train_targets[sample_idx] = target
-    #     all_train_sample_weights[sample_idx] = sample_weight
-    #     train_truth[sample_idx] = target
-
-
-
-    # for sample_idx, (data, target, sample_weight) in enumerate(validation_loader):
-    #     data = data.permute(1, 0, 2, 3)
-    #
-    #     for slice_idx in range(n_slices * 2):
-    #         slice = data[slice_idx:slice_idx + 1, ...]
-    #         slice = slice.cuda()
-    #
-    #         output = model(slice)
-    #         slice_prediction = output[:, 0:1]
-    #         slice_prediction = slice_prediction.permute(1, 0)
-    #         slice_prediction = slice_prediction.data.cpu()
-    #
-    #         all_validation_slice_predictions[sample_idx, :, slice_idx] = slice_prediction
-    #
-    #     validation_truth[sample_idx] = target
-    #
-    #
-
-    # for sample_idx, (data, target, sample_weight) in enumerate(test_loader):
-    #     data = data.permute(1, 0, 2, 3)
-    #
-    #     for slice_idx in range(n_slices * 2):
-    #         slice = data[slice_idx:slice_idx + 1, ...]
-    #         slice = slice.cuda()
-    #
-    #         output = model(slice)
-    #         slice_prediction = output[:, 0:1]
-    #         slice_prediction = slice_prediction.permute(1, 0)
-    #         slice_prediction = slice_prediction.data.cpu()
-    #
-    #         all_test_slice_predictions[sample_idx, :, slice_idx] = slice_prediction
-    #
-    #     test_truth[sample_idx] = target
-    #
-    # print('Predicted all slices in test set')
-    #
-    # for sample_idx, (data, target, sample_weight) in enumerate(ds030_loader):
-    #     data = data.permute(1, 0, 2, 3)
-    #
-    #     for slice_idx in range(n_slices * 2):
-    #         slice = data[slice_idx:slice_idx + 1, ...]
-    #         slice = slice.cuda()
-    #
-    #         output = model(slice)
-    #         slice_prediction = output[:, 0:1]
-    #         slice_prediction = slice_prediction.permute(1, 0)
-    #         slice_prediction = slice_prediction.data.cpu()
-    #
-    #         all_ds030_slice_predictions[sample_idx, :, slice_idx] = slice_prediction
-    #
-    #     ds030_truth[sample_idx] = target
 
     model.cpu()
     bag_model.cuda()
@@ -366,7 +332,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
 
     bag_model.eval()
 
-    # predict multiple instances (training)
+    # predict multiple instances (training set)
     for sample_idx in range(len(train_loader)):
         slice_predictions = all_train_slice_predictions[sample_idx, :]
         slice_predictions = slice_predictions.cuda()
@@ -376,7 +342,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
 
         train_bag_probabilities[sample_idx, :] = output.data.cpu()
 
-    # predict multiple instances (validation)
+    # predict multiple instances (validation set)
     for sample_idx in range(len(validation_loader)):
         slice_predictions = all_validation_slice_predictions[sample_idx, :]
         slice_predictions = slice_predictions.cuda()
@@ -386,26 +352,7 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
 
         validation_bag_probabilities[sample_idx, :] = output.data.cpu()
 
-    # for sample_idx in range(len(test_loader)):
-    #     slice_predictions = all_test_slice_predictions[sample_idx, :, :]
-    #     slice_predictions = slice_predictions.cuda()
-    #
-    #     output = bag_model(slice_predictions)
-    #     output = m(output)
-    #
-    #     test_probabilities[sample_idx, :] = output.data.cpu().numpy()
-    #
-    # for sample_idx in range(len(ds030_loader)):
-    #     slice_predictions = all_ds030_slice_predictions[sample_idx, :, :]
-    #     slice_predictions = slice_predictions.cuda()
-    #
-    #     output = bag_model(slice_predictions)
-    #     output = m(output)
-    #
-    #     ds030_probabilities[sample_idx, :] = output.data.cpu().numpy()
-
-    # return (train_truth, train_probabilities), (validation_truth, validation_probabilities), (test_truth, test_probabilities), (ds030_truth, ds030_probabilities)
-    return (train_truth, train_bag_probabilities.numpy()), (validation_truth, validation_bag_probabilities.numpy())
+    return (train_truth.numpy(), train_bag_probabilities.numpy()), (validation_truth.numpy(), validation_bag_probabilities.numpy())
 
 
 def set_temperature(model, f, validation_indices, n_slices):
@@ -463,6 +410,204 @@ def set_temperature(model, f, validation_indices, n_slices):
     print('After temperature - NLL: %.3f, ECE: %.3f' % (after_temperature_nll, after_temperature_ece))
 
     return model
+
+def experiment_in_3D():
+    network_input = (1,) + (image_shape[1],) + (image_shape[2],) + (image_shape[3],)    # channels, width, height
+
+    growth_rate = 4
+    depth = 64
+    reduction = 0.5
+    bottleneck=True
+
+    model_3d = densenet.DenseNet(input_shape=network_input, growthRate=growth_rate, depth=depth, reduction=reduction, bottleneck=bottleneck, nClasses=2)
+
+    abide_f = h5py.File(workdir + abide_filename, 'r')
+    ds030_f = h5py.File(workdir + ds030_filename, 'r')
+
+    abide_indices = pickle.load(open(workdir + 'abide_indices.pkl', 'rb'))
+    ds030_indices = pickle.load(open(workdir + 'ds030_indices.pkl', 'rb'))
+
+    labels = abide_f['qc_label'][abide_indices]
+
+    n_total = len(abide_indices)
+
+    n_folds = args.folds
+    n_slices = args.n_slices
+    n_slice_strategies = 2
+
+    results_shape = (n_folds, args.slice_epochs)
+
+    training_sensitivity, training_specificity = np.zeros(results_shape), np.zeros(results_shape)
+
+    results_shape = (n_folds, args.slice_epochs, n_slice_strategies)
+
+    validation_sensitivity, validation_specificity, test_sensitivity, test_specificity, val_aucs = np.zeros(results_shape), np.zeros(results_shape), np.zeros(
+        results_shape), np.zeros(results_shape), np.zeros(results_shape)
+
+    kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
+
+    skf = StratifiedKFold(n_splits=n_folds)
+    for fold_idx, (train_val_indices, test_indices) in enumerate(skf.split(abide_indices, labels)):
+        fold_num = fold_idx + 1
+
+        validation_indices = train_val_indices[::10]
+        train_indices = list(set(train_val_indices) - set(validation_indices))
+
+        train_labels = labels[list(train_indices)]
+
+        class_weights = compute_class_weight('balanced', np.unique(train_labels), train_labels)
+
+        train_sample_weights = np.zeros((len(train_labels)))
+        for i, label in enumerate(train_labels):
+            if label == 1:
+                train_sample_weights[i] = class_weights[1]
+            else:
+                train_sample_weights[i] = class_weights[0]
+
+        train_sample_weights = torch.DoubleTensor(train_sample_weights)
+
+        optimizer = optim.SGD(model.parameters(), lr=0.0002, momentum=0.9, dampening=0, weight_decay=0, nesterov=True)
+        if not args.no_scheduler:
+            print('Using learning rate scheduler')
+            scheduler = StepLR(optimizer, args.slice_epochs // 4, gamma=0.5)
+
+        for epoch_idx, epoch in enumerate(range(1, args.slice_epochs + 1)):
+            epoch_start = time.time()
+
+            if not args.no_scheduler:
+                scheduler.step()
+
+            # set up DataSets and DataLoaders
+            abide_f = h5py.File(workdir + abide_filename, 'r')
+            ds030_f = h5py.File(workdir + ds030_filename, 'r')
+
+            train_dataset = QC3DDataset(abide_f, train_indices)
+
+            validation_dataset = QC3DDataset(abide_f, validation_indices)
+            test_dataset = QC3DDataset(abide_f, test_indices)
+            ds030_dataset = QC3DDataset(ds030_f, ds030_indices)
+
+            sampler = WeightedRandomSampler(weights=train_sample_weights, num_samples=len(train_sample_weights))
+            train_loader_3d = DataLoader(train_dataset, batch_size=args.batch_size, sampler=sampler, shuffle=False,**kwargs)
+            validation_loader_3d = DataLoader(validation_dataset, **kwargs)
+            test_loader_3d = DataLoader(test_dataset, **kwargs)
+            ds030_loader_3d = DataLoader(ds030_dataset, **kwargs)
+
+            # training results
+            print('Training')
+            train_truth, train_probabilities = train_3d(train_loader_3d, epoch)
+            train_predictions = np.argmax(train_probabilities, axis=-1)
+
+            # validation results
+            print('Validation')
+            val_truth, val_probabilities = test_3d(validation_loader_3d)
+            val_predictions = np.argmax(val_probabilities, axis=-1)
+
+            # test results
+            print('Test')
+            test_truth, test_probabilities = test_3d(test_loader_3d)
+            test_predictions = np.argmax(test_probabilities, axis=-1)
+
+            # ds030 results
+            print('ds030')
+            ds030_truth, ds030_probabilities = test_3d(ds030_loader_3d)
+            ds030_average_probs = np.argmax(ds030_probabilities, axis=-1)
+
+            # plot intermediate results
+            # ROC
+            truths = [train_truth, val_truth, test_truth, ds030_truth]
+            probs = [train_probabilities, val_probabilities, test_probabilities, ds030_probabilities]
+
+            plot_labels = ['Train', 'Validation', 'Test', 'ds030']
+
+            aucs = plot_roc(truths, probs, plot_labels, results_dir, epoch, fold_num)
+            print('AUCS:', aucs)
+
+            # Training
+            train_tn, train_fp, train_fn, train_tp = confusion_matrix(np.asarray(train_truth, dtype='uint8'), np.asarray(train_predictions, dtype='uint8')).ravel()
+            print('Training TP:', train_tp, 'TN:', train_tn, 'FP:', train_fp, 'FN:', train_fn)
+
+            # Validation
+            # avg slice prediction
+            val_tn, val_fp, val_fn, val_tp = confusion_matrix(np.asarray(val_truth, dtype='uint8'), np.asarray(val_predictions_avg, dtype='uint8')).ravel()
+            print('Validation TP:', val_tp, 'TN:', val_tn, 'FP:', val_fp, 'FN:', val_fn)
+
+            validation_sensitivity[fold_idx, epoch_idx, 0] = val_tp / (val_tp + val_fn + epsilon)
+            validation_specificity[fold_idx, epoch_idx, 0] = val_tn / (val_tn + val_fp + epsilon)
+
+            # max slice prediction
+            val_tn, val_fp, val_fn, val_tp = confusion_matrix(np.asarray(val_truth, dtype='uint8'), np.asarray(val_predictions_max, dtype='uint8')).ravel()
+            print('Validation TP:', val_tp, 'TN:', val_tn, 'FP:', val_fp, 'FN:', val_fn)
+
+            validation_sensitivity[fold_idx, epoch_idx, 1] = val_tp / (val_tp + val_fn + epsilon)
+            validation_specificity[fold_idx, epoch_idx, 1] = val_tn / (val_tn + val_fp + epsilon)
+
+            # Test
+            # avg slice prediction
+            test_tn, test_fp, test_fn, test_tp = confusion_matrix(np.asarray(test_truth, dtype='uint8'), np.asarray(test_predictions_avg, dtype='uint8')).ravel()
+            print('Testing TP:', test_tp, 'TN:', test_tn, 'FP:', test_fp, 'FN:', test_fn)
+
+            test_sensitivity[fold_idx, epoch_idx, 0] = test_tp / (test_tp + test_fn + epsilon)
+            test_specificity[fold_idx, epoch_idx, 0] = test_tn / (test_tn + test_fp + epsilon)
+
+            test_tn, test_fp, test_fn, test_tp = confusion_matrix(np.asarray(test_truth, dtype='uint8'), np.asarray(test_predictions_max, dtype='uint8')).ravel()
+            print('Testing TP:', test_tp, 'TN:', test_tn, 'FP:', test_fp, 'FN:', test_fn)
+
+            test_sensitivity[fold_idx, epoch_idx, 1] = test_tp / (test_tp + test_fn + epsilon)
+            test_specificity[fold_idx, epoch_idx, 1] = test_tn / (test_tn + test_fp + epsilon)
+
+            # ds030
+            # avg slice prediction
+            ds030_tn, ds030_fp, ds030_fn, ds030_tp = confusion_matrix(np.asarray(ds030_truth, dtype='uint8'), np.asarray(ds030_predictions_avg, dtype='uint8')).ravel()
+            print('ds030 TP:', ds030_tp, 'TN:', ds030_tn, 'FP:', ds030_fp, 'FN:', ds030_fn)
+
+            ds030_sensitivity[fold_idx, epoch_idx, 0] = ds030_tp / (ds030_tp + ds030_fn + epsilon)
+            ds030_specificity[fold_idx, epoch_idx, 0] = ds030_tn / (ds030_tn + ds030_fp + epsilon)
+
+            ds030_tn, ds030_fp, ds030_fn, ds030_tp = confusion_matrix(np.asarray(ds030_truth, dtype='uint8'), np.asarray(ds030_predictions_max, dtype='uint8')).ravel()
+            print('ds030 TP:', ds030_tp, 'TN:', ds030_tn, 'FP:', ds030_fp, 'FN:', ds030_fn)
+
+            ds030_sensitivity[fold_idx, epoch_idx, 1] = ds030_tp / (ds030_tp + ds030_fn + epsilon)
+            ds030_specificity[fold_idx, epoch_idx, 1] = ds030_tn / (ds030_tn + ds030_fp + epsilon)
+
+            val_aucs[fold_idx, epoch_idx, 0] = aucs[1]
+            val_aucs[fold_idx, epoch_idx, 1] = aucs[2]
+
+            auc_score = aucs[1]
+
+            if auc_score > best_auc_score[fold_idx]:
+                print('This epoch is the new best model on the train/validation set!')
+                best_auc_score[fold_idx] = auc_score
+                # best_sens_spec_score[fold_idx] = sens_spec_score
+
+                best_epoch_idx[fold_idx] = epoch_idx
+
+                best_sensitivity[fold_idx, 0] = training_sensitivity[fold_idx, epoch_idx]
+                best_specificity[fold_idx, 0] = training_specificity[fold_idx, epoch_idx]
+
+                best_sensitivity[fold_idx, 1] = validation_sensitivity[fold_idx, epoch_idx, 0]
+                best_specificity[fold_idx, 1] = validation_specificity[fold_idx, epoch_idx, 0]
+
+                best_sensitivity[fold_idx, 2] = validation_sensitivity[fold_idx, epoch_idx, 1]
+                best_specificity[fold_idx, 2] = validation_specificity[fold_idx, epoch_idx, 1]
+
+                best_sensitivity[fold_idx, 3] = test_sensitivity[fold_idx, epoch_idx, 0]
+                best_specificity[fold_idx, 3] = test_specificity[fold_idx, epoch_idx, 0]
+
+                best_sensitivity[fold_idx, 4] = test_sensitivity[fold_idx, epoch_idx, 1]
+                best_specificity[fold_idx, 4] = test_specificity[fold_idx, epoch_idx, 1]
+
+                best_sensitivity[fold_idx, 5] = ds030_sensitivity[fold_idx, epoch_idx, 0]
+                best_specificity[fold_idx, 5] = ds030_specificity[fold_idx, epoch_idx, 0]
+
+                best_sensitivity[fold_idx, 6] = ds030_sensitivity[fold_idx, epoch_idx, 1]
+                best_specificity[fold_idx, 6] = ds030_specificity[fold_idx, epoch_idx, 1]
+
+                torch.save(model.state_dict(), results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch')
+
+            epoch_elapsed = time.time() - epoch_start
+            print('Epoch ' + str(epoch) + ' of fold ' + str(fold_num) + ' took ' + str(epoch_elapsed / 60) + ' minutes')
+
 
 
 if __name__ == '__main__':
