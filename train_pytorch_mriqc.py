@@ -212,6 +212,32 @@ def train_3d(epoch):
 
     return truth, probabilities
 
+def test_3d(loader, softmax=True):
+    model_3d.eval()
+
+    truth, probabilities = np.zeros((len(train_loader.dataset))), np.zeros((len(train_loader.dataset), 2))
+
+    if softmax:
+        m = torch.nn.Softmax(dim=-1)
+        m = m.cuda()
+
+    for i, (data, target, target_confidence) in enumerate(loader):
+        truth[i] = target
+
+        target = target.type(torch.LongTensor)
+        if args.cuda:
+            data, target = data.cuda(), target.cuda()
+
+        optimizer.zero_grad()
+        output = model_3d(data)
+
+        if softmax:
+            output = m(output)
+
+        probabilities[i, :] = output.data.cpu().numpy()
+
+    return truth, probabilities
+
 
 def test_bags(loader, n_slices):
     model.eval()
@@ -306,16 +332,11 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
             target = train_truth[sample_idx].unsqueeze(0)
             # sample_weight = all_train_sample_weights[sample_idx]
 
-            print('slice predictions', slice_predictions.shape)
-            print('target', target.shape)
-            print('sample weight, target:', target)
-
             slice_predictions = slice_predictions.cuda()
             target = target.cuda()
             # sample_weight = sample_weight.cuda()
 
             output = bag_model(slice_predictions)
-            print('output', output.shape)
 
             loss = nn.CrossEntropyLoss()
             loss_val = loss(output, target)
@@ -422,27 +443,25 @@ def experiment_in_3D():
     model_3d = densenet.DenseNet(input_shape=network_input, growthRate=growth_rate, depth=depth, reduction=reduction, bottleneck=bottleneck, nClasses=2)
 
     abide_f = h5py.File(workdir + abide_filename, 'r')
-    ds030_f = h5py.File(workdir + ds030_filename, 'r')
 
     abide_indices = pickle.load(open(workdir + 'abide_indices.pkl', 'rb'))
     ds030_indices = pickle.load(open(workdir + 'ds030_indices.pkl', 'rb'))
 
     labels = abide_f['qc_label'][abide_indices]
 
-    n_total = len(abide_indices)
-
     n_folds = args.folds
-    n_slices = args.n_slices
     n_slice_strategies = 2
 
     results_shape = (n_folds, args.slice_epochs)
-
-    training_sensitivity, training_specificity = np.zeros(results_shape), np.zeros(results_shape)
+    training_sensitivity, training_specificity, validation_sensitivity, validation_specificity, test_sensitivity, test_specificity, val_aucs = np.zeros(results_shape), np.zeros(results_shape), np.zeros(results_shape), np.zeros(results_shape), np.zeros(results_shape), np.zeros(results_shape), np.zeros(results_shape)
 
     results_shape = (n_folds, args.slice_epochs, n_slice_strategies)
 
     validation_sensitivity, validation_specificity, test_sensitivity, test_specificity, val_aucs = np.zeros(results_shape), np.zeros(results_shape), np.zeros(
         results_shape), np.zeros(results_shape), np.zeros(results_shape)
+
+    all_val_truth, all_test_truth, all_ds030_truth = [], [], []
+    all_val_probs, all_test_probs, all_ds030_probs = [], [], []
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
@@ -511,7 +530,7 @@ def experiment_in_3D():
             # ds030 results
             print('ds030')
             ds030_truth, ds030_probabilities = test_3d(ds030_loader_3d)
-            ds030_average_probs = np.argmax(ds030_probabilities, axis=-1)
+            ds030_predictions = np.argmax(ds030_probabilities, axis=-1)
 
             # plot intermediate results
             # ROC
@@ -524,89 +543,123 @@ def experiment_in_3D():
             print('AUCS:', aucs)
 
             # Training
-            train_tn, train_fp, train_fn, train_tp = confusion_matrix(np.asarray(train_truth, dtype='uint8'), np.asarray(train_predictions, dtype='uint8')).ravel()
-            print('Training TP:', train_tp, 'TN:', train_tn, 'FP:', train_fp, 'FN:', train_fn)
+            tn, fp, fn, tp = confusion_matrix(train_truth.astype(int), train_predictions.astype(int)).ravel()
+            print('Training TP:', tp, 'TN:', tn, 'FP:', fp, 'FN:', fn)
+
+            training_sensitivity[fold_idx, epoch_idx] = sensitivity(tp, fn)
+            training_specificity[fold_idx, epoch_idx] = specificity(tn, fp)
 
             # Validation
-            # avg slice prediction
-            val_tn, val_fp, val_fn, val_tp = confusion_matrix(np.asarray(val_truth, dtype='uint8'), np.asarray(val_predictions_avg, dtype='uint8')).ravel()
-            print('Validation TP:', val_tp, 'TN:', val_tn, 'FP:', val_fp, 'FN:', val_fn)
+            tn, fp, fn, tp = confusion_matrix(val_truth.astype(int), val_predictions.astype(int)).ravel()
+            print('Validation (avg) TP:', tp, 'TN:', tn, 'FP:', fp, 'FN:', fn)
 
-            validation_sensitivity[fold_idx, epoch_idx, 0] = val_tp / (val_tp + val_fn + epsilon)
-            validation_specificity[fold_idx, epoch_idx, 0] = val_tn / (val_tn + val_fp + epsilon)
-
-            # max slice prediction
-            val_tn, val_fp, val_fn, val_tp = confusion_matrix(np.asarray(val_truth, dtype='uint8'), np.asarray(val_predictions_max, dtype='uint8')).ravel()
-            print('Validation TP:', val_tp, 'TN:', val_tn, 'FP:', val_fp, 'FN:', val_fn)
-
-            validation_sensitivity[fold_idx, epoch_idx, 1] = val_tp / (val_tp + val_fn + epsilon)
-            validation_specificity[fold_idx, epoch_idx, 1] = val_tn / (val_tn + val_fp + epsilon)
+            validation_sensitivity[fold_idx, epoch_idx] = sensitivity(tp, fn)
+            validation_specificity[fold_idx, epoch_idx] = specificity(tn, fp)
 
             # Test
-            # avg slice prediction
-            test_tn, test_fp, test_fn, test_tp = confusion_matrix(np.asarray(test_truth, dtype='uint8'), np.asarray(test_predictions_avg, dtype='uint8')).ravel()
-            print('Testing TP:', test_tp, 'TN:', test_tn, 'FP:', test_fp, 'FN:', test_fn)
+            tn, fp, fn, tp = confusion_matrix(test_truth.astype(int), test_predictions.astype(int)).ravel()
+            print('Test (avg) TP:', tp, 'TN:', tn, 'FP:', fp, 'FN:', fn)
 
-            test_sensitivity[fold_idx, epoch_idx, 0] = test_tp / (test_tp + test_fn + epsilon)
-            test_specificity[fold_idx, epoch_idx, 0] = test_tn / (test_tn + test_fp + epsilon)
-
-            test_tn, test_fp, test_fn, test_tp = confusion_matrix(np.asarray(test_truth, dtype='uint8'), np.asarray(test_predictions_max, dtype='uint8')).ravel()
-            print('Testing TP:', test_tp, 'TN:', test_tn, 'FP:', test_fp, 'FN:', test_fn)
-
-            test_sensitivity[fold_idx, epoch_idx, 1] = test_tp / (test_tp + test_fn + epsilon)
-            test_specificity[fold_idx, epoch_idx, 1] = test_tn / (test_tn + test_fp + epsilon)
+            test_sensitivity[fold_idx, epoch_idx] = sensitivity(tp, fn)
+            test_specificity[fold_idx, epoch_idx] = specificity(tn, fp)
 
             # ds030
-            # avg slice prediction
-            ds030_tn, ds030_fp, ds030_fn, ds030_tp = confusion_matrix(np.asarray(ds030_truth, dtype='uint8'), np.asarray(ds030_predictions_avg, dtype='uint8')).ravel()
-            print('ds030 TP:', ds030_tp, 'TN:', ds030_tn, 'FP:', ds030_fp, 'FN:', ds030_fn)
+            tn, fp, fn, tp = confusion_matrix(ds030_truth.astype(int), ds030_predictions_avg.astype(int)).ravel()
+            print('ds030 (avg) TP:', tp, 'TN:', tn, 'FP:', fp, 'FN:', fn)
 
-            ds030_sensitivity[fold_idx, epoch_idx, 0] = ds030_tp / (ds030_tp + ds030_fn + epsilon)
-            ds030_specificity[fold_idx, epoch_idx, 0] = ds030_tn / (ds030_tn + ds030_fp + epsilon)
+            ds030_sensitivity[fold_idx, epoch_idx] = sensitivity(tp, fn)
+            ds030_specificity[fold_idx, epoch_idx] = specificity(tn, fp)
 
-            ds030_tn, ds030_fp, ds030_fn, ds030_tp = confusion_matrix(np.asarray(ds030_truth, dtype='uint8'), np.asarray(ds030_predictions_max, dtype='uint8')).ravel()
-            print('ds030 TP:', ds030_tp, 'TN:', ds030_tn, 'FP:', ds030_fp, 'FN:', ds030_fn)
-
-            ds030_sensitivity[fold_idx, epoch_idx, 1] = ds030_tp / (ds030_tp + ds030_fn + epsilon)
-            ds030_specificity[fold_idx, epoch_idx, 1] = ds030_tn / (ds030_tn + ds030_fp + epsilon)
-
-            val_aucs[fold_idx, epoch_idx, 0] = aucs[1]
-            val_aucs[fold_idx, epoch_idx, 1] = aucs[2]
+            val_aucs[fold_idx, epoch_idx] = aucs[1]
 
             auc_score = aucs[1]
 
             if auc_score > best_auc_score[fold_idx]:
                 print('This epoch is the new best model on the train/validation set!')
                 best_auc_score[fold_idx] = auc_score
-                # best_sens_spec_score[fold_idx] = sens_spec_score
 
                 best_epoch_idx[fold_idx] = epoch_idx
 
                 best_sensitivity[fold_idx, 0] = training_sensitivity[fold_idx, epoch_idx]
                 best_specificity[fold_idx, 0] = training_specificity[fold_idx, epoch_idx]
 
-                best_sensitivity[fold_idx, 1] = validation_sensitivity[fold_idx, epoch_idx, 0]
-                best_specificity[fold_idx, 1] = validation_specificity[fold_idx, epoch_idx, 0]
+                best_sensitivity[fold_idx, 1] = validation_sensitivity[fold_idx, epoch_idx]
+                best_specificity[fold_idx, 1] = validation_specificity[fold_idx, epoch_idx]
 
-                best_sensitivity[fold_idx, 2] = validation_sensitivity[fold_idx, epoch_idx, 1]
-                best_specificity[fold_idx, 2] = validation_specificity[fold_idx, epoch_idx, 1]
+                best_sensitivity[fold_idx, 2] = test_sensitivity[fold_idx, epoch_idx]
+                best_specificity[fold_idx, 2] = test_specificity[fold_idx, epoch_idx]
 
-                best_sensitivity[fold_idx, 3] = test_sensitivity[fold_idx, epoch_idx, 0]
-                best_specificity[fold_idx, 3] = test_specificity[fold_idx, epoch_idx, 0]
+                best_sensitivity[fold_idx, 3] = ds030_sensitivity[fold_idx, epoch_idx]
+                best_specificity[fold_idx, 3] = ds030_specificity[fold_idx, epoch_idx]
 
-                best_sensitivity[fold_idx, 4] = test_sensitivity[fold_idx, epoch_idx, 1]
-                best_specificity[fold_idx, 4] = test_specificity[fold_idx, epoch_idx, 1]
-
-                best_sensitivity[fold_idx, 5] = ds030_sensitivity[fold_idx, epoch_idx, 0]
-                best_specificity[fold_idx, 5] = ds030_specificity[fold_idx, epoch_idx, 0]
-
-                best_sensitivity[fold_idx, 6] = ds030_sensitivity[fold_idx, epoch_idx, 1]
-                best_specificity[fold_idx, 6] = ds030_specificity[fold_idx, epoch_idx, 1]
-
-                torch.save(model.state_dict(), results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch')
+                torch.save(model.state_dict(), results_dir + 'qc3d_torch_fold_' + str(fold_num) + '.tch')
 
             epoch_elapsed = time.time() - epoch_start
             print('Epoch ' + str(epoch) + ' of fold ' + str(fold_num) + ' took ' + str(epoch_elapsed / 60) + ' minutes')
+
+        # re-test images using best model this fold
+        print('Best epoch this folds was:', best_epoch_idx[fold_idx])
+        print('Reloading best model...')
+        model_3d.load_state_dict(torch.load(results_dir + 'qc3d_torch_fold_' + str(fold_num) + '.tch'))
+        model_3d.cuda()
+
+        print('Re-testing validation set')
+        val_truth, val_probabilities = test_3d(validation_loader_3d)
+        val_predictions = np.argmax(val_probabilities, axis=-1).astype(int)
+        print('Re-testing test set')
+        test_truth, test_probabilities = test_3d(test_loader_3d)
+        test_predictions = np.argmax(test_probabilities, axis=-1).astype(int)
+        print('Re-testing ds030 set')
+        ds030_truth, ds030_probabilities = test_3d(ds030_loader_3d)
+        ds030_predictions = np.argmax(ds030_probabilities, axis=-1).astype(int)
+
+        for i, val_idx in enumerate(validation_indices):
+            all_val_truth.append(val_truth[i, ...])
+            all_val_probs.append(val_probabilities[i, ...])
+
+        for i, test_idx in enumerate(test_indices):
+            all_test_truth.append(test_truth[i, ...])
+            all_test_probs.append(test_probabilities[i, ...])
+
+        for i, ds030_idx in enumerate(ds030_indices):
+            all_ds030_truth.append(ds030_truth[i, ...])
+            all_ds030_probs.append(ds030_probabilities[i, ...])
+
+        model_filename = os.path.join(results_dir, 'bagged_qc_model_fold_' + str(fold_num) + '.tch')
+        torch.save(bag_model, model_filename)
+
+    # plot validation AUC
+    plt.figure(figsize=(6, 4))
+    for fold_idx in range(n_folds):
+        plt.plot(val_aucs[fold_idx, :], lw=2, color='darkred')
+
+    plt.xlabel('Epoch #')
+    plt.ylabel('AUC')
+    plt.tight_layout()
+    plt.savefig(results_dir + '3d_cnn_validation_aucs.png')
+    plt.close()
+
+    # plot results across folds
+    all_val_truth = np.asarray(all_val_truth, dtype='float32')
+    all_test_truth = np.asarray(all_test_truth, dtype='float32')
+    all_ds030_truth = np.asarray(all_ds030_truth, dtype='float32')
+
+    all_val_probs = np.array(all_val_probs, dtype='float32')
+    all_test_probs = np.array(all_test_probs, dtype='float32')
+    all_ds030_probs = np.array(all_ds030_probs, dtype='float32')
+
+    truth = [all_val_truth, all_test_truth, all_ds030_truth]
+    probs = [all_val_probs, all_test_probs, all_ds030_probs]
+    plot_labels = ['Val', 'Test', 'ds030']
+
+    plot_roc(truth, probs, plot_labels, results_dir, -1, fold_num=-1, title='3D CNN Results', filename='3d_cnn_roc')
+
+    # sens/spec boxplot
+    sens = [best_sensitivity[:, 0], best_sensitivity[:, 1], best_sensitivity[:, 3], best_sensitivity[:, 5]]
+    spec = [best_specificity[:, 0], best_specificity[:, 2], best_specificity[:, 4], best_specificity[:, 6]]
+
+    sens_spec_across_folds(sens, spec, ['Training', 'Validation', 'Testing', 'ds030'], results_dir, '3d_cnn_sensspec_boxplot')
+
 
 
 
@@ -716,7 +769,7 @@ if __name__ == '__main__':
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
-    best_epoch_idx = np.zeros((n_folds, 2), dtype='uint8')
+    best_epoch_idx = np.zeros((n_folds, 2), dtype='int32')
 
     skf = StratifiedKFold(n_splits=n_folds)
     for fold_idx, (train_val_indices, test_indices) in enumerate(skf.split(abide_indices, labels)):
@@ -845,51 +898,55 @@ if __name__ == '__main__':
             print('AUCS:', aucs)
 
             # Training
-            train_tn, train_fp, train_fn, train_tp = confusion_matrix(np.asarray(train_truth, dtype='uint8'), np.asarray(train_predictions, dtype='uint8')).ravel()
-            print('Training TP:', train_tp, 'TN:', train_tn, 'FP:', train_fp, 'FN:', train_fn)
+            # random slice prediction
+            tn, fp, fn, tp = confusion_matrix(train_truth.astype(int), train_predictions.astype(int)).ravel()
+            print('Training TP:', tp, 'TN:', tn, 'FP:', fp, 'FN:', fn)
+
+            training_sensitivity[fold_idx, epoch_idx] = sensitivity(tp, fn)
+            training_specificity[fold_idx, epoch_idx] = specificity(tn, fp)
 
             # Validation
             # avg slice prediction
-            val_tn, val_fp, val_fn, val_tp = confusion_matrix(np.asarray(val_truth, dtype='uint8'), np.asarray(val_predictions_avg, dtype='uint8')).ravel()
-            print('Validation TP:', val_tp, 'TN:', val_tn, 'FP:', val_fp, 'FN:', val_fn)
+            tn, fp, fn, tp = confusion_matrix(val_truth.astype(int), val_predictions_avg.astype(int)).ravel()
+            print('Validation (avg) TP:', tp, 'TN:', tn, 'FP:', fp, 'FN:', fn)
 
-            validation_sensitivity[fold_idx, epoch_idx, 0] = val_tp / (val_tp + val_fn + epsilon)
-            validation_specificity[fold_idx, epoch_idx, 0] = val_tn / (val_tn + val_fp + epsilon)
+            validation_sensitivity[fold_idx, epoch_idx, 0] = sensitivity(tp, fn)
+            validation_specificity[fold_idx, epoch_idx, 0] = specificity(tn, fp)
 
             # max slice prediction
-            val_tn, val_fp, val_fn, val_tp = confusion_matrix(np.asarray(val_truth, dtype='uint8'), np.asarray(val_predictions_max, dtype='uint8')).ravel()
-            print('Validation TP:', val_tp, 'TN:', val_tn, 'FP:', val_fp, 'FN:', val_fn)
+            tn, fp, fn, tp = confusion_matrix(val_truth.astype(int), val_predictions_max.astype(int)).ravel()
+            print('Validation (max) TP:', tp, 'TN:', tn, 'FP:', fp, 'FN:', fn)
 
-            validation_sensitivity[fold_idx, epoch_idx, 1] = val_tp / (val_tp + val_fn + epsilon)
-            validation_specificity[fold_idx, epoch_idx, 1] = val_tn / (val_tn + val_fp + epsilon)
+            validation_sensitivity[fold_idx, epoch_idx, 1] = sensitivity(tp, fn)
+            validation_specificity[fold_idx, epoch_idx, 1] = specificity(tn, fp)
 
             # Test
             # avg slice prediction
-            test_tn, test_fp, test_fn, test_tp = confusion_matrix(np.asarray(test_truth, dtype='uint8'), np.asarray(test_predictions_avg, dtype='uint8')).ravel()
-            print('Testing TP:', test_tp, 'TN:', test_tn, 'FP:', test_fp, 'FN:', test_fn)
+            tn, fp, fn, tp = confusion_matrix(test_truth.astype(int), test_predictions_avg.astype(int)).ravel()
+            print('Test (avg) TP:', tp, 'TN:', tn, 'FP:', fp, 'FN:', fn)
 
-            test_sensitivity[fold_idx, epoch_idx, 0] = test_tp / (test_tp + test_fn + epsilon)
-            test_specificity[fold_idx, epoch_idx, 0] = test_tn / (test_tn + test_fp + epsilon)
+            test_sensitivity[fold_idx, epoch_idx, 0] = sensitivity(tp, fn)
+            test_specificity[fold_idx, epoch_idx, 0] = specificity(tn, fp)
 
-            test_tn, test_fp, test_fn, test_tp = confusion_matrix(np.asarray(test_truth, dtype='uint8'), np.asarray(test_predictions_max, dtype='uint8')).ravel()
-            print('Testing TP:', test_tp, 'TN:', test_tn, 'FP:', test_fp, 'FN:', test_fn)
+            tn, fp, fn, tp = confusion_matrix(test_truth.astype(int), test_predictions_max.astype(int)).ravel()
+            print('Test (max) TP:', tp, 'TN:', tn, 'FP:', fp, 'FN:', fn)
 
-            test_sensitivity[fold_idx, epoch_idx, 1] = test_tp / (test_tp + test_fn + epsilon)
-            test_specificity[fold_idx, epoch_idx, 1] = test_tn / (test_tn + test_fp + epsilon)
+            test_sensitivity[fold_idx, epoch_idx, 1] = sensitivity(tp, fn)
+            test_specificity[fold_idx, epoch_idx, 1] = specificity(tn, fp)
 
             # ds030
             # avg slice prediction
-            ds030_tn, ds030_fp, ds030_fn, ds030_tp = confusion_matrix(np.asarray(ds030_truth, dtype='uint8'), np.asarray(ds030_predictions_avg, dtype='uint8')).ravel()
-            print('ds030 TP:', ds030_tp, 'TN:', ds030_tn, 'FP:', ds030_fp, 'FN:', ds030_fn)
+            tn, fp, fn, tp = confusion_matrix(ds030_truth.astype(int), ds030_predictions_avg.astype(int)).ravel()
+            print('ds030 (avg) TP:', tp, 'TN:', tn, 'FP:', fp, 'FN:', fn)
 
-            ds030_sensitivity[fold_idx, epoch_idx, 0] = ds030_tp / (ds030_tp + ds030_fn + epsilon)
-            ds030_specificity[fold_idx, epoch_idx, 0] = ds030_tn / (ds030_tn + ds030_fp + epsilon)
+            ds030_sensitivity[fold_idx, epoch_idx, 0] = sensitivity(tp, fn)
+            ds030_specificity[fold_idx, epoch_idx, 0] = specificity(tn, fp)
 
-            ds030_tn, ds030_fp, ds030_fn, ds030_tp = confusion_matrix(np.asarray(ds030_truth, dtype='uint8'), np.asarray(ds030_predictions_max, dtype='uint8')).ravel()
-            print('ds030 TP:', ds030_tp, 'TN:', ds030_tn, 'FP:', ds030_fp, 'FN:', ds030_fn)
+            tn, fp, fn, tp = confusion_matrix(ds030_truth.astype(int), ds030_predictions_max.astype(int)).ravel()
+            print('ds030 (max) TP:', tp, 'TN:', tn, 'FP:', fp, 'FN:', fn)
 
-            ds030_sensitivity[fold_idx, epoch_idx, 1] = ds030_tp / (ds030_tp + ds030_fn + epsilon)
-            ds030_specificity[fold_idx, epoch_idx, 1] = ds030_tn / (ds030_tn + ds030_fp + epsilon)
+            ds030_sensitivity[fold_idx, epoch_idx, 1] = sensitivity(tp, fn)
+            ds030_specificity[fold_idx, epoch_idx, 1] = specificity(tn, fp)
 
             val_aucs[fold_idx, epoch_idx, 0] = aucs[1]
             val_aucs[fold_idx, epoch_idx, 1] = aucs[2]
@@ -1039,6 +1096,7 @@ if __name__ == '__main__':
     plt.legend(shadow=True, fancybox=True)
     plt.tight_layout()
     plt.savefig(results_dir + 'validation_aucs.png')
+    plt.close()
 
     # plot training dynamics at each epoch
     avg_senses = [training_sensitivity, validation_sensitivity[..., 0], test_sensitivity[..., 0], ds030_sensitivity[..., 0]]
@@ -1049,8 +1107,8 @@ if __name__ == '__main__':
 
     plot_labels = ['Training', 'Validation', 'Test', 'ds030']
 
-    plot_sens_spec(avg_senses, avg_specs, plot_labels, best_epoch_idx, results_dir, 'average_slice_predictions')
-    plot_sens_spec(max_senses, max_specs, plot_labels, best_epoch_idx, results_dir, 'max_slice_predictions')
+    plot_sens_spec(avg_senses, avg_specs, plot_labels, best_epoch_idx[:, 0], results_dir, 'average_slice_predictions')
+    plot_sens_spec(max_senses, max_specs, plot_labels, best_epoch_idx[:, 1], results_dir, 'max_slice_predictions')
 
     # plot_confidence(np.asarray(all_test_probs, dtype='float32'), np.asarray(all_test_probs_cal, dtype='float32'), np.asarray(all_test_truth, dtype='uint8'), results_dir)
 
