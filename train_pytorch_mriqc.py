@@ -1107,8 +1107,8 @@ if __name__ == '__main__':
 
     plot_labels = ['Training', 'Validation', 'Test', 'ds030']
 
-    plot_sens_spec(avg_senses, avg_specs, plot_labels, best_epoch_idx[:, 0], results_dir, 'average_slice_predictions')
-    plot_sens_spec(max_senses, max_specs, plot_labels, best_epoch_idx[:, 1], results_dir, 'max_slice_predictions')
+    plot_sens_spec(avg_senses, avg_specs, plot_labels, best_epoch_idx, results_dir, 'average_slice_predictions')
+    plot_sens_spec(max_senses, max_specs, plot_labels, best_epoch_idx, results_dir, 'max_slice_predictions')
 
     # plot_confidence(np.asarray(all_test_probs, dtype='float32'), np.asarray(all_test_probs_cal, dtype='float32'), np.asarray(all_test_truth, dtype='uint8'), results_dir)
 
