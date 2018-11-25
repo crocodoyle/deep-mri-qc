@@ -91,8 +91,6 @@ def plot_sens_spec(senses, specs, curve_labels, best_epoch_idx, results_dir, tit
         validation_spec = specs[1]
 
         best_epoch = best_epoch_idx[fold_num]
-        print('best epoch:', best_epoch)
-        best_epoch = int(best_epoch)
 
         sens_ax.plot(best_epoch, validation_sens[fold_num, best_epoch], color='k', marker='o', markerfacecolor='None', label=marker_label)
         spec_ax.plot(best_epoch, validation_spec[fold_num, best_epoch], color='k', marker='o', markerfacecolor='None', label=marker_label)
