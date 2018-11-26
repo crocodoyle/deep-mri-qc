@@ -1006,11 +1006,11 @@ if __name__ == '__main__':
         model.cuda()
 
         print('Re-testing validation set')
-        val_truth, val_probabilities = test_slices(validation_loader, n_slices)
+        val_truth_slices, val_probabilities = test_slices(validation_loader, n_slices)
         print('Re-testing test set')
-        test_truth, test_probabilities = test_slices(test_loader, n_slices)
+        test_truth_slices, test_probabilities = test_slices(test_loader, n_slices)
         print('Re-testing ds030 set')
-        ds030_truth, ds030_probabilities = test_slices(ds030_loader, n_slices)
+        ds030_truth_slices, ds030_probabilities = test_slices(ds030_loader, n_slices)
 
         val_average_probs = np.mean(val_probabilities, axis=1)
 
@@ -1048,8 +1048,8 @@ if __name__ == '__main__':
 
         (train_truth_bag, train_probs_bag), (val_truth_bag, val_probs_bag) = learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_size=32, n_epochs=args.bag_epochs)
 
-        test_truth, test_probs_bag = test_bags(test_loader, n_slices)
-        ds030_truth, ds030_probs_bag = test_bags(ds030_loader, n_slices)
+        test_truth_bag, test_probs_bag = test_bags(test_loader, n_slices)
+        ds030_truth_bag, ds030_probs_bag = test_bags(ds030_loader, n_slices)
 
         #calibrate model probability on validation set
         # model_with_temperature = ModelWithTemperature(bag_model)
@@ -1059,7 +1059,7 @@ if __name__ == '__main__':
         for i, val_idx in enumerate(validation_indices):
             all_val_slice_avg_probs.append(val_average_probs[i, ...])
             all_val_slice_max_probs.append(val_maximum_probs[i, ...])
-            all_val_truth.append(val_truth[i, ...])
+            all_val_truth.append(val_truth_slices[i, ...])
 
             all_bagged_val_probs.append(val_probs_bag[i, ...])
             all_bagged_val_truth.append(val_truth_bag[i, ...])
@@ -1067,14 +1067,18 @@ if __name__ == '__main__':
         for i, test_idx in enumerate(test_indices):
             all_test_slice_avg_probs.append(test_average_probs[i, ...])
             all_test_slice_max_probs.append(test_maximum_probs[i, ...])
-            all_test_truth.append(test_truth[i, ...])
+            all_test_truth.append(test_truth_slices[i, ...])
 
             all_bagged_test_probs.append(test_probs_bag[i, ...])
-            all_bagged_test_truth.append(test_truth[i, ...])
+            all_bagged_test_truth.append(test_truth_bag[i, ...])
 
         for i, ds030_idx in enumerate(ds030_indices):
+            all_ds030_slice_avg_probs.append(ds030_average_probs[i, ...])
+            all_ds030_slice_max_probs.append(ds030_maximum_probs[i, ...])
+            all_ds030_truth.append(ds030_truth_slices[i, ...])
+
             all_bagged_ds030_probs.append(ds030_probs_bag[i, ...])
-            all_bagged_ds030_truth.append(ds030_truth[i, ...])
+            all_bagged_ds030_truth.append(ds030_truth_bag[i, ...])
 
         model_filename = os.path.join(results_dir, 'bagged_qc_model_fold_' + str(fold_num) + '.tch')
         torch.save(bag_model, model_filename)
