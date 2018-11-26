@@ -1012,10 +1012,13 @@ if __name__ == '__main__':
 
         print('Re-testing validation set')
         val_truth_slices, val_probabilities = test_slices(validation_loader, n_slices)
+        print('Number of images:', val_truth_slices.shape, val_probabilities.shape)
         print('Re-testing test set')
         test_truth_slices, test_probabilities = test_slices(test_loader, n_slices)
+        print('Number of images:', test_truth_slices.shape, test_probabilities.shape)
         print('Re-testing ds030 set')
         ds030_truth_slices, ds030_probabilities = test_slices(ds030_loader, n_slices)
+        print('Number of images:', ds030_truth_slices.shape, ds030_probabilities.shape)
 
         val_average_probs = np.mean(val_probabilities, axis=1)
 
@@ -1034,18 +1037,6 @@ if __name__ == '__main__':
         ds030_maximum_probs = np.zeros_like(ds030_average_probs)
         ds030_maximum_probs[:, 0] = np.max(ds030_probabilities[:, :, 0], axis=1)
         ds030_maximum_probs[:, 1] = 1 - ds030_maximum_probs[:, 0]
-
-        # print('ds030 truth shape:', ds030_truth.shape)
-        # print('ds030 probabilities shape:', ds030_probabilities.shape)
-        # ds030_predictions = np.argmax(np.mean(ds030_probabilities, axis=1), axis=-1)
-        # print('ds030 predictions shape:', ds030_predictions.shape)
-        #
-        # (ds030_tn, ds030_fp, ds030_fn, ds030_tp) = confusion_matrix(ds030_truth, ds030_predictions).ravel()
-        #
-        # ds030_results[fold_idx, 0] = ds030_tp / (ds030_tp + ds030_fn + epsilon)
-        # ds030_results[fold_idx, 1] = ds030_tn / (ds030_tn + ds030_fp + epsilon)
-        # ds030_results[fold_idx, 2] = accuracy_score(ds030_truth, ds030_predictions)
-        # ds030_results[fold_idx, 3] = roc_auc_score(ds030_truth, ds030_predictions)
 
         print('Learning distribution of multiple instances')
         bag_model = BagDistributionModel(n_slices)
@@ -1084,6 +1075,17 @@ if __name__ == '__main__':
 
             all_bagged_ds030_probs.append(ds030_probs_bag[i, ...])
             all_bagged_ds030_truth.append(ds030_truth_bag[i, ...])
+
+        print('Length of result validation lists:', len(all_val_slice_avg_probs), len(all_val_slice_max_probs), len(all_val_truth))
+        print('Length of result validation lists:', len(all_bagged_val_probs), len(all_bagged_val_truth))
+
+        print('Length of result test lists:', len(all_test_slice_avg_probs), len(all_test_slice_max_probs), len(all_test_truth))
+        print('Length of result test lists:', len(all_bagged_test_probs), len(all_bagged_test_truth))
+
+        print('Length of result ds030 lists:', len(all_ds030_slice_avg_probs), len(all_ds030_slice_max_probs), len(all_ds030_truth))
+        print('Length of result ds030 lists:', len(all_bagged_ds030_probs), len(all_bagged_ds030_truth))
+
+
 
         model_filename = os.path.join(results_dir, 'bagged_qc_model_fold_' + str(fold_num) + '.tch')
         torch.save(bag_model, model_filename)
