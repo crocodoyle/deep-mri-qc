@@ -1136,8 +1136,8 @@ if __name__ == '__main__':
     all_val_slice_avg_probs = np.asarray(all_val_slice_avg_probs, dtype='float32')
     all_val_slice_max_probs = np.asarray(all_val_slice_max_probs, dtype='float32')
 
-    all_test_slice_avg_probs = np.asarray(all_val_slice_avg_probs, dtype='float32')
-    all_test_slice_max_probs = np.asarray(all_val_slice_max_probs, dtype='float32')
+    all_test_slice_avg_probs = np.asarray(all_test_slice_avg_probs, dtype='float32')
+    all_test_slice_max_probs = np.asarray(all_test_slice_max_probs, dtype='float32')
 
     all_ds030_slice_avg_probs = np.asarray(all_ds030_slice_avg_probs, dtype='float32')
     all_ds030_slice_max_probs = np.asarray(all_ds030_slice_max_probs, dtype='float32')
