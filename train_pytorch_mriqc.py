@@ -266,6 +266,7 @@ def test_bags(loader, n_slices):
 
         bag_predictions[sample_idx, :] = m(output).data.cpu()
 
+    print('bag truth', truth.shape, 'bag predictions', bag_predictions.shape)
     return truth, bag_predictions.numpy()
 
 def test_slices(loader, n_slices, softmax=True):
@@ -290,6 +291,7 @@ def test_slices(loader, n_slices, softmax=True):
 
             all_predictions[i, slice_idx:slice_idx+2, :] = output.data.cpu()
 
+    print('slice truth', truth.shape, ' slice predictions', all_predictions.shape)
     return truth, all_predictions.numpy()
 
 
@@ -372,6 +374,9 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
         output = m(output)
 
         validation_bag_probabilities[sample_idx, :] = output.data.cpu()
+
+    print('bag truth', train_truth.shape, validation_truth.shape)
+    print('probs', train_bag_probabilities.shape, validation_bag_probabilities.shape)
 
     return (train_truth.numpy(), train_bag_probabilities.numpy()), (validation_truth.numpy(), validation_bag_probabilities.numpy())
 
