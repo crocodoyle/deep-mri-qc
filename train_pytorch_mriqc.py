@@ -138,8 +138,11 @@ def specificity(tn, fp):
 
 
 def train(epoch, class_weight=None):
-    model.train()
+    for param in model.parameters():
+        param.requires_grad = True
 
+    model.train()
+    
     truth, probabilities = np.zeros((len(train_loader.dataset))), np.zeros((len(train_loader.dataset), 2))
     m = torch.nn.Softmax(dim=-1)
     m = m.cuda()
@@ -300,6 +303,9 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
     bag_model.train()
     bag_model.cpu()
     model.cuda()
+
+    for param in model.parameters():
+        param.requires_grad = False
 
     m = nn.Softmax(dim=-1)
     m = m.cuda()
@@ -713,7 +719,7 @@ if __name__ == '__main__':
 
     # densenet parameters
     network_input = (1,) + (image_shape[1],) + (image_shape[2],)    # channels, width, height
-    growth_rate = 8
+    growth_rate = 4
     depth = 64
     reduction = 0.5
     bottleneck = True
