@@ -1046,6 +1046,8 @@ if __name__ == '__main__':
         test_truth_bag, test_probs_bag = test_bags(test_loader, n_slices)
         ds030_truth_bag, ds030_probs_bag = test_bags(ds030_loader, n_slices)
 
+        print('training sensitivity:', training_sensitivity[fold_idx, best_epoch])
+
         best_sensitivity[fold_idx, 0] = training_sensitivity[fold_idx, best_epoch]
         best_specificity[fold_idx, 0] = training_specificity[fold_idx, best_epoch]
 
