@@ -713,10 +713,10 @@ if __name__ == '__main__':
 
     # densenet parameters
     network_input = (1,) + (image_shape[1],) + (image_shape[2],)    # channels, width, height
-    growth_rate = 4
-    depth = 64
+    growth_rate = 8
+    depth = 128
     reduction = 0.5
-    bottleneck=True
+    bottleneck = True
 
     model = densenet.DenseNet(input_shape=network_input, growthRate=growth_rate, depth=depth, reduction=reduction, bottleneck=bottleneck, nClasses=2)
     if args.cuda:
