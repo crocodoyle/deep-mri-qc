@@ -698,6 +698,8 @@ if __name__ == '__main__':
                         help='specifies which GPU to use')
     parser.add_argument('--no-scheduler', action='store_true', default=False,
                         help='disable learning rate scheduling')
+    parser.add_argument('--test-freq', type=int, default=25, metavar='N',
+                        help='epoch frequency at which to test the test set and ds030')
 
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -739,7 +741,7 @@ if __name__ == '__main__':
 
     n_folds = args.folds
     n_slices = args.n_slices
-    n_slice_strategies = 2
+    n_slice_strategies = 3
 
     results_shape = (n_folds, args.slice_epochs)
 
@@ -751,10 +753,8 @@ if __name__ == '__main__':
         results_shape), np.zeros(results_shape), np.zeros(results_shape)
 
     ds030_sensitivity, ds030_specificity = np.zeros(results_shape), np.zeros(results_shape)
-    # ds030_results = np.zeros((n_folds, 4))
 
     best_auc_score, best_sensitivity, best_specificity = np.zeros(n_folds), np.zeros((n_folds, 7)), np.zeros((n_folds, 7))
-    best_sens_spec_score = np.zeros((n_folds))
 
     all_test_truth, all_val_truth, all_ds030_truth, all_test_slice_avg_probs, all_test_slice_max_probs, all_val_slice_avg_probs, all_val_slice_max_probs, all_ds030_slice_avg_probs, all_ds030_slice_max_probs = [], [], [], [], [], [], [], [], []
 
@@ -868,36 +868,45 @@ if __name__ == '__main__':
             val_predictions_max = np.argmax(val_maximum_probs, axis=-1)
             val_predictions_avg = np.argmax(val_average_probs, axis=-1)
 
-            # test results
-            print('Test')
-            test_truth, test_probabilities = test_slices(test_loader, n_slices)
-            test_average_probs = np.mean(test_probabilities, axis=1)                     # average of slice predictions
+            if args.test_freq % epoch == 0:
+                # test results
+                print('Test')
+                test_truth, test_probabilities = test_slices(test_loader, n_slices)
+                test_average_probs = np.mean(test_probabilities, axis=1)                     # average of slice predictions
 
-            test_maximum_probs = np.zeros_like(test_average_probs)
-            test_maximum_probs[:, 0] = np.max(test_probabilities[:, :, 0], axis=1)
-            test_maximum_probs[:, 1] = 1 - test_maximum_probs[:, 0]                      # worst slice prediction
+                test_maximum_probs = np.zeros_like(test_average_probs)
+                test_maximum_probs[:, 0] = np.max(test_probabilities[:, :, 0], axis=1)
+                test_maximum_probs[:, 1] = 1 - test_maximum_probs[:, 0]                      # worst slice prediction
 
-            test_predictions_avg = np.argmax(test_average_probs, axis=-1)
-            test_predictions_max = np.argmax(test_maximum_probs, axis=-1)
+                test_predictions_avg = np.argmax(test_average_probs, axis=-1)
+                test_predictions_max = np.argmax(test_maximum_probs, axis=-1)
 
-            # test results
-            print('ds030')
-            ds030_truth, ds030_probabilities = test_slices(ds030_loader, n_slices)
-            ds030_average_probs = np.mean(ds030_probabilities, axis=1)                     # average of slice predictions
+                # test results
+                print('ds030')
+                ds030_truth, ds030_probabilities = test_slices(ds030_loader, n_slices)
+                ds030_average_probs = np.mean(ds030_probabilities, axis=1)                     # average of slice predictions
 
-            ds030_maximum_probs = np.zeros_like(ds030_average_probs)
-            ds030_maximum_probs[:, 0] = np.max(ds030_probabilities[:, :, 0], axis=1)
-            ds030_maximum_probs[:, 1] = 1 - ds030_maximum_probs[:, 0]                      # worst slice prediction
+                ds030_maximum_probs = np.zeros_like(ds030_average_probs)
+                ds030_maximum_probs[:, 0] = np.max(ds030_probabilities[:, :, 0], axis=1)
+                ds030_maximum_probs[:, 1] = 1 - ds030_maximum_probs[:, 0]                      # worst slice prediction
 
-            ds030_predictions_avg = np.argmax(ds030_average_probs, axis=-1)
-            ds030_predictions_max = np.argmax(ds030_maximum_probs, axis=-1)
+                ds030_predictions_avg = np.argmax(ds030_average_probs, axis=-1)
+                ds030_predictions_max = np.argmax(ds030_maximum_probs, axis=-1)
 
             # plot intermediate results
             # ROC
-            truths = [train_truth, val_truth, val_truth, test_truth, test_truth, ds030_truth, ds030_truth]
-            probs = [train_probabilities, val_average_probs, val_maximum_probs, test_average_probs, test_maximum_probs, ds030_average_probs, ds030_maximum_probs]
+            if args.test_freq % epoch == 0:
+                truths = [train_truth, val_truth, val_truth, test_truth, test_truth, ds030_truth, ds030_truth]
+                probs = [train_probabilities, val_average_probs, val_maximum_probs, test_average_probs,
+                         test_maximum_probs, ds030_average_probs, ds030_maximum_probs]
+                plot_labels = ['Train', 'Val (avg)', 'Val (max)', 'Test (avg)', 'Test (max)', 'ds030 (avg)',
+                               'ds030 (max)']
 
-            plot_labels = ['Train', 'Val (avg)', 'Val (max)', 'Test (avg)', 'Test (max)', 'ds030 (avg)', 'ds030 (max)']
+            else:
+                truths = [train_truth, val_truth, val_truth]
+                probs = [train_probabilities, val_average_probs, val_maximum_probs]
+
+                plot_labels = ['Train', 'Val (avg)', 'Val (max)']
 
             aucs = plot_roc(truths, probs, plot_labels, results_dir, epoch, fold_num)
             print('AUCS:', aucs)
@@ -925,78 +934,45 @@ if __name__ == '__main__':
             validation_sensitivity[fold_idx, epoch_idx, 1] = sensitivity(tp, fn)
             validation_specificity[fold_idx, epoch_idx, 1] = specificity(tn, fp)
 
-            # Test
-            # avg slice prediction
-            tn, fp, fn, tp = confusion_matrix(test_truth.astype(int), test_predictions_avg.astype(int)).ravel()
-            print('Test (avg) TP:', tp, 'TN:', tn, 'FP:', fp, 'FN:', fn)
+            if args.test_freq % epoch == 0:
+                # Test
+                # avg slice prediction
+                tn, fp, fn, tp = confusion_matrix(test_truth.astype(int), test_predictions_avg.astype(int)).ravel()
+                print('Test (avg) TP:', tp, 'TN:', tn, 'FP:', fp, 'FN:', fn)
 
-            test_sensitivity[fold_idx, epoch_idx, 0] = sensitivity(tp, fn)
-            test_specificity[fold_idx, epoch_idx, 0] = specificity(tn, fp)
+                test_sensitivity[fold_idx, epoch_idx, 0] = sensitivity(tp, fn)
+                test_specificity[fold_idx, epoch_idx, 0] = specificity(tn, fp)
 
-            tn, fp, fn, tp = confusion_matrix(test_truth.astype(int), test_predictions_max.astype(int)).ravel()
-            print('Test (max) TP:', tp, 'TN:', tn, 'FP:', fp, 'FN:', fn)
+                tn, fp, fn, tp = confusion_matrix(test_truth.astype(int), test_predictions_max.astype(int)).ravel()
+                print('Test (max) TP:', tp, 'TN:', tn, 'FP:', fp, 'FN:', fn)
 
-            test_sensitivity[fold_idx, epoch_idx, 1] = sensitivity(tp, fn)
-            test_specificity[fold_idx, epoch_idx, 1] = specificity(tn, fp)
+                test_sensitivity[fold_idx, epoch_idx, 1] = sensitivity(tp, fn)
+                test_specificity[fold_idx, epoch_idx, 1] = specificity(tn, fp)
 
-            # ds030
-            # avg slice prediction
-            tn, fp, fn, tp = confusion_matrix(ds030_truth.astype(int), ds030_predictions_avg.astype(int)).ravel()
-            print('ds030 (avg) TP:', tp, 'TN:', tn, 'FP:', fp, 'FN:', fn)
+                # ds030
+                # avg slice prediction
+                tn, fp, fn, tp = confusion_matrix(ds030_truth.astype(int), ds030_predictions_avg.astype(int)).ravel()
+                print('ds030 (avg) TP:', tp, 'TN:', tn, 'FP:', fp, 'FN:', fn)
 
-            ds030_sensitivity[fold_idx, epoch_idx, 0] = sensitivity(tp, fn)
-            ds030_specificity[fold_idx, epoch_idx, 0] = specificity(tn, fp)
+                ds030_sensitivity[fold_idx, epoch_idx, 0] = sensitivity(tp, fn)
+                ds030_specificity[fold_idx, epoch_idx, 0] = specificity(tn, fp)
 
-            tn, fp, fn, tp = confusion_matrix(ds030_truth.astype(int), ds030_predictions_max.astype(int)).ravel()
-            print('ds030 (max) TP:', tp, 'TN:', tn, 'FP:', fp, 'FN:', fn)
+                tn, fp, fn, tp = confusion_matrix(ds030_truth.astype(int), ds030_predictions_max.astype(int)).ravel()
+                print('ds030 (max) TP:', tp, 'TN:', tn, 'FP:', fp, 'FN:', fn)
 
-            ds030_sensitivity[fold_idx, epoch_idx, 1] = sensitivity(tp, fn)
-            ds030_specificity[fold_idx, epoch_idx, 1] = specificity(tn, fp)
+                ds030_sensitivity[fold_idx, epoch_idx, 1] = sensitivity(tp, fn)
+                ds030_specificity[fold_idx, epoch_idx, 1] = specificity(tn, fp)
 
             val_aucs[fold_idx, epoch_idx, 0] = aucs[1]
             val_aucs[fold_idx, epoch_idx, 1] = aucs[2]
 
-            # print('Train sensitivity/specificity:', training_sensitivity[fold_idx, epoch_idx],
-            #       training_specificity[fold_idx, epoch_idx])
-            # print('Validation sensitivity/specificity:', validation_sensitivity[fold_idx, epoch_idx],
-            #       validation_specificity[fold_idx, epoch_idx])
-            # print('Test sensitivity/specificity:', test_sensitivity[fold_idx, epoch_idx],
-            #       test_specificity[fold_idx, epoch_idx])
-
             auc_score = aucs[1]
-
-            # sens_score = 0.6*validation_sensitivity[fold_idx, epoch_idx] + 0.4*training_sensitivity[fold_idx, epoch_idx]
-            # spec_score = 0.6*validation_specificity[fold_idx, epoch_idx] + 0.4*training_specificity[fold_idx, epoch_idx]
-            #
-            # sens_spec_score = (sens_score + spec_score) / 2
 
             if auc_score > best_auc_score[fold_idx]:
                 print('This epoch is the new best model on the train/validation set!')
                 best_auc_score[fold_idx] = auc_score
-                # best_sens_spec_score[fold_idx] = sens_spec_score
 
                 best_epoch_idx[fold_idx] = epoch_idx
-
-                best_sensitivity[fold_idx, 0] = training_sensitivity[fold_idx, epoch_idx]
-                best_specificity[fold_idx, 0] = training_specificity[fold_idx, epoch_idx]
-
-                best_sensitivity[fold_idx, 1] = validation_sensitivity[fold_idx, epoch_idx, 0]
-                best_specificity[fold_idx, 1] = validation_specificity[fold_idx, epoch_idx, 0]
-
-                best_sensitivity[fold_idx, 2] = validation_sensitivity[fold_idx, epoch_idx, 1]
-                best_specificity[fold_idx, 2] = validation_specificity[fold_idx, epoch_idx, 1]
-
-                best_sensitivity[fold_idx, 3] = test_sensitivity[fold_idx, epoch_idx, 0]
-                best_specificity[fold_idx, 3] = test_specificity[fold_idx, epoch_idx, 0]
-
-                best_sensitivity[fold_idx, 4] = test_sensitivity[fold_idx, epoch_idx, 1]
-                best_specificity[fold_idx, 4] = test_specificity[fold_idx, epoch_idx, 1]
-
-                best_sensitivity[fold_idx, 5] = ds030_sensitivity[fold_idx, epoch_idx, 0]
-                best_specificity[fold_idx, 5] = ds030_specificity[fold_idx, epoch_idx, 0]
-
-                best_sensitivity[fold_idx, 6] = ds030_sensitivity[fold_idx, epoch_idx, 1]
-                best_specificity[fold_idx, 6] = ds030_specificity[fold_idx, epoch_idx, 1]
 
                 torch.save(model.state_dict(), results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch')
 
@@ -1005,7 +981,8 @@ if __name__ == '__main__':
 
 
         # re-test images using best model this fold
-        print('Best epoch this folds was:', best_epoch_idx[fold_idx])
+        best_epoch = best_epoch_idx[fold_idx]
+        print('Best epoch this folds was:', best_epoch)
         print('Reloading best model...')
         model.load_state_dict(torch.load(results_dir + 'qc_torch_fold_' + str(fold_num) + '.tch'))
         model.cuda()
@@ -1032,11 +1009,27 @@ if __name__ == '__main__':
         test_maximum_probs[:, 0] = np.max(test_probabilities[:, :, 0], axis=1)
         test_maximum_probs[:, 1] = 1 - test_maximum_probs[:, 0]
 
+        tn, fp, fn, tp = confusion_matrix(test_truth_slices.astype(int), np.argmax(test_average_probs, axis=-1).astype(int)).ravel()
+        test_sensitivity[fold_idx, best_epoch, 0] = sensitivity(tp, fn)
+        test_specificity[fold_idx, best_epoch, 0] = specificity(tn, fp)
+
+        tn, fp, fn, tp = confusion_matrix(test_truth_slices.astype(int), np.argmax(test_maximum_probs, axis=-1).astype(int)).ravel()
+        test_sensitivity[fold_idx, best_epoch, 1] = sensitivity(tp, fn)
+        test_specificity[fold_idx, best_epoch, 1] = specificity(tn, fp)
+
         ds030_average_probs = np.mean(ds030_probabilities, axis=1)
 
         ds030_maximum_probs = np.zeros_like(ds030_average_probs)
         ds030_maximum_probs[:, 0] = np.max(ds030_probabilities[:, :, 0], axis=1)
         ds030_maximum_probs[:, 1] = 1 - ds030_maximum_probs[:, 0]
+
+        tn, fp, fn, tp = confusion_matrix(ds030_truth_slices.astype(int), np.argmax(ds030_average_probs, axis=-1).astype(int)).ravel()
+        test_sensitivity[fold_idx, best_epoch, 0] = sensitivity(tp, fn)
+        test_specificity[fold_idx, best_epoch, 0] = specificity(tn, fp)
+
+        tn, fp, fn, tp = confusion_matrix(ds030_truth_slices.astype(int), np.argmax(ds030_maximum_probs, axis=-1).astype(int)).ravel()
+        test_sensitivity[fold_idx, best_epoch, 1] = sensitivity(tp, fn)
+        test_specificity[fold_idx, best_epoch, 1] = specificity(tn, fp)
 
         print('Learning distribution of multiple instances')
         bag_model = BagDistributionModel(n_slices)
@@ -1046,6 +1039,28 @@ if __name__ == '__main__':
 
         test_truth_bag, test_probs_bag = test_bags(test_loader, n_slices)
         ds030_truth_bag, ds030_probs_bag = test_bags(ds030_loader, n_slices)
+
+        best_sensitivity[fold_idx, 0] = training_sensitivity[fold_idx, best_epoch]
+        best_specificity[fold_idx, 0] = training_specificity[fold_idx, best_epoch]
+
+        best_sensitivity[fold_idx, 1] = validation_sensitivity[fold_idx, best_epoch, 0]
+        best_specificity[fold_idx, 1] = validation_specificity[fold_idx, best_epoch, 0]
+
+        best_sensitivity[fold_idx, 2] = validation_sensitivity[fold_idx, best_epoch, 1]
+        best_specificity[fold_idx, 2] = validation_specificity[fold_idx, best_epoch, 1]
+
+        best_sensitivity[fold_idx, 3] = test_sensitivity[fold_idx, best_epoch, 0]
+        best_specificity[fold_idx, 3] = test_specificity[fold_idx, best_epoch, 0]
+
+        best_sensitivity[fold_idx, 4] = test_sensitivity[fold_idx, best_epoch, 1]
+        best_specificity[fold_idx, 4] = test_specificity[fold_idx, best_epoch, 1]
+
+        best_sensitivity[fold_idx, 5] = ds030_sensitivity[fold_idx, best_epoch, 0]
+        best_specificity[fold_idx, 5] = ds030_specificity[fold_idx, best_epoch, 0]
+
+        best_sensitivity[fold_idx, 6] = ds030_sensitivity[fold_idx, best_epoch, 1]
+        best_specificity[fold_idx, 6] = ds030_specificity[fold_idx, best_epoch, 1]
+
 
         #calibrate model probability on validation set
         # model_with_temperature = ModelWithTemperature(bag_model)
@@ -1076,16 +1091,14 @@ if __name__ == '__main__':
             all_bagged_ds030_probs.append(ds030_probs_bag[i, ...])
             all_bagged_ds030_truth.append(ds030_truth_bag[i, ...])
 
-        print('Length of result validation lists:', len(all_val_slice_avg_probs), len(all_val_slice_max_probs), len(all_val_truth))
-        print('Length of result validation lists:', len(all_bagged_val_probs), len(all_bagged_val_truth))
-
-        print('Length of result test lists:', len(all_test_slice_avg_probs), len(all_test_slice_max_probs), len(all_test_truth))
-        print('Length of result test lists:', len(all_bagged_test_probs), len(all_bagged_test_truth))
-
-        print('Length of result ds030 lists:', len(all_ds030_slice_avg_probs), len(all_ds030_slice_max_probs), len(all_ds030_truth))
-        print('Length of result ds030 lists:', len(all_bagged_ds030_probs), len(all_bagged_ds030_truth))
-
-
+        # print('Length of result validation lists:', len(all_val_slice_avg_probs), len(all_val_slice_max_probs), len(all_val_truth))
+        # print('Length of result validation lists:', len(all_bagged_val_probs), len(all_bagged_val_truth))
+        #
+        # print('Length of result test lists:', len(all_test_slice_avg_probs), len(all_test_slice_max_probs), len(all_test_truth))
+        # print('Length of result test lists:', len(all_bagged_test_probs), len(all_bagged_test_truth))
+        #
+        # print('Length of result ds030 lists:', len(all_ds030_slice_avg_probs), len(all_ds030_slice_max_probs), len(all_ds030_truth))
+        # print('Length of result ds030 lists:', len(all_bagged_ds030_probs), len(all_bagged_ds030_truth))
 
         model_filename = os.path.join(results_dir, 'bagged_qc_model_fold_' + str(fold_num) + '.tch')
         torch.save(bag_model, model_filename)

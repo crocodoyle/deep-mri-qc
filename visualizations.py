@@ -71,7 +71,7 @@ def plot_sens_spec(senses, specs, curve_labels, best_epoch_idx, results_dir, tit
 
     n_folds = senses[0].shape[0]
     n_epochs = senses[0].shape[-1]
-    epoch_number = range(n_epochs)
+    epoch_number = np.asarray(range(n_epochs))
 
     colours = ['pink', 'blue', 'lightblue', 'green', 'lightgreen', 'hotpink', 'purple']
 
@@ -79,14 +79,21 @@ def plot_sens_spec(senses, specs, curve_labels, best_epoch_idx, results_dir, tit
 
     for fold_num in range(n_folds):
         for i, (sens, spec, label, colour) in enumerate(zip(senses, specs, curve_labels, colours)):
+
+            # test and ds030 are probably sparsely populated
+            sens = sens[fold_num, :][np.nonzero(sens[fold_num, :])]
+            spec = spec[fold_num, :][np.nonzero(spec[fold_num, :])]
+            sparse_epochs = epoch_number[np.nonzero(sens[fold_num, :])]
+
             if not fold_num == 0:
                 label = None
                 marker_label = None
             else:
                 marker_label = 'selected model'
 
-            sens_ax.plot(epoch_number, sens[fold_num, :], color=colour, lw=lw, label=label)
-            spec_ax.plot(epoch_number, spec[fold_num, :], color=colour, linestyle=':', lw=lw, label=label)
+            sens_ax.plot(sparse_epochs, sens, color=colour, lw=lw, label=label)
+            spec_ax.plot(sparse_epochs, spec, color=colour, linestyle=':', lw=lw, label=label)
+
 
         validation_sens = senses[1]
         validation_spec = specs[1]
