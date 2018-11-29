@@ -753,10 +753,10 @@ if __name__ == '__main__':
 
     training_sensitivity, training_specificity = np.zeros(results_shape), np.zeros(results_shape)
 
-    results_shape = (n_folds, args.slice_epochs, n_slice_strategies)
+    results_shape_slice = (n_folds, args.slice_epochs, n_slice_strategies)
 
-    validation_sensitivity, validation_specificity, test_sensitivity, test_specificity, val_aucs = np.zeros(results_shape), np.zeros(results_shape), np.zeros(
-        results_shape), np.zeros(results_shape), np.zeros(results_shape)
+    validation_sensitivity, validation_specificity, test_sensitivity, test_specificity, val_aucs = np.zeros(results_shape_slice), np.zeros(results_shape_slice), np.zeros(
+        results_shape_slice), np.zeros(results_shape_slice), np.zeros(results_shape_slice)
 
     ds030_sensitivity, ds030_specificity = np.zeros(results_shape), np.zeros(results_shape)
 
