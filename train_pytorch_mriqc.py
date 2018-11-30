@@ -1048,8 +1048,8 @@ if __name__ == '__main__':
 
         print('training sensitivity:', training_sensitivity[fold_idx, best_epoch])
 
-        best_sensitivity[fold_idx, 0] = training_sensitivity[fold_idx, best_epoch]
-        best_specificity[fold_idx, 0] = training_specificity[fold_idx, best_epoch]
+        best_sensitivity[fold_idx, 0] = training_sensitivity[fold_idx, best_epoch][0]
+        best_specificity[fold_idx, 0] = training_specificity[fold_idx, best_epoch][0]
 
         best_sensitivity[fold_idx, 1] = validation_sensitivity[fold_idx, best_epoch, 0]
         best_specificity[fold_idx, 1] = validation_specificity[fold_idx, best_epoch, 0]
