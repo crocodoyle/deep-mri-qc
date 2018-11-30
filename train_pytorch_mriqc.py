@@ -1051,23 +1051,23 @@ if __name__ == '__main__':
         best_sensitivity[fold_idx, 0] = training_sensitivity[fold_idx, best_epoch][0]
         best_specificity[fold_idx, 0] = training_specificity[fold_idx, best_epoch][0]
 
-        best_sensitivity[fold_idx, 1] = validation_sensitivity[fold_idx, best_epoch, 0]
-        best_specificity[fold_idx, 1] = validation_specificity[fold_idx, best_epoch, 0]
+        best_sensitivity[fold_idx, 1] = validation_sensitivity[fold_idx, best_epoch, 0][0]
+        best_specificity[fold_idx, 1] = validation_specificity[fold_idx, best_epoch, 0][0]
 
-        best_sensitivity[fold_idx, 2] = validation_sensitivity[fold_idx, best_epoch, 1]
-        best_specificity[fold_idx, 2] = validation_specificity[fold_idx, best_epoch, 1]
+        best_sensitivity[fold_idx, 2] = validation_sensitivity[fold_idx, best_epoch, 1][0]
+        best_specificity[fold_idx, 2] = validation_specificity[fold_idx, best_epoch, 1][0]
 
-        best_sensitivity[fold_idx, 3] = test_sensitivity[fold_idx, best_epoch, 0]
-        best_specificity[fold_idx, 3] = test_specificity[fold_idx, best_epoch, 0]
+        best_sensitivity[fold_idx, 3] = test_sensitivity[fold_idx, best_epoch, 0][0]
+        best_specificity[fold_idx, 3] = test_specificity[fold_idx, best_epoch, 0][0]
 
-        best_sensitivity[fold_idx, 4] = test_sensitivity[fold_idx, best_epoch, 1]
-        best_specificity[fold_idx, 4] = test_specificity[fold_idx, best_epoch, 1]
+        best_sensitivity[fold_idx, 4] = test_sensitivity[fold_idx, best_epoch, 1][0]
+        best_specificity[fold_idx, 4] = test_specificity[fold_idx, best_epoch, 1][0]
 
-        best_sensitivity[fold_idx, 5] = ds030_sensitivity[fold_idx, best_epoch, 0]
-        best_specificity[fold_idx, 5] = ds030_specificity[fold_idx, best_epoch, 0]
+        best_sensitivity[fold_idx, 5] = ds030_sensitivity[fold_idx, best_epoch, 0][0]
+        best_specificity[fold_idx, 5] = ds030_specificity[fold_idx, best_epoch, 0][0]
 
-        best_sensitivity[fold_idx, 6] = ds030_sensitivity[fold_idx, best_epoch, 1]
-        best_specificity[fold_idx, 6] = ds030_specificity[fold_idx, best_epoch, 1]
+        best_sensitivity[fold_idx, 6] = ds030_sensitivity[fold_idx, best_epoch, 1][0]
+        best_specificity[fold_idx, 6] = ds030_specificity[fold_idx, best_epoch, 1][0]
 
 
         #calibrate model probability on validation set
