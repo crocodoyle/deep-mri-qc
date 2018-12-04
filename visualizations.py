@@ -81,9 +81,14 @@ def plot_sens_spec(senses, specs, curve_labels, best_epoch_idx, results_dir, tit
         for i, (sens, spec, label, colour) in enumerate(zip(senses, specs, curve_labels, colours)):
 
             # test and ds030 are probably sparsely populated
-            sens = sens[fold_num, :][np.nonzero(sens[fold_num, :])]
-            spec = spec[fold_num, :][np.nonzero(spec[fold_num, :])]
-            sparse_epochs = epoch_number[np.nonzero(sens[fold_num, :])]
+            print('Sens shape', sens.shape)
+            entries_at = np.nonzero(sens[fold_num, :])
+            print('Entries at:', entries_at.shape)
+            print(entries_at)
+
+            plot_sens = sens[fold_num][entries_at]
+            plot_spec = spec[fold_num][entries_at]
+            sparse_epochs = epoch_number[entries_at]
 
             if not fold_num == 0:
                 label = None
@@ -91,8 +96,8 @@ def plot_sens_spec(senses, specs, curve_labels, best_epoch_idx, results_dir, tit
             else:
                 marker_label = 'selected model'
 
-            sens_ax.plot(sparse_epochs, sens, color=colour, lw=lw, label=label)
-            spec_ax.plot(sparse_epochs, spec, color=colour, linestyle=':', lw=lw, label=label)
+            sens_ax.plot(sparse_epochs, plot_sens, color=colour, lw=lw, label=label)
+            spec_ax.plot(sparse_epochs, plot_spec, color=colour, linestyle=':', lw=lw, label=label)
 
 
         validation_sens = senses[1]

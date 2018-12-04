@@ -1130,66 +1130,74 @@ if __name__ == '__main__':
     plt.savefig(results_dir + 'validation_aucs.png')
     plt.close()
 
-    # plot training dynamics at each epoch
-    avg_senses = [training_sensitivity[0], validation_sensitivity[..., 0][0], test_sensitivity[..., 0][0], ds030_sensitivity[..., 0][0]]
-    avg_specs = [training_specificity[0], validation_specificity[..., 0][0], test_specificity[..., 0][0], ds030_specificity[..., 0][0]]
+    try:
+        # plot training dynamics at each epoch
+        avg_senses = [training_sensitivity[0], validation_sensitivity[..., 0][0], test_sensitivity[..., 0][0], ds030_sensitivity[..., 0][0]]
+        avg_specs = [training_specificity[0], validation_specificity[..., 0][0], test_specificity[..., 0][0], ds030_specificity[..., 0][0]]
 
-    max_senses = [training_sensitivity[0], validation_sensitivity[..., 1][0], test_sensitivity[..., 1][0], ds030_sensitivity[..., 1][0]]
-    max_specs = [training_specificity[0], validation_specificity[..., 1][0], test_specificity[..., 1][0], ds030_specificity[..., 1][0]]
+        max_senses = [training_sensitivity[0], validation_sensitivity[..., 1][0], test_sensitivity[..., 1][0], ds030_sensitivity[..., 1][0]]
+        max_specs = [training_specificity[0], validation_specificity[..., 1][0], test_specificity[..., 1][0], ds030_specificity[..., 1][0]]
 
-    plot_labels = ['Training', 'Validation', 'Test', 'ds030']
+        plot_labels = ['Training', 'Validation', 'Test', 'ds030']
 
-    plot_sens_spec(avg_senses, avg_specs, plot_labels, best_epoch_idx[:, 0], results_dir, 'average_slice_predictions')
-    plot_sens_spec(max_senses, max_specs, plot_labels, best_epoch_idx[:, 1], results_dir, 'max_slice_predictions')
+        plot_sens_spec(avg_senses, avg_specs, plot_labels, best_epoch_idx[:, 0], results_dir, 'average_slice_predictions')
+        plot_sens_spec(max_senses, max_specs, plot_labels, best_epoch_idx[:, 1], results_dir, 'max_slice_predictions')
+    except Exception as e:
+        print('ERROR plotting sens/spec over epochs:', e)
 
     # plot_confidence(np.asarray(all_test_probs, dtype='float32'), np.asarray(all_test_probs_cal, dtype='float32'), np.asarray(all_test_truth, dtype='uint8'), results_dir)
 
+    try:
+        # plot results across folds
+        all_val_truth = np.asarray(all_val_truth, dtype='float32')
+        all_test_truth = np.asarray(all_test_truth, dtype='float32')
+        all_ds030_truth = np.asarray(all_ds030_truth, dtype='float32')
 
-    # plot results across folds
-    all_val_truth = np.asarray(all_val_truth, dtype='float32')
-    all_test_truth = np.asarray(all_test_truth, dtype='float32')
-    all_ds030_truth = np.asarray(all_ds030_truth, dtype='float32')
+        all_bagged_val_truth = np.asarray(all_bagged_val_truth, dtype='float32')
+        all_bagged_test_truth = np.asarray(all_bagged_test_truth, dtype='float32')
+        all_bagged_ds030_truth = np.asarray(all_bagged_ds030_truth, dtype='float32')
 
-    all_bagged_val_truth = np.asarray(all_bagged_val_truth, dtype='float32')
-    all_bagged_test_truth = np.asarray(all_bagged_test_truth, dtype='float32')
-    all_bagged_ds030_truth = np.asarray(all_bagged_ds030_truth, dtype='float32')
+        all_val_slice_avg_probs = np.asarray(all_val_slice_avg_probs, dtype='float32')
+        all_val_slice_max_probs = np.asarray(all_val_slice_max_probs, dtype='float32')
 
-    all_val_slice_avg_probs = np.asarray(all_val_slice_avg_probs, dtype='float32')
-    all_val_slice_max_probs = np.asarray(all_val_slice_max_probs, dtype='float32')
+        all_test_slice_avg_probs = np.asarray(all_test_slice_avg_probs, dtype='float32')
+        all_test_slice_max_probs = np.asarray(all_test_slice_max_probs, dtype='float32')
 
-    all_test_slice_avg_probs = np.asarray(all_test_slice_avg_probs, dtype='float32')
-    all_test_slice_max_probs = np.asarray(all_test_slice_max_probs, dtype='float32')
+        all_ds030_slice_avg_probs = np.asarray(all_ds030_slice_avg_probs, dtype='float32')
+        all_ds030_slice_max_probs = np.asarray(all_ds030_slice_max_probs, dtype='float32')
 
-    all_ds030_slice_avg_probs = np.asarray(all_ds030_slice_avg_probs, dtype='float32')
-    all_ds030_slice_max_probs = np.asarray(all_ds030_slice_max_probs, dtype='float32')
-
-    all_bagged_val_probs = np.asarray(all_bagged_val_probs, dtype='float32')
-    all_bagged_test_probs = np.asarray(all_bagged_test_probs, dtype='float32')
-    all_bagged_ds030_probs = np.asarray(all_bagged_ds030_probs, dtype='float32')
+        all_bagged_val_probs = np.asarray(all_bagged_val_probs, dtype='float32')
+        all_bagged_test_probs = np.asarray(all_bagged_test_probs, dtype='float32')
+        all_bagged_ds030_probs = np.asarray(all_bagged_ds030_probs, dtype='float32')
 
 
-    slice_ground_truth = [all_val_truth, all_test_truth, all_ds030_truth]
-    bagged_ground_truth = [all_bagged_val_truth, all_bagged_test_truth, all_bagged_ds030_truth]
+        slice_ground_truth = [all_val_truth, all_test_truth, all_ds030_truth]
+        bagged_ground_truth = [all_bagged_val_truth, all_bagged_test_truth, all_bagged_ds030_truth]
 
-    slice_avg_probabilities = [all_val_slice_avg_probs, all_test_slice_avg_probs, all_ds030_slice_avg_probs]
-    slice_max_probabilities = [all_val_slice_max_probs, all_test_slice_max_probs, all_ds030_slice_max_probs]
-    bagged_probabilities = [all_bagged_val_probs, all_bagged_test_probs, all_bagged_ds030_probs]
+        slice_avg_probabilities = [all_val_slice_avg_probs, all_test_slice_avg_probs, all_ds030_slice_avg_probs]
+        slice_max_probabilities = [all_val_slice_max_probs, all_test_slice_max_probs, all_ds030_slice_max_probs]
+        bagged_probabilities = [all_bagged_val_probs, all_bagged_test_probs, all_bagged_ds030_probs]
 
-    plot_labels = ['Val', 'Test', 'ds030']
+        plot_labels = ['Val', 'Test', 'ds030']
 
-    plot_roc(slice_ground_truth, slice_avg_probabilities, plot_labels, results_dir, -1, fold_num=-1, title='Average Slice Predictions', filename='average_slice_predictions_roc')
-    plot_roc(slice_ground_truth, slice_max_probabilities, plot_labels, results_dir, -1, fold_num=-1, title='Max Slice Predictions', filename='max_slice_predictions_roc')
-    plot_roc(bagged_ground_truth, bagged_probabilities, plot_labels, results_dir, -1, fold_num=-1, title='Learned Slice Distribution Predictions', filename='bagged_predictions')
+        plot_roc(slice_ground_truth, slice_avg_probabilities, plot_labels, results_dir, -1, fold_num=-1, title='Average Slice Predictions', filename='average_slice_predictions_roc')
+        plot_roc(slice_ground_truth, slice_max_probabilities, plot_labels, results_dir, -1, fold_num=-1, title='Max Slice Predictions', filename='max_slice_predictions_roc')
+        plot_roc(bagged_ground_truth, bagged_probabilities, plot_labels, results_dir, -1, fold_num=-1, title='Learned Slice Distribution Predictions', filename='bagged_predictions')
+    except Exception as e:
+        print('ERROR plotting ROCs:', e)
 
-    # sens/spec boxplot
-    sens_slices_avg = [best_sensitivity[:, 0], best_sensitivity[:, 1], best_sensitivity[:, 3], best_sensitivity[:, 5]]
-    sens_slices_max = [best_sensitivity[:, 0], best_sensitivity[:, 2], best_sensitivity[:, 4], best_sensitivity[:, 6]]
+    try:
+        # sens/spec boxplot
+        sens_slices_avg = [best_sensitivity[:, 0], best_sensitivity[:, 1], best_sensitivity[:, 3], best_sensitivity[:, 5]]
+        sens_slices_max = [best_sensitivity[:, 0], best_sensitivity[:, 2], best_sensitivity[:, 4], best_sensitivity[:, 6]]
 
-    spec_slices_avg = [best_specificity[:, 0], best_specificity[:, 1], best_specificity[:, 3], best_specificity[:, 5]]
-    spec_slices_max = [best_specificity[:, 0], best_specificity[:, 2], best_specificity[:, 4], best_specificity[:, 6]]
+        spec_slices_avg = [best_specificity[:, 0], best_specificity[:, 1], best_specificity[:, 3], best_specificity[:, 5]]
+        spec_slices_max = [best_specificity[:, 0], best_specificity[:, 2], best_specificity[:, 4], best_specificity[:, 6]]
 
-    sens_spec_across_folds(sens_slices_avg, spec_slices_avg, ['Training', 'Validation', 'Testing', 'ds030'], results_dir, 'average_slice_sensspec_boxplot')
-    sens_spec_across_folds(sens_slices_max, spec_slices_max, ['Training', 'Validation', 'Testing', 'ds030'], results_dir, 'maximum_slice_sensspec_boxplot')
+        sens_spec_across_folds(sens_slices_avg, spec_slices_avg, ['Training', 'Validation', 'Testing', 'ds030'], results_dir, 'average_slice_sensspec_boxplot')
+        sens_spec_across_folds(sens_slices_max, spec_slices_max, ['Training', 'Validation', 'Testing', 'ds030'], results_dir, 'maximum_slice_sensspec_boxplot')
+    except Exception as e:
+        print('ERROR plotting boxplot:', e)
 
     # pickle.dump(sens_plot, open(results_dir + 'best_sens.pkl', 'wb'))
     # pickle.dump(spec_plot, open(results_dir + 'best_spec.pkl', 'wb'))
@@ -1203,8 +1211,11 @@ if __name__ == '__main__':
 
     # torch.onnx.export(model, dummy_input, results_dir + "deepqc.onnx", verbose=False)
 
-    for fold in range(skf.get_n_splits()):
-        make_roc_gif(results_dir, args.slice_epochs, fold + 1)
+    try:
+        for fold in range(skf.get_n_splits()):
+            make_roc_gif(results_dir, args.slice_epochs, fold + 1)
+    except Exception as e:
+        print('ERROR making gifs:', e)
 
     time_elapsed = time.time() - start_time
     print('Whole experiment took', time_elapsed / (60*60), 'hours')
