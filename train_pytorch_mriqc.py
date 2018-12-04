@@ -720,7 +720,7 @@ if __name__ == '__main__':
     # densenet parameters
     network_input = (1,) + (image_shape[1],) + (image_shape[2],)    # channels, width, height
     growth_rate = 4
-    depth = 64
+    depth = 96
     reduction = 0.5
     bottleneck = True
 
