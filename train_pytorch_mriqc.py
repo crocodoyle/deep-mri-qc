@@ -381,8 +381,8 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
 
         validation_bag_probabilities[sample_idx, :] = output.data.cpu()
 
-    print('bag truth', train_truth.shape, validation_truth.shape)
-    print('probs', train_bag_probabilities.shape, validation_bag_probabilities.shape)
+    # print('bag truth', train_truth.shape, validation_truth.shape)
+    # print('probs', train_bag_probabilities.shape, validation_bag_probabilities.shape)
 
     return (train_truth.numpy(), train_bag_probabilities.numpy()), (validation_truth.numpy(), validation_bag_probabilities.numpy())
 
@@ -719,8 +719,8 @@ if __name__ == '__main__':
 
     # densenet parameters
     network_input = (1,) + (image_shape[1],) + (image_shape[2],)    # channels, width, height
-    growth_rate = 4
-    depth = 96
+    growth_rate = 6
+    depth = 64
     reduction = 0.5
     bottleneck = True
 
