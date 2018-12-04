@@ -1131,11 +1131,11 @@ if __name__ == '__main__':
     plt.close()
 
     # plot training dynamics at each epoch
-    avg_senses = [training_sensitivity, validation_sensitivity[..., 0], test_sensitivity[..., 0], ds030_sensitivity[..., 0]]
-    avg_specs = [training_specificity, validation_specificity[..., 0], test_specificity[..., 0], ds030_specificity[..., 0]]
+    avg_senses = [training_sensitivity[0], validation_sensitivity[..., 0][0], test_sensitivity[..., 0][0], ds030_sensitivity[..., 0][0]]
+    avg_specs = [training_specificity[0], validation_specificity[..., 0][0], test_specificity[..., 0][0], ds030_specificity[..., 0][0]]
 
-    max_senses = [training_sensitivity, validation_sensitivity[..., 1], test_sensitivity[..., 1], ds030_sensitivity[..., 1]]
-    max_specs = [training_specificity, validation_specificity[..., 1], test_specificity[..., 1], ds030_specificity[..., 1]]
+    max_senses = [training_sensitivity[0], validation_sensitivity[..., 1][0], test_sensitivity[..., 1][0], ds030_sensitivity[..., 1][0]]
+    max_specs = [training_specificity[0], validation_specificity[..., 1][0], test_specificity[..., 1][0], ds030_specificity[..., 1][0]]
 
     plot_labels = ['Training', 'Validation', 'Test', 'ds030']
 
