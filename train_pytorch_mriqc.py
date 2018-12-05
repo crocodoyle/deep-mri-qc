@@ -333,6 +333,9 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
     print('Predicted all slices in ds030')
     print('Starting to train bag classifier...')
 
+    auc_per_epoch = np.zeros(n_epochs)
+    best_epoch_idx = 0
+
     for epoch_idx in range(n_epochs):
         print('Epoch', epoch_idx+1, 'of', n_epochs+1)
         for sample_idx in range(len(train_truth)):
@@ -359,6 +362,32 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
         bag_optimizer.step()
         bag_optimizer.zero_grad()
 
+        bag_model.eval()
+
+        for sample_idx in range(len(validation_loader)):
+            slice_predictions = all_validation_slice_predictions[sample_idx, :]
+            slice_predictions = slice_predictions.cuda()
+
+            output = bag_model(slice_predictions)
+            output = m(output)
+
+            validation_bag_probabilities[sample_idx, :] = output.data.cpu()
+
+        auc = roc_auc_score(validation_truth, validation_bag_probabilities[:, 1], 'weighted')
+        auc_per_epoch[epoch_idx] = auc
+
+        if auc > auc_per_epoch[best_epoch_idx]:
+            best_epoch_idx = epoch_idx
+
+            torch.save(bag_model.state_dict(), results_dir + 'qc_torch_bag_model_fold_' + str(fold_num) + '.tch')
+
+        bag_model.train()
+
+    print('Validation AUCs for bag model:', auc_per_epoch)
+    print('Best epoch:', best_epoch_idx)
+
+    bag_model.load_state_dict(torch.load(results_dir + 'qc_torch_bag_model_fold_' + str(fold_num) + '.tch'))
+    bag_model.cuda()
     bag_model.eval()
 
     # predict multiple instances (training set)

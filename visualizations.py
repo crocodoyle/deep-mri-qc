@@ -134,8 +134,8 @@ def sens_spec_across_folds(sens_to_plot, spec_to_plot, labels, results_dir, file
         for patch, color in zip(bplot['boxes'], colors):
             patch.set_facecolor(color)
 
-    ax1.set_ylim([0, 1])
-    ax2.set_ylim([0, 1])
+    ax1.set_ylim([0, 1.05])
+    ax2.set_ylim([0, 1.05])
 
     ax1.set_xticklabels(labels, fontsize=16)
     ax2.set_xticklabels(labels, fontsize=16)
