@@ -386,7 +386,11 @@ def learn_bag_distribution(train_loader_bag, validation_loader, n_slices, batch_
     print('Validation AUCs for bag model:', auc_per_epoch)
     print('Best epoch:', best_epoch_idx)
 
-    bag_model.load_state_dict(torch.load(results_dir + 'qc_torch_bag_model_fold_' + str(fold_num) + '.tch'))
+    try:
+        bag_model.load_state_dict(torch.load(results_dir + 'qc_torch_bag_model_fold_' + str(fold_num) + '.tch'))
+    except FileNotFoundError:
+        print('something went wrong, best model not saved')
+
     bag_model.cuda()
     bag_model.eval()
 
