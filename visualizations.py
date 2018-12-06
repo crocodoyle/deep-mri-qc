@@ -82,8 +82,7 @@ def plot_sens_spec(senses, specs, curve_labels, best_epoch_idx, results_dir, tit
 
             # test and ds030 are probably sparsely populated
             print('Sens shape', sens.shape)
-            entries_at = np.nonzero(sens[fold_num])
-            print('Entries at:', entries_at.shape)
+            entries_at = list(np.nonzero(sens[fold_num]))
             print(entries_at)
 
             plot_sens = sens[fold_num][entries_at]
