@@ -82,7 +82,7 @@ def plot_sens_spec(senses, specs, curve_labels, best_epoch_idx, results_dir, tit
 
             # test and ds030 are probably sparsely populated
             print('Sens shape', sens.shape)
-            entries_at = np.nonzero(sens[fold_num, :])
+            entries_at = np.nonzero(sens[fold_num])
             print('Entries at:', entries_at.shape)
             print(entries_at)
 
@@ -100,8 +100,8 @@ def plot_sens_spec(senses, specs, curve_labels, best_epoch_idx, results_dir, tit
             spec_ax.plot(sparse_epochs, plot_spec, color=colour, linestyle=':', lw=lw, label=label)
 
 
-        validation_sens = senses[1]
-        validation_spec = specs[1]
+        validation_sens = senses[2]
+        validation_spec = specs[2]
 
         best_epoch = best_epoch_idx[fold_num]
 
